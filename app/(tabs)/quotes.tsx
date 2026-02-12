@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import { FileText, Search } from "lucide-react-native";
 import { useCallback, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   RefreshControl,
@@ -16,6 +15,8 @@ import { Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import api from "@/src/lib/api";
+import { getCurrencySymbol, DEFAULT_CURRENCY } from "@/src/lib/currency";
+import { QuotesListSkeleton } from "@/components/Skeleton";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -65,11 +66,13 @@ function QuoteCard({
   onPress,
   onLongPress,
   t,
+  currencySymbol,
 }: {
   quote: Quote;
   onPress: () => void;
   onLongPress?: () => void;
   t: (key: string) => string;
+  currencySymbol: string;
 }) {
   const status = getQuoteStatus(quote, t);
 
@@ -99,12 +102,16 @@ function QuoteCard({
         </Text>
         {quote.totalCost != null && (
           <Text className="ml-3 text-sm font-medium text-slate-600">
-            ${quote.totalCost.toFixed(2)}
+            {currencySymbol}{quote.totalCost.toFixed(2)}
           </Text>
         )}
       </View>
     </Pressable>
   );
+}
+
+interface UserProfile {
+  currency: string;
 }
 
 // ─── Main Screen ────────────────────────────────────────────
@@ -127,6 +134,17 @@ export default function AllQuotesScreen() {
       return data.quotes;
     },
   });
+
+  // Fetch user profile for currency
+  const { data: userProfile } = useQuery({
+    queryKey: ["me"],
+    queryFn: async () => {
+      const { data } = await api.get<UserProfile>("/api/me");
+      return data;
+    },
+  });
+
+  const currencySymbol = getCurrencySymbol(userProfile?.currency || DEFAULT_CURRENCY);
 
   // Search across all fields
   const filteredQuotes = useMemo(() => {
@@ -183,11 +201,12 @@ export default function AllQuotesScreen() {
       <QuoteCard
         quote={item}
         t={t}
+        currencySymbol={currencySymbol}
         onPress={() => router.push(`/quote/${item.id}` as any)}
         onLongPress={() => handleDeleteQuote(item)}
       />
     ),
-    [router, t, handleDeleteQuote]
+    [router, t, handleDeleteQuote, currencySymbol]
   );
 
   return (
@@ -214,9 +233,7 @@ export default function AllQuotesScreen() {
 
       {/* List */}
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#0f172a" size="large" />
-        </View>
+        <QuotesListSkeleton count={6} />
       ) : filteredQuotes.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <FileText size={40} color="#cbd5e1" />

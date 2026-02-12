@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import { Search, ChevronRight, Plus, User } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   Text,
@@ -15,6 +14,7 @@ import { useTranslation } from "react-i18next";
 
 import AddClientModal from "@/components/AddClientModal";
 import api from "@/src/lib/api";
+import { ClientsListSkeleton } from "@/components/Skeleton";
 
 interface Client {
   id: number;
@@ -116,9 +116,7 @@ export default function ClientsScreen() {
 
       {/* List */}
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#0f172a" size="large" />
-        </View>
+        <ClientsListSkeleton count={6} />
       ) : filteredClients.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <User size={40} color="#cbd5e1" />

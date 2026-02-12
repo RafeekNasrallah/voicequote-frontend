@@ -107,7 +107,15 @@
     "failedToLoad": "לא ניתן לטעון את ההצעה.",
     "goBack": "חזרה",
     "failedUpdateClient": "לא ניתן לעדכן את הלקוח.",
-    "failedSaveItems": "לא ניתן לשמור את הפריטים."
+    "failedSaveItems": "לא ניתן לשמור את הפריטים.",
+    "laborHours": "שעות עבודה",
+    "hours": "שע'",
+    "failedSaveLaborHours": "לא ניתן לשמור את שעות העבודה.",
+    "failedSaveLaborEnabled": "לא ניתן לשמור את הגדרת העבודה.",
+    "materials": "חומרים",
+    "labor": "עבודה",
+    "laborRate": "תעריף שעתי",
+    "laborCost": "עלות עבודה"
   },
   "clients": {
     "title": "לקוחות",
@@ -149,6 +157,18 @@
     "account": "חשבון",
     "signOut": "התנתקות",
     "signOutConfirm": "האם אתה בטוח שברצונך להתנתק?",
+    "priceList": "רשימת המחירים שלי",
+    "priceListDesc": "מילוי אוטומטי של מחירים בהצעות חדשות",
+    "laborRate": "תעריף שעתי",
+    "laborRateDesc": "התעריף השעתי שלך לעבודה",
+    "laborRateNotSet": "לא הוגדר",
+    "perHour": "/שע'",
+    "laborRateUpdateFailed": "לא ניתן לעדכן את התעריף השעתי.",
+    "laborRateModalDesc": "הגדר את התעריף השעתי שלך. זה ישמש לחישוב עלויות עבודה בהצעות.",
+    "currency": "מטבע",
+    "currencyDesc": "מטבע תצוגה להצעות מחיר",
+    "selectCurrency": "בחר מטבע",
+    "currencyUpdateFailed": "לא ניתן לעדכן את המטבע.",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {
@@ -173,5 +193,27 @@
     "quotes": "הצעות",
     "clients": "לקוחות",
     "settings": "הגדרות"
+  },
+  "priceList": {
+    "title": "רשימת המחירים שלי",
+    "searchPlaceholder": "חפש פריטים...",
+    "addItem": "הוסף פריט",
+    "itemName": "שם הפריט",
+    "itemNamePlaceholder": "לדוגמה: צינור נחושת",
+    "price": "מחיר",
+    "pricePlaceholder": "0.00",
+    "unit": "יחידה",
+    "unitPlaceholder": "לדוגמה: מ', מ\"ר, יח'",
+    "noItems": "עדיין אין פריטים",
+    "noItemsMsg": "הוסף פריטים למילוי אוטומטי של מחירים בהצעות חדשות.",
+    "noMatchSearch": "לא נמצאו פריטים תואמים",
+    "saveFailed": "לא ניתן לשמור את רשימת המחירים.",
+    "saved": "נשמר",
+    "savedMsg": "רשימת המחירים עודכנה.",
+    "deleteItem": "מחק פריט",
+    "deleteItemConfirm": "להסיר פריט זה מרשימת המחירים?",
+    "itemCount_one": "פריט {{count}}",
+    "itemCount_other": "{{count}} פריטים",
+    "itemCount_zero": "אין פריטים"
   }
 }

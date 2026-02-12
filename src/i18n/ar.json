@@ -107,7 +107,15 @@
     "failedToLoad": "تعذر تحميل العرض.",
     "goBack": "رجوع",
     "failedUpdateClient": "تعذر تحديث العميل.",
-    "failedSaveItems": "تعذر حفظ الأصناف."
+    "failedSaveItems": "تعذر حفظ الأصناف.",
+    "laborHours": "ساعات العمل",
+    "hours": "ساعة",
+    "failedSaveLaborHours": "تعذر حفظ ساعات العمل.",
+    "failedSaveLaborEnabled": "تعذر حفظ إعداد العمل.",
+    "materials": "المواد",
+    "labor": "العمل",
+    "laborRate": "سعر الساعة",
+    "laborCost": "تكلفة العمل"
   },
   "clients": {
     "title": "العملاء",
@@ -149,6 +157,18 @@
     "account": "الحساب",
     "signOut": "تسجيل الخروج",
     "signOutConfirm": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+    "priceList": "قائمة الأسعار",
+    "priceListDesc": "ملء الأسعار تلقائيًا في العروض الجديدة",
+    "laborRate": "سعر الساعة",
+    "laborRateDesc": "سعر ساعة العمل الخاص بك",
+    "laborRateNotSet": "غير محدد",
+    "perHour": "/ساعة",
+    "laborRateUpdateFailed": "تعذر تحديث سعر الساعة.",
+    "laborRateModalDesc": "حدد سعر ساعة العمل. سيتم استخدامه لحساب تكاليف العمل في العروض.",
+    "currency": "العملة",
+    "currencyDesc": "عملة العرض للعروض",
+    "selectCurrency": "اختر العملة",
+    "currencyUpdateFailed": "تعذر تحديث العملة.",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {
@@ -173,5 +193,27 @@
     "quotes": "العروض",
     "clients": "العملاء",
     "settings": "الإعدادات"
+  },
+  "priceList": {
+    "title": "قائمة الأسعار",
+    "searchPlaceholder": "ابحث عن أصناف...",
+    "addItem": "إضافة صنف",
+    "itemName": "اسم الصنف",
+    "itemNamePlaceholder": "مثال: أنبوب نحاس",
+    "price": "السعر",
+    "pricePlaceholder": "0.00",
+    "unit": "الوحدة",
+    "unitPlaceholder": "مثال: م، م²، قطعة",
+    "noItems": "لا توجد أصناف بعد",
+    "noItemsMsg": "أضف أصنافًا لملء الأسعار تلقائيًا في العروض الجديدة.",
+    "noMatchSearch": "لا توجد أصناف مطابقة",
+    "saveFailed": "تعذر حفظ قائمة الأسعار.",
+    "saved": "تم الحفظ",
+    "savedMsg": "تم تحديث قائمة الأسعار.",
+    "deleteItem": "حذف الصنف",
+    "deleteItemConfirm": "إزالة هذا الصنف من قائمة الأسعار؟",
+    "itemCount_one": "صنف {{count}}",
+    "itemCount_other": "{{count}} أصناف",
+    "itemCount_zero": "لا توجد أصناف"
   }
 }

@@ -107,7 +107,15 @@
     "failedToLoad": "Angebot konnte nicht geladen werden.",
     "goBack": "Zurück",
     "failedUpdateClient": "Kunde konnte nicht aktualisiert werden.",
-    "failedSaveItems": "Artikel konnten nicht gespeichert werden."
+    "failedSaveItems": "Artikel konnten nicht gespeichert werden.",
+    "laborHours": "Arbeitsstunden",
+    "hours": "Std",
+    "failedSaveLaborHours": "Arbeitsstunden konnten nicht gespeichert werden.",
+    "failedSaveLaborEnabled": "Arbeitseinstellung konnte nicht gespeichert werden.",
+    "materials": "Material",
+    "labor": "Arbeit",
+    "laborRate": "Stundensatz",
+    "laborCost": "Arbeitskosten"
   },
   "clients": {
     "title": "Kunden",
@@ -149,6 +157,18 @@
     "account": "Konto",
     "signOut": "Abmelden",
     "signOutConfirm": "Bist du sicher, dass du dich abmelden möchtest?",
+    "priceList": "Meine Preisliste",
+    "priceListDesc": "Preise in neuen Angeboten automatisch ausfüllen",
+    "laborRate": "Stundensatz",
+    "laborRateDesc": "Dein Stundensatz für Arbeit",
+    "laborRateNotSet": "Nicht festgelegt",
+    "perHour": "/Std",
+    "laborRateUpdateFailed": "Stundensatz konnte nicht aktualisiert werden.",
+    "laborRateModalDesc": "Lege deinen Stundensatz fest. Dieser wird zur Berechnung der Arbeitskosten in Angeboten verwendet.",
+    "currency": "Währung",
+    "currencyDesc": "Anzeigewährung für Angebote",
+    "selectCurrency": "Währung auswählen",
+    "currencyUpdateFailed": "Währung konnte nicht aktualisiert werden.",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {
@@ -173,5 +193,27 @@
     "quotes": "Angebote",
     "clients": "Kunden",
     "settings": "Einstellungen"
+  },
+  "priceList": {
+    "title": "Meine Preisliste",
+    "searchPlaceholder": "Artikel suchen...",
+    "addItem": "Artikel hinzufügen",
+    "itemName": "Artikelname",
+    "itemNamePlaceholder": "z.B. Kupferrohr",
+    "price": "Preis",
+    "pricePlaceholder": "0,00",
+    "unit": "Einheit",
+    "unitPlaceholder": "z.B. m, m², Stk",
+    "noItems": "Noch keine Artikel",
+    "noItemsMsg": "Füge Artikel hinzu, um Preise in neuen Angeboten automatisch auszufüllen.",
+    "noMatchSearch": "Keine passenden Artikel",
+    "saveFailed": "Preisliste konnte nicht gespeichert werden.",
+    "saved": "Gespeichert",
+    "savedMsg": "Preisliste wurde aktualisiert.",
+    "deleteItem": "Artikel löschen",
+    "deleteItemConfirm": "Diesen Artikel aus der Preisliste entfernen?",
+    "itemCount_one": "{{count}} Artikel",
+    "itemCount_other": "{{count}} Artikel",
+    "itemCount_zero": "Keine Artikel"
   }
 }

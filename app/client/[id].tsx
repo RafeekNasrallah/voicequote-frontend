@@ -91,7 +91,7 @@ export default function ClientDetailScreen() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
-      router.back();
+      router.replace("/(tabs)/clients");
     },
     onError: () => {
       Alert.alert(t("common.error"), t("clients.deleteClientFailed"));
@@ -134,7 +134,7 @@ export default function ClientDetailScreen() {
           {t("clients.noClientsFound")}
         </Text>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => router.replace("/(tabs)/clients")}
           className="mt-4 h-10 items-center justify-center rounded-lg bg-slate-900 px-6"
         >
           <Text className="text-sm font-semibold text-white">
@@ -146,13 +146,13 @@ export default function ClientDetailScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-slate-200 bg-white">
+      <View className="flex-row items-center px-4 py-3 border-b border-slate-200">
         <Pressable
           onPress={() => {
             queryClient.invalidateQueries({ queryKey: ["clients"] });
-            router.back();
+            router.replace("/(tabs)/clients");
           }}
           className="mr-3 h-10 w-10 items-center justify-center rounded-lg"
           style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
@@ -172,7 +172,7 @@ export default function ClientDetailScreen() {
       </View>
 
       <KeyboardAvoidingView
-        className="flex-1"
+        className="flex-1 bg-slate-50"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView

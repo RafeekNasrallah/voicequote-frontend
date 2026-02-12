@@ -107,7 +107,15 @@
     "failedToLoad": "Failed to load quote.",
     "goBack": "Go Back",
     "failedUpdateClient": "Failed to update client.",
-    "failedSaveItems": "Failed to save items."
+    "failedSaveItems": "Failed to save items.",
+    "laborHours": "Labor Hours",
+    "hours": "hrs",
+    "failedSaveLaborHours": "Failed to save labor hours.",
+    "failedSaveLaborEnabled": "Failed to save labor setting.",
+    "materials": "Materials",
+    "labor": "Labor",
+    "laborRate": "Hourly Rate",
+    "laborCost": "Labor Cost"
   },
   "clients": {
     "title": "Clients",
@@ -149,6 +157,18 @@
     "account": "Account",
     "signOut": "Sign Out",
     "signOutConfirm": "Are you sure you want to sign out?",
+    "priceList": "My Price List",
+    "priceListDesc": "Auto-fill prices in new quotes",
+    "laborRate": "Labor Rate",
+    "laborRateDesc": "Your hourly rate for labor",
+    "laborRateNotSet": "Not set",
+    "perHour": "/hr",
+    "laborRateUpdateFailed": "Failed to update labor rate.",
+    "laborRateModalDesc": "Set your hourly labor rate. This will be used to calculate labor costs in quotes.",
+    "currency": "Currency",
+    "currencyDesc": "Display currency for quotes",
+    "selectCurrency": "Select Currency",
+    "currencyUpdateFailed": "Failed to update currency.",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {
@@ -173,5 +193,27 @@
     "quotes": "Quotes",
     "clients": "Clients",
     "settings": "Settings"
+  },
+  "priceList": {
+    "title": "My Price List",
+    "searchPlaceholder": "Search items...",
+    "addItem": "Add Item",
+    "itemName": "Item Name",
+    "itemNamePlaceholder": "e.g. Copper Pipe",
+    "price": "Price",
+    "pricePlaceholder": "0.00",
+    "unit": "Unit",
+    "unitPlaceholder": "e.g. ft, m², pcs",
+    "noItems": "No items yet",
+    "noItemsMsg": "Add items to auto-fill prices in new quotes.",
+    "noMatchSearch": "No items match your search",
+    "saveFailed": "Failed to save price list.",
+    "saved": "Saved",
+    "savedMsg": "Price list has been updated.",
+    "deleteItem": "Delete Item",
+    "deleteItemConfirm": "Remove this item from your price list?",
+    "itemCount_one": "{{count}} item",
+    "itemCount_other": "{{count}} items",
+    "itemCount_zero": "No items"
   }
 }

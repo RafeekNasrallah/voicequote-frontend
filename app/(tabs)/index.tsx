@@ -7,7 +7,6 @@ import {
 } from "lucide-react-native";
 import { useCallback } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   RefreshControl,
@@ -23,6 +22,8 @@ import ProcessingModal from "@/components/ProcessingModal";
 import RecordButton from "@/components/RecordButton";
 import { useCreateQuote } from "@/src/hooks/useCreateQuote";
 import api from "@/src/lib/api";
+import { getCurrencySymbol, DEFAULT_CURRENCY } from "@/src/lib/currency";
+import { QuoteCardSkeleton } from "@/components/Skeleton";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -83,11 +84,13 @@ function QuoteCard({
   onPress,
   onLongPress,
   t,
+  currencySymbol,
 }: {
   quote: Quote;
   onPress: () => void;
   onLongPress?: () => void;
   t: (key: string) => string;
+  currencySymbol: string;
 }) {
   const status = getQuoteStatus(quote, t);
 
@@ -114,7 +117,7 @@ function QuoteCard({
         </Text>
         {quote.totalCost != null && (
           <Text className="ml-3 text-sm font-medium text-slate-600">
-            ${quote.totalCost.toFixed(2)}
+            {currencySymbol}{quote.totalCost.toFixed(2)}
           </Text>
         )}
       </View>
@@ -134,12 +137,27 @@ function getQuoteStatus(quote: Quote, t: (key: string) => string): { label: stri
 
 // ─── Main Screen ────────────────────────────────────────────
 
+interface UserProfile {
+  currency: string;
+}
+
 export default function HomeScreen() {
   const { user } = useUser();
   const router = useRouter();
   const queryClient = useQueryClient();
   const createQuote = useCreateQuote();
   const { t } = useTranslation();
+
+  // Fetch user profile for currency
+  const { data: userProfile } = useQuery({
+    queryKey: ["me"],
+    queryFn: async () => {
+      const { data } = await api.get<UserProfile>("/api/me");
+      return data;
+    },
+  });
+
+  const currencySymbol = getCurrencySymbol(userProfile?.currency || DEFAULT_CURRENCY);
 
   // Greeting based on time of day
   function getGreeting(): string {
@@ -149,16 +167,16 @@ export default function HomeScreen() {
     return t("greeting.evening");
   }
 
-  // Fetch real quotes
+  // Fetch recent quotes (limited to 4 for home screen)
   const {
     data: quotes = [],
     isLoading,
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ["quotes"],
+    queryKey: ["recentQuotes"],
     queryFn: async () => {
-      const { data } = await api.get<{ quotes: Quote[] }>("/api/quotes");
+      const { data } = await api.get<{ quotes: Quote[] }>("/api/quotes?limit=4");
       return data.quotes;
     },
   });
@@ -169,6 +187,7 @@ export default function HomeScreen() {
       await api.delete(`/api/quotes/${quoteId}`);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
       queryClient.invalidateQueries({ queryKey: ["quotes"] });
     },
     onError: () => {
@@ -204,6 +223,7 @@ export default function HomeScreen() {
         {
           onSuccess: () => {
             // Refresh the quotes list after a new quote is created
+            queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
             queryClient.invalidateQueries({ queryKey: ["quotes"] });
           },
           onError: (error) => {
@@ -301,9 +321,11 @@ export default function HomeScreen() {
           </View>
 
           {isLoading ? (
-            <View className="items-center py-8">
-              <ActivityIndicator color="#0f172a" />
-            </View>
+            <>
+              <QuoteCardSkeleton />
+              <QuoteCardSkeleton />
+              <QuoteCardSkeleton />
+            </>
           ) : quotes.length === 0 ? (
             <View className="items-center rounded-xl bg-white py-8 border border-slate-100">
               <FileText size={32} color="#cbd5e1" />
@@ -312,11 +334,12 @@ export default function HomeScreen() {
               </Text>
             </View>
           ) : (
-            quotes.slice(0, 5).map((quote) => (
+            quotes.map((quote) => (
               <QuoteCard
                 key={quote.id}
                 quote={quote}
                 t={t}
+                currencySymbol={currencySymbol}
                 onPress={() => router.push(`/quote/${quote.id}` as any)}
                 onLongPress={() => handleDeleteQuote(quote)}
               />

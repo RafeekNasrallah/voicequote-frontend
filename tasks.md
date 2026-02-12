@@ -350,3 +350,182 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 - Tapping the quote title in the editor allows renaming.
 - Custom quote names appear on the Home dashboard and Quotes tab.
 - Quotes without a custom name still show "Quote #ID" as fallback.
+
+---
+
+## Phase 14: Price List Management
+
+### Task 14.1: Price List Screen
+
+- **Goal:** Allow users to manage a personal price list of items with prices and units. When a new quote is processed, the backend fuzzy-matches extracted items against this list and auto-fills prices.
+- **Action:** Create a new screen accessible from Settings (e.g., "My Price List" row).
+- **Action:** The screen should:
+  - Fetch the current price list from `GET /api/me` (the `priceList` field).
+  - Display a list of items, each showing **Name**, **Price**, and **Unit**.
+  - Allow the user to **add** new items (inline or via a modal).
+  - Allow the user to **edit** existing items (tap to edit inline).
+  - Allow the user to **delete** items (swipe or long-press).
+  - Include a **search/filter** bar at the top for quick lookup.
+- **Action:** On save, send the full updated list to `PUT /api/me/pricelist` with body `{ items: [{ name, price, unit }] }`.
+- **Backend note:** The endpoint `PUT /api/me/pricelist` and `GET /api/me` (returns `priceList`) are already fully implemented. Fuse.js fuzzy matching is already integrated in `POST /api/process-quote`.
+
+### Task 14.2: Settings Integration
+
+- **Action:** Add a "My Price List" row in the Settings tab (under Preferences), showing the item count (e.g., "12 items").
+- **Action:** Tapping the row navigates to the Price List screen.
+
+### Task 14.3: Translations
+
+- **Action:** Add translation keys for the Price List screen in all 5 languages (en, de, he, ar, es):
+  - `settings.priceList`, `settings.priceListCount`
+  - `priceList.title`, `priceList.searchPlaceholder`, `priceList.addItem`, `priceList.itemName`, `priceList.price`, `priceList.unit`, `priceList.unitPlaceholder`, `priceList.noItems`, `priceList.noItemsMsg`, `priceList.saveFailed`, `priceList.saved`, `priceList.savedMsg`, `priceList.deleteItem`, `priceList.deleteItemConfirm`
+
+### ✅ Validation (Phase 14)
+
+- Settings shows "My Price List" with item count.
+- Tapping opens the Price List screen.
+- User can add items (e.g., "Copper Pipe", $10.00, "ft").
+- User can edit and delete items.
+- Changes are saved to the backend via `PUT /api/me/pricelist`.
+- After saving a price list, recording a new quote auto-fills prices for matching items.
+
+---
+
+## Phase 15: Labor Hours in Quote Editor
+
+### Task 15.1: Display Labor Hours
+
+- **Goal:** Show the labor hours extracted by AI in the Quote Editor.
+- **Action:** Update the `QuoteData` interface in `app/quote/[id].tsx` to include `laborHours: number | null`.
+- **Action:** Add a "Labor Hours" section in the Quote Editor (above or below the items table) that displays the current labor hours value.
+- **Backend requirement:** `GET /api/quotes/:id` must return `laborHours`. See backend `tasks.md` Phase 15.
+
+### Task 15.2: Editable Labor Hours
+
+- **Goal:** Allow users to edit the labor hours value.
+- **Action:** Make the labor hours field editable (numeric input).
+- **Action:** On blur/change, save the updated value to the backend via `PATCH /api/quotes/:id` with `{ laborHours: number }`.
+- **Backend requirement:** `PATCH /api/quotes/:id` must accept an optional `laborHours` field. If not already supported, add to backend tasks.
+
+### Task 15.3: Labor Cost Calculation (Optional Enhancement)
+
+- **Goal:** Allow users to set an hourly rate and calculate labor cost.
+- **Action:** Add a "Labor Rate" field (e.g., $/hour) — this could be stored in user settings or entered per quote.
+- **Action:** Display calculated labor cost = `laborHours × laborRate`.
+- **Action:** Include labor cost in the total calculation.
+- **Note:** This is an optional enhancement; skip if not needed for MVP.
+
+### Task 15.4: Translations
+
+- **Action:** Add translation keys for labor hours in all 5 languages (en, de, he, ar, es):
+  - `quoteEditor.laborHours`, `quoteEditor.laborHoursPlaceholder`, `quoteEditor.hours`, `quoteEditor.failedSaveLaborHours`
+
+### ✅ Validation (Phase 15)
+
+- Record a voice note mentioning labor time (e.g., "This will take about 4 hours").
+- Open the quote — labor hours should display (e.g., "4").
+- Edit the labor hours value and blur — it should save to the backend.
+- Reload the quote — the edited value persists.
+
+---
+
+## Phase 16: Labor Rate & Cost Calculation
+
+### Task 16.1: Fetch Labor Rate from Profile
+
+- **Goal:** Fetch the user's hourly labor rate from their profile.
+- **Action:** Update the `UserProfile` interface in `app/(tabs)/settings.tsx` to include `laborRate: number | null`.
+- **Action:** Ensure `GET /api/me` returns `laborRate`.
+- **Backend requirement:** See backend `tasks.md` Phase 16.
+
+### Task 16.2: Labor Rate Setting in Settings
+
+- **Goal:** Allow users to set their hourly labor rate in Settings.
+- **Action:** Add a "Labor Rate" row in the Settings Preferences section (below "My Price List").
+- **Action:** Tapping the row opens an editable input (modal or inline) to set the hourly rate.
+- **Action:** Save the rate via `PATCH /api/me` with `{ laborRate: number }`.
+- **Action:** Display the current rate (e.g., "$50/hr") or "Not set" if null.
+
+### Task 16.3: Display Labor Cost in Quote Editor
+
+- **Goal:** Show the calculated labor cost in the Quote Editor.
+- **Action:** Fetch the user's `laborRate` (from `GET /api/me` or cache it in context/state).
+- **Action:** In the Labor Hours section, display:
+  - Labor Hours: `4`
+  - Rate: `× $50/hr`
+  - Labor Cost: `= $200`
+- **Action:** If `laborRate` is null, show "Set rate in Settings" link or just show hours without cost.
+
+### Task 16.4: Include Labor Cost in Total
+
+- **Goal:** Add labor cost to the quote total.
+- **Action:** Calculate `laborCost = laborHours × laborRate`.
+- **Action:** Update total display to show:
+  - Materials: $500
+  - Labor: $200
+  - **Total: $700**
+- **Action:** The PDF generation should also include labor cost (backend may need update).
+
+### Task 16.5: Translations
+
+- **Action:** Add translation keys in all 5 languages (en, de, he, ar, es):
+  - `settings.laborRate`, `settings.laborRateDesc`, `settings.laborRatePlaceholder`, `settings.laborRateNotSet`, `settings.perHour`
+  - `quoteEditor.laborRate`, `quoteEditor.laborCost`, `quoteEditor.materials`, `quoteEditor.setRateInSettings`
+
+### ✅ Validation (Phase 16)
+
+- In Settings, set labor rate to $50/hr. Confirm it saves.
+- Open a quote with labor hours (e.g., 4 hrs).
+- Labor section shows: `4 hrs × $50/hr = $200`.
+- Total shows Materials + Labor = Grand Total.
+- If labor rate is not set, quote shows hours only without cost calculation.
+
+---
+
+## Phase 17: Currency Setting
+
+### Task 17.1: Fetch Currency from Profile
+
+- **Goal:** Fetch the user's preferred currency from their profile.
+- **Action:** Update the `UserProfile` interface to include `currency: string`.
+- **Action:** Ensure `GET /api/me` returns `currency` (defaults to "USD" if not set).
+- **Backend requirement:** See backend `tasks.md` Phase 17.
+
+### Task 17.2: Currency Setting in Settings
+
+- **Goal:** Allow users to select their preferred currency in Settings.
+- **Action:** Add a "Currency" row in the Settings Preferences section.
+- **Action:** Tapping the row opens a picker/modal with common currencies:
+  - USD ($), EUR (€), GBP (£), ILS (₪), AED (د.إ), etc.
+- **Action:** Save the selection via `PATCH /api/me` with `{ currency: string }`.
+- **Action:** Display the current currency code and symbol (e.g., "USD ($)").
+
+### Task 17.3: Create Currency Utility
+
+- **Action:** Create `src/lib/currency.ts` with:
+  - `SUPPORTED_CURRENCIES`: Array of `{ code, symbol, name }` (e.g., `{ code: "USD", symbol: "$", name: "US Dollar" }`).
+  - `getCurrencySymbol(code: string)`: Returns the symbol for a currency code.
+  - `formatCurrency(amount: number, code: string)`: Returns formatted string (e.g., "$420.00", "€350.00", "₪1,500").
+
+### Task 17.4: Apply Currency Throughout the App
+
+- **Action:** Update all price displays to use `formatCurrency()` or the user's currency symbol:
+  - Quote Editor: items, labor, totals
+  - Home Dashboard: quote cards
+  - Quotes Tab: quote list
+  - Price List: item prices
+- **Action:** Replace hardcoded "$" with dynamic currency symbol from user profile.
+
+### Task 17.5: Translations
+
+- **Action:** Add translation keys in all 5 languages (en, de, he, ar, es):
+  - `settings.currency`, `settings.currencyDesc`, `settings.selectCurrency`
+
+### ✅ Validation (Phase 17)
+
+- In Settings, select EUR (€) as currency. Confirm it saves.
+- Open a quote — all prices should display with € symbol.
+- Home dashboard shows quote totals in €.
+- Quotes tab shows amounts in €.
+- Price List shows prices in €.
+- Change back to USD ($) — all displays update accordingly.

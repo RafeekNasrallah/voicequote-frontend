@@ -107,7 +107,15 @@
     "failedToLoad": "No se pudo cargar el presupuesto.",
     "goBack": "Volver",
     "failedUpdateClient": "No se pudo actualizar el cliente.",
-    "failedSaveItems": "No se pudieron guardar los artículos."
+    "failedSaveItems": "No se pudieron guardar los artículos.",
+    "laborHours": "Horas de trabajo",
+    "hours": "hrs",
+    "failedSaveLaborHours": "No se pudieron guardar las horas de trabajo.",
+    "failedSaveLaborEnabled": "No se pudo guardar la configuración de trabajo.",
+    "materials": "Materiales",
+    "labor": "Mano de obra",
+    "laborRate": "Tarifa por hora",
+    "laborCost": "Costo de mano de obra"
   },
   "clients": {
     "title": "Clientes",
@@ -149,6 +157,18 @@
     "account": "Cuenta",
     "signOut": "Cerrar sesión",
     "signOutConfirm": "¿Estás seguro de que quieres cerrar sesión?",
+    "priceList": "Mi lista de precios",
+    "priceListDesc": "Completar precios automáticamente en nuevos presupuestos",
+    "laborRate": "Tarifa por hora",
+    "laborRateDesc": "Tu tarifa por hora de trabajo",
+    "laborRateNotSet": "No establecida",
+    "perHour": "/hr",
+    "laborRateUpdateFailed": "No se pudo actualizar la tarifa por hora.",
+    "laborRateModalDesc": "Establece tu tarifa por hora. Se usará para calcular los costos de mano de obra en los presupuestos.",
+    "currency": "Moneda",
+    "currencyDesc": "Moneda de visualización para presupuestos",
+    "selectCurrency": "Seleccionar moneda",
+    "currencyUpdateFailed": "No se pudo actualizar la moneda.",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {
@@ -173,5 +193,27 @@
     "quotes": "Presupuestos",
     "clients": "Clientes",
     "settings": "Ajustes"
+  },
+  "priceList": {
+    "title": "Mi lista de precios",
+    "searchPlaceholder": "Buscar artículos...",
+    "addItem": "Agregar artículo",
+    "itemName": "Nombre del artículo",
+    "itemNamePlaceholder": "ej. Tubo de cobre",
+    "price": "Precio",
+    "pricePlaceholder": "0.00",
+    "unit": "Unidad",
+    "unitPlaceholder": "ej. m, m², ud",
+    "noItems": "Aún no hay artículos",
+    "noItemsMsg": "Agrega artículos para completar precios automáticamente en nuevos presupuestos.",
+    "noMatchSearch": "No se encontraron artículos",
+    "saveFailed": "No se pudo guardar la lista de precios.",
+    "saved": "Guardado",
+    "savedMsg": "La lista de precios ha sido actualizada.",
+    "deleteItem": "Eliminar artículo",
+    "deleteItemConfirm": "¿Eliminar este artículo de la lista de precios?",
+    "itemCount_one": "{{count}} artículo",
+    "itemCount_other": "{{count}} artículos",
+    "itemCount_zero": "Sin artículos"
   }
 }

@@ -3,14 +3,15 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import {
   ArrowLeft,
+  Clock,
   FileText,
-  UserPlus,
-  Trash2,
   Plus,
   Share2,
-  Loader2,
+  Trash2,
+  UserPlus,
 } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -18,15 +19,16 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Switch,
   Text,
   TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTranslation } from "react-i18next";
 
 import ClientSelectModal from "@/components/ClientSelectModal";
 import api from "@/src/lib/api";
+import { getCurrencySymbol, DEFAULT_CURRENCY } from "@/src/lib/currency";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -42,10 +44,17 @@ interface QuoteData {
   id: number;
   name: string | null;
   items: QuoteItem[] | null;
+  laborHours: number | null;
+  laborEnabled: boolean;
   totalCost: number | null;
   clientId: number | null;
   clientName: string | null;
   pdfKey: boolean;
+}
+
+interface UserProfile {
+  laborRate: number | null;
+  currency: string;
 }
 
 // ─── Main Screen ────────────────────────────────────────────
@@ -60,6 +69,9 @@ export default function QuoteScreen() {
   const [localItems, setLocalItems] = useState<QuoteItem[]>([]);
   const [localTotal, setLocalTotal] = useState<number | null>(null);
   const [localName, setLocalName] = useState("");
+  const [localLaborHours, setLocalLaborHours] = useState<string>("");
+  const [localLaborRate, setLocalLaborRate] = useState<string>("");
+  const [localLaborEnabled, setLocalLaborEnabled] = useState(true);
   const [isEditingName, setIsEditingName] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
@@ -77,6 +89,32 @@ export default function QuoteScreen() {
     },
   });
 
+  // ─── Fetch User Profile (for default labor rate) ──────────────────
+  const { data: userProfile } = useQuery({
+    queryKey: ["me"],
+    queryFn: async () => {
+      const { data } = await api.get<UserProfile>("/api/me");
+      return data;
+    },
+  });
+
+  // Initialize local labor rate from user profile (once)
+  useEffect(() => {
+    if (userProfile?.laborRate !== undefined && localLaborRate === "") {
+      setLocalLaborRate(userProfile.laborRate?.toString() || "");
+    }
+  }, [userProfile?.laborRate]);
+
+  const currencySymbol = getCurrencySymbol(userProfile?.currency || DEFAULT_CURRENCY);
+  const laborRateNum = parseFloat(localLaborRate) || 0;
+  const laborHoursNum = parseFloat(localLaborHours) || 0;
+  const laborCost =
+    localLaborEnabled && laborRateNum > 0 && laborHoursNum > 0
+      ? laborHoursNum * laborRateNum
+      : null;
+  const materialsCost = localTotal ?? 0;
+  const grandTotal = materialsCost + (localLaborEnabled ? (laborCost ?? 0) : 0);
+
   // Sync server data to local state
   useEffect(() => {
     if (quote?.items) {
@@ -88,6 +126,12 @@ export default function QuoteScreen() {
     if (quote?.name !== undefined) {
       setLocalName(quote.name || "");
     }
+    if (quote?.laborHours !== undefined) {
+      setLocalLaborHours(quote.laborHours?.toString() || "");
+    }
+    if (quote?.laborEnabled !== undefined) {
+      setLocalLaborEnabled(quote.laborEnabled);
+    }
   }, [quote]);
 
   // ─── Mutations ──────────────────────────────────────────
@@ -97,6 +141,7 @@ export default function QuoteScreen() {
       await api.patch(`/api/quotes/${id}/client`, { clientId });
     },
     onSuccess: () => {
+      setPdfUrl(null); // Clear PDF so share will regenerate
       queryClient.invalidateQueries({ queryKey: ["quote", id] });
     },
     onError: () => {
@@ -106,16 +151,17 @@ export default function QuoteScreen() {
 
   const patchItems = useMutation({
     mutationFn: async (items: QuoteItem[]) => {
-      const { data } = await api.patch<{ ok: boolean; totalCost: number | null }>(
-        `/api/quotes/${id}/items`,
-        { items }
-      );
+      const { data } = await api.patch<{
+        ok: boolean;
+        totalCost: number | null;
+      }>(`/api/quotes/${id}/items`, { items });
       return data;
     },
     onSuccess: (data) => {
       if (data.totalCost !== null && data.totalCost !== undefined) {
         setLocalTotal(data.totalCost);
       }
+      setPdfUrl(null); // Clear PDF so share will regenerate
       queryClient.invalidateQueries({ queryKey: ["quote", id] });
     },
     onError: () => {
@@ -129,6 +175,7 @@ export default function QuoteScreen() {
       await api.patch(`/api/quotes/${id}`, { name: name || null });
     },
     onSuccess: () => {
+      setPdfUrl(null); // Clear PDF so share will regenerate
       queryClient.invalidateQueries({ queryKey: ["quote", id] });
       queryClient.invalidateQueries({ queryKey: ["quotes"] });
     },
@@ -146,6 +193,48 @@ export default function QuoteScreen() {
     }
   }, [localName, quote?.name, patchName]);
 
+  // Patch Labor Hours
+  const patchLaborHours = useMutation({
+    mutationFn: async (hours: number | null) => {
+      await api.patch(`/api/quotes/${id}`, { laborHours: hours });
+    },
+    onSuccess: () => {
+      setPdfUrl(null); // Clear PDF so share will regenerate
+      queryClient.invalidateQueries({ queryKey: ["quote", id] });
+    },
+    onError: () => {
+      Alert.alert(t("common.error"), t("quoteEditor.failedSaveLaborHours"));
+    },
+  });
+
+  const handleLaborHoursBlur = useCallback(() => {
+    const serverHours = quote?.laborHours?.toString() || "";
+    if (localLaborHours !== serverHours) {
+      const hours = parseFloat(localLaborHours) || null;
+      patchLaborHours.mutate(hours);
+    }
+  }, [localLaborHours, quote?.laborHours, patchLaborHours]);
+
+  // Patch Labor Enabled
+  const patchLaborEnabled = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      await api.patch(`/api/quotes/${id}`, { laborEnabled: enabled });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quote", id] });
+    },
+    onError: () => {
+      Alert.alert(t("common.error"), t("quoteEditor.failedSaveLaborEnabled"));
+    },
+  });
+
+  const handleLaborEnabledToggle = useCallback(() => {
+    const newValue = !localLaborEnabled;
+    setLocalLaborEnabled(newValue);
+    setPdfUrl(null); // Clear PDF so share will regenerate
+    patchLaborEnabled.mutate(newValue);
+  }, [localLaborEnabled, patchLaborEnabled]);
+
   // Delete Quote
   const deleteQuote = useMutation({
     mutationFn: async () => {
@@ -153,7 +242,8 @@ export default function QuoteScreen() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["quotes"] });
-      router.back();
+      queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
+      router.replace("/(tabs)/quotes");
     },
     onError: () => {
       Alert.alert(t("common.error"), t("quotes.deleteQuoteFailed"));
@@ -175,7 +265,7 @@ export default function QuoteScreen() {
   const generatePdf = useMutation({
     mutationFn: async () => {
       const { data } = await api.post<{ pdfUrl: string }>(
-        `/api/quotes/${id}/regenerate-pdf`
+        `/api/quotes/${id}/regenerate-pdf`,
       );
       return data;
     },
@@ -183,7 +273,6 @@ export default function QuoteScreen() {
       setPdfUrl(data.pdfUrl);
       queryClient.invalidateQueries({ queryKey: ["quote", id] });
       queryClient.invalidateQueries({ queryKey: ["quotes"] });
-      Alert.alert(t("quoteEditor.pdfReady"), t("quoteEditor.pdfReadyMsg"));
     },
     onError: () => {
       Alert.alert(t("common.error"), t("quoteEditor.pdfError"));
@@ -193,21 +282,26 @@ export default function QuoteScreen() {
   // ─── Share PDF ──────────────────────────────────────────
 
   const handleShare = useCallback(async () => {
-    if (!pdfUrl) {
-      Alert.alert(t("quoteEditor.noPdf"), t("quoteEditor.generateFirst"));
-      return;
-    }
-
     const canShare = await Sharing.isAvailableAsync();
     if (!canShare) {
-      Alert.alert(t("quoteEditor.sharingUnavailable"), t("quoteEditor.sharingUnavailableMsg"));
+      Alert.alert(
+        t("quoteEditor.sharingUnavailable"),
+        t("quoteEditor.sharingUnavailableMsg"),
+      );
       return;
     }
 
     setIsSharing(true);
     try {
+      // If no PDF URL, generate it first
+      let urlToShare = pdfUrl;
+      if (!urlToShare) {
+        const result = await generatePdf.mutateAsync();
+        urlToShare = result.pdfUrl;
+      }
+
       // Download the PDF to a local temp file
-      const response = await fetch(pdfUrl);
+      const response = await fetch(urlToShare);
       const blob = await response.blob();
 
       // Convert blob to base64 and write to cache
@@ -238,11 +332,14 @@ export default function QuoteScreen() {
       });
     } catch (err) {
       console.error("Share failed:", err);
-      Alert.alert(t("quoteEditor.shareFailed"), t("quoteEditor.shareFailedMsg"));
+      Alert.alert(
+        t("quoteEditor.shareFailed"),
+        t("quoteEditor.shareFailedMsg"),
+      );
     } finally {
       setIsSharing(false);
     }
-  }, [pdfUrl, id, t]);
+  }, [pdfUrl, id, t, generatePdf, localName]);
 
   // ─── Item Editing Helpers ───────────────────────────────
 
@@ -273,7 +370,7 @@ export default function QuoteScreen() {
         return updated;
       });
     },
-    [recalcTotal]
+    [recalcTotal],
   );
 
   const saveItems = useCallback(() => {
@@ -300,7 +397,7 @@ export default function QuoteScreen() {
         patchItems.mutate(updated);
       }, 100);
     },
-    [localItems, patchItems, recalcTotal]
+    [localItems, patchItems, recalcTotal],
   );
 
   // ─── Loading / Error States ─────────────────────────────
@@ -321,10 +418,12 @@ export default function QuoteScreen() {
           {t("quoteEditor.failedToLoad")}
         </Text>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => router.replace("/(tabs)/quotes")}
           className="mt-4 h-10 items-center justify-center rounded-lg bg-slate-900 px-6"
         >
-          <Text className="text-sm font-semibold text-white">{t("quoteEditor.goBack")}</Text>
+          <Text className="text-sm font-semibold text-white">
+            {t("quoteEditor.goBack")}
+          </Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -341,7 +440,7 @@ export default function QuoteScreen() {
   // ─── Render ─────────────────────────────────────────────
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       {/* Client Select Modal */}
       <ClientSelectModal
         visible={clientModalVisible}
@@ -350,21 +449,19 @@ export default function QuoteScreen() {
       />
 
       {/* Header Bar */}
-      <View className="flex-row items-center px-4 py-3 border-b border-slate-200 bg-white">
+      <View className="flex-row items-center px-4 py-3 border-b border-slate-200">
         <Pressable
           onPress={() => {
             queryClient.invalidateQueries({ queryKey: ["quotes"] });
-            router.back();
+            queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
+            router.replace("/(tabs)/quotes");
           }}
           className="mr-3 h-10 w-10 items-center justify-center rounded-lg"
           style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
         >
           <ArrowLeft size={22} color="#0f172a" />
         </Pressable>
-        <Pressable
-          className="flex-1"
-          onPress={() => setIsEditingName(true)}
-        >
+        <Pressable className="flex-1" onPress={() => setIsEditingName(true)}>
           {isEditingName ? (
             <TextInput
               className="text-lg font-bold text-slate-900 py-0"
@@ -378,12 +475,19 @@ export default function QuoteScreen() {
               onSubmitEditing={handleNameBlur}
             />
           ) : (
-            <Text className="text-lg font-bold text-slate-900" numberOfLines={1}>
+            <Text
+              className="text-lg font-bold text-slate-900"
+              numberOfLines={1}
+            >
               {localName || `Quote #${quote.id}`}
             </Text>
           )}
           <Text className="text-xs text-slate-400">
-            {isEditingName ? "" : localName ? `#${quote.id} · ${formattedDate}` : formattedDate}
+            {isEditingName
+              ? ""
+              : localName
+                ? `#${quote.id} · ${formattedDate}`
+                : formattedDate}
           </Text>
         </Pressable>
         <Pressable
@@ -396,7 +500,7 @@ export default function QuoteScreen() {
       </View>
 
       <KeyboardAvoidingView
-        className="flex-1"
+        className="flex-1 bg-slate-50"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={100}
       >
@@ -526,12 +630,110 @@ export default function QuoteScreen() {
               </Pressable>
             </View>
 
+            {/* ─── Labor Section ──────────────────────── */}
+            <View className="border-t border-slate-100 p-4">
+              {/* Header with Toggle */}
+              <View className="flex-row items-center justify-between mb-3">
+                <View className="flex-row items-center">
+                  <Clock size={14} color="#64748b" />
+                  <Text className="ml-2 text-xs font-semibold uppercase text-slate-400">
+                    {t("quoteEditor.labor")}
+                  </Text>
+                </View>
+                <Switch
+                  value={localLaborEnabled}
+                  onValueChange={handleLaborEnabledToggle}
+                  trackColor={{ false: "#e2e8f0", true: "#0f172a" }}
+                  thumbColor="#ffffff"
+                  ios_backgroundColor="#e2e8f0"
+                />
+              </View>
+
+              {/* Calculation Row: [hours] hrs × $[rate]/hr = $total */}
+              {localLaborEnabled && (
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center">
+                    {/* Hours */}
+                    <TextInput
+                      className="w-12 text-center text-sm font-semibold text-slate-900 border border-slate-200 rounded-md px-2"
+                      style={{
+                        paddingTop: 6,
+                        paddingBottom: 10,
+                        textAlignVertical: "center",
+                        includeFontPadding: false,
+                      }}
+                      value={localLaborHours}
+                      onChangeText={setLocalLaborHours}
+                      onBlur={handleLaborHoursBlur}
+                      placeholder="0"
+                      placeholderTextColor="#cbd5e1"
+                      keyboardType="decimal-pad"
+                    />
+                    <Text className="mx-2 text-sm text-slate-400">
+                      {t("quoteEditor.hours")} ×
+                    </Text>
+                    {/* Rate */}
+                    <View
+                      className="flex-row items-center border border-slate-200 rounded-md px-2"
+                      style={{ paddingVertical: 10 }}
+                    >
+                      <Text className="text-sm text-slate-500">{currencySymbol}</Text>
+                      <TextInput
+                        className="w-12 text-center text-sm font-semibold text-slate-900"
+                        style={{
+                          paddingVertical: 0,
+                          textAlignVertical: "center",
+                          includeFontPadding: false,
+                        }}
+                        value={localLaborRate}
+                        onChangeText={setLocalLaborRate}
+                        placeholder="0"
+                        placeholderTextColor="#cbd5e1"
+                        keyboardType="decimal-pad"
+                      />
+                    </View>
+                    <Text className="ml-1 text-sm text-slate-400">
+                      {t("settings.perHour")}
+                    </Text>
+                  </View>
+                  {/* Result */}
+                  <Text className="text-sm font-semibold text-slate-700">
+                    = {currencySymbol}{(laborCost ?? 0).toFixed(2)}
+                  </Text>
+                </View>
+              )}
+            </View>
+
             {/* ─── Footer / Total ──────────────────── */}
             <View className="border-t border-slate-100 p-4">
+              {/* Materials subtotal (only show if labor cost exists) */}
+              {laborCost !== null && laborCost > 0 && (
+                <>
+                  <View className="flex-row items-center justify-between mb-1.5">
+                    <Text className="text-sm text-slate-400">
+                      {t("quoteEditor.materials")}
+                    </Text>
+                    <Text className="text-sm text-slate-500">
+                      {currencySymbol}{materialsCost.toFixed(2)}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center justify-between mb-2">
+                    <Text className="text-sm text-slate-400">
+                      {t("quoteEditor.labor")}
+                    </Text>
+                    <Text className="text-sm text-slate-500">
+                      {currencySymbol}{laborCost.toFixed(2)}
+                    </Text>
+                  </View>
+                </>
+              )}
+              {/* Grand Total */}
               <View className="flex-row items-center justify-between">
-                <Text className="text-sm text-slate-500">{t("quoteEditor.total")}</Text>
+                <Text className="text-sm text-slate-500">
+                  {t("quoteEditor.total")}
+                </Text>
                 <Text className="text-xl font-bold text-slate-900">
-                  ${(localTotal ?? 0).toFixed(2)}
+                  {currencySymbol}{grandTotal.toFixed(2)}
                 </Text>
               </View>
             </View>
@@ -542,7 +744,13 @@ export default function QuoteScreen() {
             {/* Finalize PDF */}
             <Pressable
               className="h-12 flex-row items-center justify-center rounded-lg bg-orange-600"
-              onPress={() => generatePdf.mutate()}
+              onPress={() => {
+                generatePdf.mutate(undefined, {
+                  onSuccess: () => {
+                    Alert.alert(t("quoteEditor.pdfReady"), t("quoteEditor.pdfReadyMsg"));
+                  },
+                });
+              }}
               disabled={generatePdf.isPending}
               style={({ pressed }) => ({
                 opacity: pressed || generatePdf.isPending ? 0.85 : 1,
@@ -552,7 +760,9 @@ export default function QuoteScreen() {
                 <ActivityIndicator color="#ffffff" />
               ) : (
                 <Text className="text-base font-semibold text-white">
-                  {hasPdf ? t("quoteEditor.regeneratePdf") : t("quoteEditor.finalizePdf")}
+                  {hasPdf
+                    ? t("quoteEditor.regeneratePdf")
+                    : t("quoteEditor.finalizePdf")}
                 </Text>
               )}
             </Pressable>
