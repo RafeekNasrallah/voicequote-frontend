@@ -23,6 +23,9 @@ interface Client {
   address: string | null;
   email: string | null;
   phone: string | null;
+  _count?: {
+    quotes: number;
+  };
 }
 
 function getInitials(name: string) {
@@ -59,33 +62,45 @@ export default function ClientsScreen() {
     );
   });
 
-  const renderClient = useCallback(({ item }: { item: Client }) => (
-    <Pressable
-      onPress={() => router.push(`/client/${item.id}` as any)}
-      className="mb-3 flex-row items-center rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
-      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-    >
-      {/* Avatar */}
-      <View className="h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-        <Text className="text-base font-bold text-slate-600">
-          {getInitials(item.name)}
-        </Text>
-      </View>
-      {/* Info */}
-      <View className="ml-4 flex-1">
-        <Text className="text-base font-semibold text-slate-900">
-          {item.name}
-        </Text>
-        {item.address && (
-          <Text className="mt-1 text-sm text-slate-400" numberOfLines={1}>
-            {item.address}
+  const renderClient = useCallback(({ item }: { item: Client }) => {
+    const quoteCount = item._count?.quotes ?? 0;
+    return (
+      <Pressable
+        onPress={() => router.push(`/client/${item.id}` as any)}
+        className="mb-3 flex-row items-center rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
+        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      >
+        {/* Avatar */}
+        <View className="h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+          <Text className="text-base font-bold text-slate-600">
+            {getInitials(item.name)}
           </Text>
-        )}
-      </View>
-      {/* Arrow */}
-      <ChevronRight size={20} color="#cbd5e1" />
-    </Pressable>
-  ), [router]);
+        </View>
+        {/* Info */}
+        <View className="ml-4 flex-1">
+          <Text className="text-base font-semibold text-slate-900">
+            {item.name}
+          </Text>
+          <View className="flex-row items-center mt-1">
+            {item.address ? (
+              <Text className="text-sm text-slate-400 flex-1" numberOfLines={1}>
+                {item.address}
+              </Text>
+            ) : null}
+            {quoteCount > 0 && (
+              <View className="bg-slate-100 px-2 py-0.5 rounded-full ml-2">
+                <Text className="text-xs font-medium text-slate-500">
+                  {quoteCount} {quoteCount === 1 ? t("clients.quote") : t("clients.quotesPlural")}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+        {/* Arrow */}
+        <ChevronRight size={20} color="#cbd5e1" />
+      </Pressable>
+    );
+  }, [router, t]);
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>

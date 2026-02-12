@@ -55,6 +55,10 @@ interface QuoteData {
 interface UserProfile {
   laborRate: number | null;
   currency: string;
+  taxEnabled: boolean;
+  taxRate: number | null;
+  taxLabel: string | null;
+  taxInclusive: boolean;
 }
 
 // ─── Main Screen ────────────────────────────────────────────
@@ -113,7 +117,35 @@ export default function QuoteScreen() {
       ? laborHoursNum * laborRateNum
       : null;
   const materialsCost = localTotal ?? 0;
-  const grandTotal = materialsCost + (localLaborEnabled ? (laborCost ?? 0) : 0);
+  const subtotalBeforeTax = materialsCost + (localLaborEnabled ? (laborCost ?? 0) : 0);
+
+  // Tax calculation
+  const taxEnabled = userProfile?.taxEnabled ?? false;
+  const taxRate = userProfile?.taxRate ?? 0;
+  const taxInclusive = userProfile?.taxInclusive ?? false;
+  const taxLabel = userProfile?.taxLabel || t("taxSettings.defaultLabel");
+
+  let displaySubtotal: number;
+  let taxAmount: number;
+  let grandTotal: number;
+
+  if (taxEnabled && taxRate > 0) {
+    if (taxInclusive) {
+      // Prices include tax - extract it
+      grandTotal = subtotalBeforeTax;
+      displaySubtotal = subtotalBeforeTax / (1 + taxRate / 100);
+      taxAmount = subtotalBeforeTax - displaySubtotal;
+    } else {
+      // Prices exclude tax - add it on top
+      displaySubtotal = subtotalBeforeTax;
+      taxAmount = displaySubtotal * (taxRate / 100);
+      grandTotal = displaySubtotal + taxAmount;
+    }
+  } else {
+    displaySubtotal = subtotalBeforeTax;
+    taxAmount = 0;
+    grandTotal = subtotalBeforeTax;
+  }
 
   // Sync server data to local state
   useEffect(() => {
@@ -706,7 +738,7 @@ export default function QuoteScreen() {
 
             {/* ─── Footer / Total ──────────────────── */}
             <View className="border-t border-slate-100 p-4">
-              {/* Materials subtotal (only show if labor cost exists) */}
+              {/* Materials line (only show if labor cost exists) */}
               {laborCost !== null && laborCost > 0 && (
                 <>
                   <View className="flex-row items-center justify-between mb-1.5">
@@ -727,6 +759,31 @@ export default function QuoteScreen() {
                   </View>
                 </>
               )}
+
+              {/* Subtotal (show when tax is enabled) */}
+              {taxEnabled && taxRate > 0 && (
+                <>
+                  <View className="flex-row items-center justify-between mb-1.5">
+                    <Text className="text-sm text-slate-400">
+                      {taxInclusive
+                        ? t("taxSettings.subtotalExclTax")
+                        : t("taxSettings.subtotal")}
+                    </Text>
+                    <Text className="text-sm text-slate-500">
+                      {currencySymbol}{displaySubtotal.toFixed(2)}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center justify-between mb-2">
+                    <Text className="text-sm text-slate-400">
+                      {taxLabel} ({taxRate}%)
+                    </Text>
+                    <Text className="text-sm text-slate-500">
+                      {currencySymbol}{taxAmount.toFixed(2)}
+                    </Text>
+                  </View>
+                </>
+              )}
+
               {/* Grand Total */}
               <View className="flex-row items-center justify-between">
                 <Text className="text-sm text-slate-500">

@@ -667,3 +667,222 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 - Tap Save — terms are saved and reflected on next PDF.
 - Tap "Reset to Defaults" — custom terms are cleared, defaults restored.
 - Generate a PDF — verify custom/default terms appear correctly.
+
+---
+
+## Phase 21: Business Info Settings
+
+**Goal:** Allow users to configure their business information (company name, address, phone, email) that appears on PDF quotes.
+
+### Task 21.1: Create Business Info Screen ✅
+
+- **Action:** Create `app/business-info.tsx` — a dedicated screen for managing business details.
+- **UI:**
+  - Header with back button and title "Business Info"
+  - Form fields for:
+    - Company Name (TextInput)
+    - Address (TextInput, multiline)
+    - Phone (TextInput, phone keyboard)
+    - Email (TextInput, email keyboard)
+  - "Save" button in header (enabled when changes exist)
+- **Navigation:** Back button returns to Settings tab.
+
+### Task 21.2: Add Business Info Setting Row ✅
+
+- **Action:** In `app/(tabs)/settings.tsx`, add a "Business Info" row in the Preferences section (near Business Logo).
+- **UI:**
+  - Shows company name if set, or "Not configured"
+  - Green checkmark if all fields are filled
+- **Navigation:** Taps navigate to `app/business-info.tsx`.
+
+### Task 21.3: Fetch and Save Business Info ✅
+
+- **Action:** Fetch `companyName`, `companyAddress`, `companyPhone`, `companyEmail` from `GET /api/me`.
+- **Action:** Save via `PATCH /api/me` with the business info fields.
+- **Action:** Update `UserProfile` interface to include these fields.
+
+### Task 21.4: Translations ✅
+
+- **Action:** Add translation keys in all 5 languages (en, de, he, ar, es):
+  - `settings.businessInfo`, `settings.businessInfoDesc`, `settings.notConfigured`
+  - `businessInfo.title`, `businessInfo.companyName`, `businessInfo.companyNamePlaceholder`
+  - `businessInfo.address`, `businessInfo.addressPlaceholder`
+  - `businessInfo.phone`, `businessInfo.phonePlaceholder`
+  - `businessInfo.email`, `businessInfo.emailPlaceholder`
+  - `businessInfo.saved`, `businessInfo.savedMsg`, `businessInfo.saveFailed`
+
+### ✅ Validation (Phase 21)
+
+- In Settings, tap "Business Info" — navigates to business info screen.
+- Enter company details and tap Save.
+- Regenerate a PDF — verify company info appears in the header.
+- Return to Settings — row shows company name.
+
+---
+
+## Phase 22: Tax/VAT Support
+
+**Goal:** Allow users to configure tax settings and display subtotal, tax, and total on quotes.
+
+### Task 22.1: Create Tax Settings Screen ✅
+
+- **Action:** Create `app/tax-settings.tsx` — a screen for configuring tax.
+- **UI:**
+  - Header with back button and title "Tax Settings"
+  - Toggle switch for "Enable Tax"
+  - Tax Rate input (number, percentage, 0-100)
+  - Tax Label input (e.g., "VAT", "GST", "Sales Tax")
+  - Preview showing how tax will appear:
+    - "Subtotal: $100.00"
+    - "{Label} ({Rate}%): $19.00"
+    - "Total: $119.00"
+  - "Save" button in header
+
+### Task 22.2: Add Tax Setting Row ✅
+
+- **Action:** In `app/(tabs)/settings.tsx`, add a "Tax / VAT" row in the Preferences section.
+- **UI:**
+  - Shows "{Label} {Rate}%" if enabled (e.g., "VAT 19%")
+  - Shows "Disabled" if tax is off
+- **Navigation:** Taps navigate to `app/tax-settings.tsx`.
+
+### Task 22.3: Fetch and Save Tax Settings ✅
+
+- **Action:** Fetch `taxRate`, `taxLabel`, `taxEnabled` from `GET /api/me`.
+- **Action:** Save via `PATCH /api/me` with tax settings.
+- **Action:** Update `UserProfile` interface to include tax fields.
+
+### Task 22.4: Display Tax in Quote Editor (Optional)
+
+- **Action:** In `app/quote/[id].tsx`, if user has tax enabled, show a preview:
+  - "Subtotal: $X"
+  - "{taxLabel} ({taxRate}%): $Y"
+  - "Total: $Z"
+- **Note:** This is a read-only preview. Actual tax calculation happens in PDF generation.
+
+### Task 22.5: Translations ✅
+
+- **Action:** Add translation keys in all 5 languages:
+  - `settings.taxSettings`, `settings.taxSettingsDesc`, `settings.taxDisabled`
+  - `taxSettings.title`, `taxSettings.enableTax`, `taxSettings.taxRate`, `taxSettings.taxRatePlaceholder`
+  - `taxSettings.taxLabel`, `taxSettings.taxLabelPlaceholder`, `taxSettings.preview`
+  - `taxSettings.subtotal`, `taxSettings.total`
+  - `taxSettings.saved`, `taxSettings.savedMsg`, `taxSettings.saveFailed`
+
+### ✅ Validation (Phase 22)
+
+- In Settings, tap "Tax / VAT" — navigates to tax settings screen.
+- Enable tax, set rate to 19%, label to "VAT".
+- Save and return to Settings — row shows "VAT 19%".
+- Regenerate a PDF — verify subtotal, tax, and total are shown.
+- Disable tax — PDF shows only total without tax breakdown.
+
+---
+
+## Phase 23: Client Quote History
+
+**Goal:** Display all quotes associated with a client when viewing client details.
+
+### Task 23.1: Update Client Detail Screen ✅
+
+- **Action:** In `app/client/[id].tsx`, add a "Quote History" section below client info.
+- **UI:**
+  - Section header: "Quote History" with count badge (e.g., "5 quotes")
+  - List of quotes showing:
+    - Quote name (or "Quote #ID" if no name)
+    - Date created
+    - Total amount
+    - Status indicator (Ready/Draft/No Client)
+  - Empty state: "No quotes yet for this client"
+- **Data:** Fetch from `GET /api/clients/:id/quotes`.
+
+### Task 23.2: Navigate to Quote from History ✅
+
+- **Action:** Tapping a quote in the history list navigates to `app/quote/[id].tsx`.
+- **Note:** User can view/edit the quote and return to client detail.
+
+### Task 23.3: Show Quote Count on Client List ✅
+
+- **Action:** In `app/(tabs)/clients.tsx`, display quote count on each client card.
+- **UI:** Small badge or text like "5 quotes" or just a number indicator.
+- **Data:** Use `quoteCount` from `GET /api/clients` response.
+
+### Task 23.4: Add Total Value Summary ✅
+
+- **Action:** In `app/client/[id].tsx`, show a summary card above the quote list:
+  - "Total Quotes: X"
+  - "Total Value: $Y,YYY.YY"
+- **Note:** This helps users quickly see the client's business value.
+
+### Task 23.5: Translations ✅
+
+- **Action:** Add translation keys in all 5 languages:
+  - `clients.quoteHistory`, `clients.noQuotesForClient`
+  - `clients.totalQuotes`, `clients.totalValue`
+  - `clients.quotesCount` (pluralized: "1 quote", "5 quotes")
+
+### ✅ Validation (Phase 23)
+
+- Create a client and assign 3 quotes to them.
+- In Clients tab, verify each client card shows quote count.
+- Tap a client — verify "Quote History" section shows all 3 quotes.
+- Verify summary shows "Total Quotes: 3" and "Total Value: $X".
+- Tap a quote in the list — navigates to quote editor.
+- Test empty state with a client that has no quotes.
+
+---
+
+## Phase 24: Tax Inclusive/Exclusive Setting ✅
+
+**Goal:** Allow users to specify whether item prices include tax or if tax is added on top.
+
+### Task 24.1: Update Tax Settings Screen
+
+- **Action:** In `app/tax-settings.tsx`, add a toggle/checkbox for "Prices include tax".
+- **UI:**
+  - New toggle: "Prices include tax"
+  - Description text explaining the modes:
+    - OFF: "Tax will be added on top of your prices"
+    - ON: "Your prices already include tax"
+  - Update preview to reflect the selected mode:
+    - Tax Exclusive: Subtotal $100 + Tax $19 = Total $119
+    - Tax Inclusive: Total $100 = Subtotal $84.03 + Tax $15.97
+
+### Task 24.2: Fetch and Save Tax Inclusive Setting
+
+- **Action:** Fetch `taxInclusive` from `GET /api/me`.
+- **Action:** Save via `PATCH /api/me` with `{ taxInclusive: boolean }`.
+- **Action:** Update `UserProfile` interface to include `taxInclusive: boolean`.
+
+### Task 24.3: Update Preview Calculation
+
+- **Action:** In the preview section, calculate differently based on mode:
+  ```typescript
+  if (taxInclusive) {
+    // Prices include tax
+    const subtotal = previewTotal / (1 + taxRate / 100);
+    const taxAmount = previewTotal - subtotal;
+    // Show: Subtotal (excl. tax): $84.03, Tax: $15.97, Total: $100.00
+  } else {
+    // Tax added on top
+    const subtotal = previewTotal;
+    const taxAmount = subtotal * (taxRate / 100);
+    const total = subtotal + taxAmount;
+    // Show: Subtotal: $100.00, Tax: $19.00, Total: $119.00
+  }
+  ```
+
+### Task 24.4: Translations
+
+- **Action:** Add translation keys in all 5 languages:
+  - `taxSettings.taxInclusive`, `taxSettings.taxInclusiveDesc`
+  - `taxSettings.taxExclusiveHint`, `taxSettings.taxInclusiveHint`
+  - `taxSettings.subtotalExclTax`
+
+### ✅ Validation (Phase 24)
+
+- In Tax Settings, toggle "Prices include tax" OFF.
+- Preview shows: Subtotal $100 + Tax (19%) $19 = Total $119.
+- Toggle "Prices include tax" ON.
+- Preview shows: Total $100 = Subtotal (excl. tax) $84.03 + Tax $15.97.
+- Save and regenerate a PDF — verify calculation matches the selected mode.
