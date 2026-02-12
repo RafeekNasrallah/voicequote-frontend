@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import {
   FlatList,
   Pressable,
+  RefreshControl,
   Text,
   TextInput,
   View,
@@ -14,7 +15,9 @@ import { useTranslation } from "react-i18next";
 
 import AddClientModal from "@/components/AddClientModal";
 import MicFAB from "@/components/MicFAB";
+import NetworkErrorView from "@/components/NetworkErrorView";
 import api from "@/src/lib/api";
+import { isNetworkError } from "@/src/lib/networkError";
 import { ClientsListSkeleton } from "@/components/Skeleton";
 
 interface Client {
@@ -43,7 +46,7 @@ export default function ClientsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
     queryKey: ["clients"],
     queryFn: async () => {
       const { data } = await api.get<{ clients: Client[] }>("/api/clients");
@@ -140,6 +143,8 @@ export default function ClientsScreen() {
       {/* List */}
       {isLoading ? (
         <ClientsListSkeleton count={6} />
+      ) : isError && isNetworkError(error) ? (
+        <NetworkErrorView onRetry={refetch} />
       ) : filteredClients.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <User size={40} color="#cbd5e1" />
@@ -159,6 +164,13 @@ export default function ClientsScreen() {
           renderItem={renderClient}
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              tintColor="#0f172a"
+            />
+          }
         />
       )}
 

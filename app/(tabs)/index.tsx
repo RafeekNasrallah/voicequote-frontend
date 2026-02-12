@@ -18,10 +18,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
+import NetworkErrorView from "@/components/NetworkErrorView";
 import ProcessingModal from "@/components/ProcessingModal";
 import RecordButton from "@/components/RecordButton";
 import { useCreateQuote } from "@/src/hooks/useCreateQuote";
 import api from "@/src/lib/api";
+import { isNetworkError } from "@/src/lib/networkError";
 import { getCurrencySymbol, DEFAULT_CURRENCY } from "@/src/lib/currency";
 import { QuoteCardSkeleton, Skeleton } from "@/components/Skeleton";
 
@@ -183,6 +185,8 @@ export default function HomeScreen() {
   const {
     data: quotes = [],
     isLoading,
+    isError,
+    error,
     refetch,
     isRefetching,
   } = useQuery({
@@ -249,17 +253,31 @@ export default function HomeScreen() {
             queryClient.invalidateQueries({ queryKey: ["quotes"] });
             queryClient.invalidateQueries({ queryKey: ["quoteStats"] });
           },
-          onError: (error) => {
-            Alert.alert(
-              t("home.processingFailed"),
-              t("home.processingFailedMsg")
-            );
+          onError: (error: any) => {
+            if (error?.response?.status === 403) {
+              const code = error?.response?.data?.code;
+              if (code === "QUOTA_EXCEEDED") {
+                router.push("/paywall" as any);
+                return;
+              }
+            }
+            if (isNetworkError(error)) {
+              Alert.alert(
+                t("errors.noConnection"),
+                t("errors.somethingWentWrong")
+              );
+            } else {
+              Alert.alert(
+                t("home.processingFailed"),
+                t("home.processingFailedMsg")
+              );
+            }
             console.error("Create quote error:", error);
           },
         }
       );
     },
-    [createQuote, queryClient, t]
+    [createQuote, queryClient, router, t]
   );
 
   return (
@@ -352,6 +370,8 @@ export default function HomeScreen() {
               <QuoteCardSkeleton />
               <QuoteCardSkeleton />
             </>
+          ) : isError && isNetworkError(error) ? (
+            <NetworkErrorView onRetry={refetch} compact />
           ) : quotes.length === 0 ? (
             <View className="items-center rounded-xl bg-white py-8 border border-slate-100">
               <FileText size={32} color="#cbd5e1" />

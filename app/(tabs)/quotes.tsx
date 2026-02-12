@@ -14,8 +14,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 
+import NetworkErrorView from "@/components/NetworkErrorView";
 import api from "@/src/lib/api";
 import { getCurrencySymbol, DEFAULT_CURRENCY } from "@/src/lib/currency";
+import { isNetworkError } from "@/src/lib/networkError";
 import { QuotesListSkeleton } from "@/components/Skeleton";
 import MicFAB from "@/components/MicFAB";
 
@@ -126,6 +128,8 @@ export default function AllQuotesScreen() {
   const {
     data: quotes = [],
     isLoading,
+    isError,
+    error,
     refetch,
     isRefetching,
   } = useQuery({
@@ -235,6 +239,8 @@ export default function AllQuotesScreen() {
       {/* List */}
       {isLoading ? (
         <QuotesListSkeleton count={6} />
+      ) : isError && isNetworkError(error) ? (
+        <NetworkErrorView onRetry={refetch} />
       ) : filteredQuotes.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <FileText size={40} color="#cbd5e1" />

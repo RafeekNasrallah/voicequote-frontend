@@ -1,12 +1,14 @@
 import { Mic } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { Alert, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 import RecordingModal from "./RecordingModal";
 import ProcessingModal from "./ProcessingModal";
 import { useCreateQuote } from "@/src/hooks/useCreateQuote";
+import { isNetworkError } from "@/src/lib/networkError";
 
 interface MicFABProps {
   style?: object;
@@ -15,6 +17,7 @@ interface MicFABProps {
 export default function MicFAB({ style }: MicFABProps) {
   const [recordingModalVisible, setRecordingModalVisible] = useState(false);
   const queryClient = useQueryClient();
+  const router = useRouter();
   const { t } = useTranslation();
   const createQuote = useCreateQuote();
 
@@ -31,17 +34,31 @@ export default function MicFAB({ style }: MicFABProps) {
             queryClient.invalidateQueries({ queryKey: ["quotes"] });
             queryClient.invalidateQueries({ queryKey: ["quoteStats"] });
           },
-          onError: (error) => {
-            Alert.alert(
-              t("home.processingFailed"),
-              t("home.processingFailedMsg")
-            );
+          onError: (error: any) => {
+            if (error?.response?.status === 403) {
+              const code = error?.response?.data?.code;
+              if (code === "QUOTA_EXCEEDED") {
+                router.push("/paywall" as any);
+                return;
+              }
+            }
+            if (isNetworkError(error)) {
+              Alert.alert(
+                t("errors.noConnection"),
+                t("errors.somethingWentWrong")
+              );
+            } else {
+              Alert.alert(
+                t("home.processingFailed"),
+                t("home.processingFailedMsg")
+              );
+            }
             console.error("Create quote error:", error);
           },
         }
       );
     },
-    [createQuote, queryClient, t]
+    [createQuote, queryClient, router, t]
   );
 
   return (

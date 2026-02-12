@@ -1,4 +1,9 @@
 {
+  "errors": {
+    "noConnection": "No connection",
+    "somethingWentWrong": "Something went wrong. Check your connection and try again.",
+    "retry": "Try again"
+  },
   "common": {
     "appName": "VoiceQuote",
     "cancel": "Cancel",
@@ -163,6 +168,10 @@
     "account": "Account",
     "signOut": "Sign Out",
     "signOutConfirm": "Are you sure you want to sign out?",
+    "deleteAccount": "Delete account",
+    "deleteAccountDesc": "Permanently remove your data",
+    "deleteAccountConfirm": "Are you sure? All your quotes, clients, and settings will be permanently deleted. This cannot be undone.",
+    "deleteAccountFailed": "Could not delete account. Please try again.",
     "priceList": "My Price List",
     "priceListDesc": "Auto-fill prices in new quotes",
     "laborRate": "Labor Rate",
@@ -192,7 +201,18 @@
     "taxSettings": "Tax / VAT",
     "taxSettingsDesc": "Add tax to your quotes",
     "taxDisabled": "Disabled",
-    "appVersion": "VoiceQuote v1.0.0"
+    "legal": "Legal",
+    "privacyPolicy": "Privacy Policy",
+    "privacyPolicyDesc": "How we handle your data",
+    "termsOfUse": "Terms of Use",
+    "termsOfUseDesc": "App terms and conditions",
+    "openLinkFailed": "Could not open link.",
+    "appVersion": "VoiceQuote v1.0.0",
+    "pro": "Pro",
+    "proActive": "Your subscription is active",
+    "quoteUsage": "Quote usage",
+    "upgradeToPro": "Upgrade to Pro",
+    "resetsOn": "Resets on {{date}}"
   },
   "taxSettings": {
     "title": "Tax Settings",
@@ -299,5 +319,22 @@
     "saveFailed": "Failed to save terms. Please try again.",
     "unsavedChanges": "You have unsaved changes. What would you like to do?",
     "discard": "Discard"
+  },
+  "paywall": {
+    "title": "Upgrade to Pro",
+    "benefitsTitle": "What you get",
+    "benefit1": "Unlimited quotes per month",
+    "benefit2": "No watermark on PDFs",
+    "benefit3": "Priority support",
+    "subscribeFor": "Subscribe for {{price}}/mo",
+    "restorePurchases": "Restore Purchases",
+    "loading": "Loading...",
+    "noOffers": "No subscription options available.",
+    "purchaseFailed": "Purchase failed. Please try again.",
+    "restoreSuccess": "Restored",
+    "restoreSuccessMsg": "Your subscription has been restored.",
+    "restoreNoSubscription": "No subscription",
+    "restoreNoSubscriptionMsg": "No active subscription found.",
+    "restoreFailed": "Restore failed. Please try again."
   }
 }

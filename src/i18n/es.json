@@ -1,4 +1,9 @@
 {
+  "errors": {
+    "noConnection": "Sin conexión",
+    "somethingWentWrong": "Algo salió mal. Comprueba tu conexión e inténtalo de nuevo.",
+    "retry": "Intentar de nuevo"
+  },
   "common": {
     "appName": "VoiceQuote",
     "cancel": "Cancelar",
@@ -163,6 +168,10 @@
     "account": "Cuenta",
     "signOut": "Cerrar sesión",
     "signOutConfirm": "¿Estás seguro de que quieres cerrar sesión?",
+    "deleteAccount": "Eliminar cuenta",
+    "deleteAccountDesc": "Eliminar tus datos permanentemente",
+    "deleteAccountConfirm": "¿Estás seguro? Todas tus ofertas, clientes y ajustes se eliminarán permanentemente. No se puede deshacer.",
+    "deleteAccountFailed": "No se pudo eliminar la cuenta. Por favor, inténtalo de nuevo.",
     "priceList": "Mi lista de precios",
     "priceListDesc": "Completar precios automáticamente en nuevos presupuestos",
     "laborRate": "Tarifa por hora",
@@ -192,7 +201,18 @@
     "taxSettings": "IVA / Impuestos",
     "taxSettingsDesc": "Añadir impuestos a presupuestos",
     "taxDisabled": "Desactivado",
-    "appVersion": "VoiceQuote v1.0.0"
+    "legal": "Legal",
+    "privacyPolicy": "Política de privacidad",
+    "privacyPolicyDesc": "Cómo tratamos tus datos",
+    "termsOfUse": "Términos de uso",
+    "termsOfUseDesc": "Términos y condiciones de la app",
+    "openLinkFailed": "No se pudo abrir el enlace.",
+    "appVersion": "VoiceQuote v1.0.0",
+    "pro": "Pro",
+    "proActive": "Tu suscripción está activa",
+    "quoteUsage": "Uso de presupuestos",
+    "upgradeToPro": "Pasar a Pro",
+    "resetsOn": "Se reinicia el {{date}}"
   },
   "taxSettings": {
     "title": "Configuración de impuestos",
@@ -299,5 +319,22 @@
     "saveFailed": "No se pudieron guardar los términos. Por favor, inténtelo de nuevo.",
     "unsavedChanges": "Tiene cambios sin guardar. ¿Qué desea hacer?",
     "discard": "Descartar"
+  },
+  "paywall": {
+    "title": "Pasar a Pro",
+    "benefitsTitle": "Qué obtienes",
+    "benefit1": "Presupuestos ilimitados al mes",
+    "benefit2": "Sin marca de agua en los PDF",
+    "benefit3": "Soporte prioritario",
+    "subscribeFor": "Suscríbete por {{price}}/mes",
+    "restorePurchases": "Restaurar compras",
+    "loading": "Cargando...",
+    "noOffers": "No hay opciones de suscripción.",
+    "purchaseFailed": "Error en la compra. Inténtalo de nuevo.",
+    "restoreSuccess": "Restaurado",
+    "restoreSuccessMsg": "Tu suscripción se ha restaurado.",
+    "restoreNoSubscription": "Sin suscripción",
+    "restoreNoSubscriptionMsg": "No se encontró ninguna suscripción activa.",
+    "restoreFailed": "Error al restaurar. Inténtalo de nuevo."
   }
 }

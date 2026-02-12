@@ -1,4 +1,9 @@
 {
+  "errors": {
+    "noConnection": "אין חיבור",
+    "somethingWentWrong": "משהו השתבש. בדוק את החיבור ונסה שוב.",
+    "retry": "נסה שוב"
+  },
   "common": {
     "appName": "VoiceQuote",
     "cancel": "ביטול",
@@ -163,6 +168,10 @@
     "account": "חשבון",
     "signOut": "התנתקות",
     "signOutConfirm": "האם אתה בטוח שברצונך להתנתק?",
+    "deleteAccount": "מחק חשבון",
+    "deleteAccountDesc": "הסר את הנתונים שלך לצמיתות",
+    "deleteAccountConfirm": "האם אתה בטוח? כל ההצעות, הלקוחות וההגדרות שלך יימחקו לצמיתות. לא ניתן לבטל פעולה זו.",
+    "deleteAccountFailed": "לא ניתן למחוק את החשבון. אנא נסה שוב.",
     "priceList": "רשימת המחירים שלי",
     "priceListDesc": "מילוי אוטומטי של מחירים בהצעות חדשות",
     "laborRate": "תעריף שעתי",
@@ -192,7 +201,18 @@
     "taxSettings": "מע״מ / מס",
     "taxSettingsDesc": "הוסף מס להצעות מחיר",
     "taxDisabled": "מושבת",
-    "appVersion": "VoiceQuote v1.0.0"
+    "legal": "משפטי",
+    "privacyPolicy": "מדיניות פרטיות",
+    "privacyPolicyDesc": "כיצד אנו מטפלים בנתונים שלך",
+    "termsOfUse": "תנאי שימוש",
+    "termsOfUseDesc": "תנאים והגבלות של האפליקציה",
+    "openLinkFailed": "לא ניתן לפתוח את הקישור.",
+    "appVersion": "VoiceQuote v1.0.0",
+    "pro": "Pro",
+    "proActive": "המנוי שלך פעיל",
+    "quoteUsage": "שימוש בהצעות",
+    "upgradeToPro": "שדרג ל-Pro",
+    "resetsOn": "מתאפס ב-{{date}}"
   },
   "taxSettings": {
     "title": "הגדרות מס",
@@ -299,5 +319,22 @@
     "saveFailed": "שמירת התנאים נכשלה. אנא נסה שוב.",
     "unsavedChanges": "יש לך שינויים שלא נשמרו. מה תרצה לעשות?",
     "discard": "התעלם"
+  },
+  "paywall": {
+    "title": "שדרג ל-Pro",
+    "benefitsTitle": "מה תקבל",
+    "benefit1": "הצעות ללא הגבלה לחודש",
+    "benefit2": "ללא סימן מים על קבצי PDF",
+    "benefit3": "תמיכה בעדיפות",
+    "subscribeFor": "הירשם תמורת {{price}}/חודש",
+    "restorePurchases": "שחזר רכישות",
+    "loading": "טוען...",
+    "noOffers": "אין אפשרויות מנוי.",
+    "purchaseFailed": "הרכישה נכשלה. נסה שוב.",
+    "restoreSuccess": "שוחזר",
+    "restoreSuccessMsg": "המנוי שלך שוחזר.",
+    "restoreNoSubscription": "אין מנוי",
+    "restoreNoSubscriptionMsg": "לא נמצא מנוי פעיל.",
+    "restoreFailed": "שחזור נכשל. נסה שוב."
   }
 }

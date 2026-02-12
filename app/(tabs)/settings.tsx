@@ -1,12 +1,14 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
+import Constants from "expo-constants";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Building2, Camera, Check, ChevronRight, Clock, Coins, DollarSign, FileText, Globe, LogOut, Receipt, User } from "lucide-react-native";
+import { Building2, Camera, Check, ChevronRight, Clock, Coins, Crown, DollarSign, FileText, Globe, LogOut, Receipt, Shield, Trash2, User } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -41,6 +43,9 @@ interface UserProfile {
   taxRate: number | null;
   taxLabel: string | null;
   taxEnabled: boolean;
+  isPro?: boolean;
+  quoteCount?: number;
+  periodEnd?: string | null;
 }
 
 interface UploadUrlResponse {
@@ -109,6 +114,21 @@ export default function SettingsScreen() {
     },
     onError: () => {
       Alert.alert(t("common.error"), t("settings.currencyUpdateFailed"));
+    },
+  });
+
+  // Delete account
+  const deleteAccount = useMutation({
+    mutationFn: async () => {
+      await api.delete("/api/me");
+    },
+    onSuccess: () => {
+      signOut();
+    },
+    onError: (err: any) => {
+      const message =
+        err?.response?.data?.error || t("settings.deleteAccountFailed");
+      Alert.alert(t("common.error"), message);
     },
   });
 
@@ -221,6 +241,44 @@ export default function SettingsScreen() {
       },
     ]);
   }, [signOut, t]);
+
+  const handleDeleteAccount = useCallback(() => {
+    Alert.alert(
+      t("settings.deleteAccount"),
+      t("settings.deleteAccountConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("settings.deleteAccount"),
+          style: "destructive",
+          onPress: () => deleteAccount.mutate(),
+        },
+      ]
+    );
+  }, [deleteAccount, t]);
+
+  const privacyPolicyUrl = process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ?? "";
+  const termsOfUseUrl = process.env.EXPO_PUBLIC_TERMS_OF_USE_URL ?? "";
+
+  const getAppVersionString = useCallback(() => {
+    const version = Constants.expoConfig?.version;
+    if (!version) return t("settings.appVersion");
+    const build =
+      Constants.expoConfig?.android?.versionCode ??
+      Constants.expoConfig?.ios?.buildNumber;
+    const buildStr = build != null ? ` (${build})` : "";
+    return `${t("common.appName")} v${version}${buildStr}`;
+  }, [t]);
+
+  const openUrl = useCallback((url: string, title: string) => {
+    if (!url || !url.startsWith("http")) {
+      Alert.alert(t("common.error"), `${title} URL is not configured.`);
+      return;
+    }
+    Linking.openURL(url).catch(() => {
+      Alert.alert(t("common.error"), t("settings.openLinkFailed"));
+    });
+  }, [t]);
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
@@ -420,6 +478,68 @@ export default function SettingsScreen() {
             <Text className="mt-0.5 text-sm text-slate-400">
               {user?.primaryEmailAddress?.emailAddress || profile?.email || ""}
             </Text>
+          </View>
+        </View>
+
+        {/* Plan / Pro status */}
+        <View className="mx-6 mb-4">
+          <View className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden p-4">
+            {profile?.isPro ? (
+              <View className="flex-row items-center">
+                <View className="h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+                  <Crown size={20} color="#d97706" />
+                </View>
+                <View className="ml-3 flex-1">
+                  <Text className="text-base font-semibold text-slate-900">
+                    {t("settings.pro")}
+                  </Text>
+                  <Text className="text-sm text-slate-500">
+                    {t("settings.proActive")}
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              <View>
+                <View className="flex-row items-center justify-between mb-2">
+                  <Text className="text-sm font-medium text-slate-700">
+                    {t("settings.quoteUsage")}
+                  </Text>
+                  <Text className="text-sm text-slate-500">
+                    {(profile?.quoteCount ?? 0)} / 3
+                  </Text>
+                </View>
+                <View className="h-2 rounded-full bg-slate-100 overflow-hidden mb-2">
+                  <View
+                    className="h-full rounded-full bg-orange-500"
+                    style={{
+                      width: `${Math.min(100, ((profile?.quoteCount ?? 0) / 3) * 100)}%`,
+                    }}
+                  />
+                </View>
+                {profile?.periodEnd ? (
+                  <Text className="text-xs text-slate-500 mb-4">
+                    {t("settings.resetsOn", {
+                      date: new Date(profile.periodEnd).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      }),
+                    })}
+                  </Text>
+                ) : (
+                  <View className="mb-4" />
+                )}
+                <Pressable
+                  onPress={() => router.push("/paywall" as any)}
+                  className="h-10 items-center justify-center rounded-lg bg-orange-600"
+                  style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+                >
+                  <Text className="text-sm font-semibold text-white">
+                    {t("settings.upgradeToPro")}
+                  </Text>
+                </Pressable>
+              </View>
+            )}
           </View>
         </View>
 
@@ -687,7 +807,52 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {/* Account Section */}
+      {/* Legal Section */}
+        <View className="mx-6 mb-4">
+          <Text className="mb-2 text-xs font-semibold uppercase text-slate-400 px-1">
+            {t("settings.legal")}
+          </Text>
+          <View className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden">
+            <Pressable
+              onPress={() => openUrl(privacyPolicyUrl, "Privacy Policy")}
+              className="flex-row items-center px-4 py-3.5 border-b border-slate-100"
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              <View className="h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
+                <Shield size={18} color="#64748b" />
+              </View>
+              <View className="ml-3 flex-1">
+                <Text className="text-sm font-medium text-slate-900">
+                  {t("settings.privacyPolicy")}
+                </Text>
+                <Text className="mt-0.5 text-xs text-slate-400">
+                  {t("settings.privacyPolicyDesc")}
+                </Text>
+              </View>
+              <ChevronRight size={16} color="#cbd5e1" />
+            </Pressable>
+            <Pressable
+              onPress={() => openUrl(termsOfUseUrl, "Terms of Use")}
+              className="flex-row items-center px-4 py-3.5"
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              <View className="h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
+                <FileText size={18} color="#64748b" />
+              </View>
+              <View className="ml-3 flex-1">
+                <Text className="text-sm font-medium text-slate-900">
+                  {t("settings.termsOfUse")}
+                </Text>
+                <Text className="mt-0.5 text-xs text-slate-400">
+                  {t("settings.termsOfUseDesc")}
+                </Text>
+              </View>
+              <ChevronRight size={16} color="#cbd5e1" />
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Account Section */}
         <View className="mx-6">
           <Text className="mb-2 text-xs font-semibold uppercase text-slate-400 px-1">
             {t("settings.account")}
@@ -696,7 +861,7 @@ export default function SettingsScreen() {
             {/* Sign Out */}
             <Pressable
               onPress={handleSignOut}
-              className="flex-row items-center px-4 py-3.5"
+              className="flex-row items-center px-4 py-3.5 border-b border-slate-100"
               style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
             >
               <View className="h-9 w-9 items-center justify-center rounded-lg bg-red-50">
@@ -707,12 +872,40 @@ export default function SettingsScreen() {
               </Text>
               <ChevronRight size={16} color="#cbd5e1" />
             </Pressable>
+            {/* Delete Account */}
+            <Pressable
+              onPress={handleDeleteAccount}
+              disabled={deleteAccount.isPending}
+              className="flex-row items-center px-4 py-3.5"
+              style={({ pressed }) => ({
+                opacity: pressed || deleteAccount.isPending ? 0.7 : 1,
+              })}
+            >
+              <View className="h-9 w-9 items-center justify-center rounded-lg bg-red-50">
+                <Trash2 size={18} color="#ef4444" />
+              </View>
+              <View className="ml-3 flex-1">
+                <Text className="text-sm font-medium text-red-600">
+                  {t("settings.deleteAccount")}
+                </Text>
+                <Text className="mt-0.5 text-xs text-slate-400">
+                  {t("settings.deleteAccountDesc")}
+                </Text>
+              </View>
+              {deleteAccount.isPending ? (
+                <ActivityIndicator size="small" color="#ef4444" />
+              ) : (
+                <ChevronRight size={16} color="#cbd5e1" />
+              )}
+            </Pressable>
           </View>
         </View>
 
         {/* App Version */}
         <View className="mt-6 items-center">
-          <Text className="text-xs text-slate-300">{t("settings.appVersion")}</Text>
+          <Text className="text-xs text-slate-300">
+            {getAppVersionString()}
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>

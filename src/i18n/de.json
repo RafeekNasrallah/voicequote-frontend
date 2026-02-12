@@ -1,4 +1,9 @@
 {
+  "errors": {
+    "noConnection": "Keine Verbindung",
+    "somethingWentWrong": "Etwas ist schiefgelaufen. Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    "retry": "Erneut versuchen"
+  },
   "common": {
     "appName": "VoiceQuote",
     "cancel": "Abbrechen",
@@ -163,6 +168,10 @@
     "account": "Konto",
     "signOut": "Abmelden",
     "signOutConfirm": "Bist du sicher, dass du dich abmelden möchtest?",
+    "deleteAccount": "Konto löschen",
+    "deleteAccountDesc": "Deine Daten dauerhaft entfernen",
+    "deleteAccountConfirm": "Bist du sicher? Alle deine Angebote, Kunden und Einstellungen werden dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.",
+    "deleteAccountFailed": "Konto konnte nicht gelöscht werden. Bitte versuche es erneut.",
     "priceList": "Meine Preisliste",
     "priceListDesc": "Preise in neuen Angeboten automatisch ausfüllen",
     "laborRate": "Stundensatz",
@@ -192,7 +201,18 @@
     "taxSettings": "MwSt. / Steuer",
     "taxSettingsDesc": "Steuer zu Angeboten hinzufügen",
     "taxDisabled": "Deaktiviert",
-    "appVersion": "VoiceQuote v1.0.0"
+    "legal": "Rechtliches",
+    "privacyPolicy": "Datenschutz",
+    "privacyPolicyDesc": "Umgang mit Ihren Daten",
+    "termsOfUse": "Nutzungsbedingungen",
+    "termsOfUseDesc": "AGB der App",
+    "openLinkFailed": "Link konnte nicht geöffnet werden.",
+    "appVersion": "VoiceQuote v1.0.0",
+    "pro": "Pro",
+    "proActive": "Ihr Abo ist aktiv",
+    "quoteUsage": "Angebotsnutzung",
+    "upgradeToPro": "Auf Pro upgraden",
+    "resetsOn": "Setzt sich am {{date}} zurück"
   },
   "taxSettings": {
     "title": "Steuereinstellungen",
@@ -299,5 +319,22 @@
     "saveFailed": "Speichern der AGB fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "unsavedChanges": "Sie haben ungespeicherte Änderungen. Was möchten Sie tun?",
     "discard": "Verwerfen"
+  },
+  "paywall": {
+    "title": "Auf Pro upgraden",
+    "benefitsTitle": "Was Sie bekommen",
+    "benefit1": "Unbegrenzte Angebote pro Monat",
+    "benefit2": "Kein Wasserzeichen auf PDFs",
+    "benefit3": "Prioritäts-Support",
+    "subscribeFor": "Abonnieren für {{price}}/Monat",
+    "restorePurchases": "Käufe wiederherstellen",
+    "loading": "Laden...",
+    "noOffers": "Keine Abo-Optionen verfügbar.",
+    "purchaseFailed": "Kauf fehlgeschlagen. Bitte erneut versuchen.",
+    "restoreSuccess": "Wiederhergestellt",
+    "restoreSuccessMsg": "Ihr Abo wurde wiederhergestellt.",
+    "restoreNoSubscription": "Kein Abo",
+    "restoreNoSubscriptionMsg": "Kein aktives Abo gefunden.",
+    "restoreFailed": "Wiederherstellung fehlgeschlagen. Bitte erneut versuchen."
   }
 }

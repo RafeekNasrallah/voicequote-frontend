@@ -4,7 +4,6 @@ import * as Sharing from "expo-sharing";
 import {
   ArrowLeft,
   Clock,
-  FileText,
   Plus,
   Share2,
   Trash2,
@@ -27,8 +26,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ClientSelectModal from "@/components/ClientSelectModal";
+import NetworkErrorView from "@/components/NetworkErrorView";
 import api from "@/src/lib/api";
 import { getCurrencySymbol, DEFAULT_CURRENCY } from "@/src/lib/currency";
+import { isNetworkError } from "@/src/lib/networkError";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -85,6 +86,8 @@ export default function QuoteScreen() {
     data: quote,
     isLoading,
     isError,
+    error,
+    refetch,
   } = useQuery({
     queryKey: ["quote", id],
     queryFn: async () => {
@@ -444,19 +447,21 @@ export default function QuoteScreen() {
 
   if (isError || !quote) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-slate-50 px-6">
-        <FileText size={36} color="#94a3b8" />
-        <Text className="mt-4 text-base text-slate-500">
-          {t("quoteEditor.failedToLoad")}
-        </Text>
-        <Pressable
-          onPress={() => router.replace("/(tabs)/quotes")}
-          className="mt-4 h-10 items-center justify-center rounded-lg bg-slate-900 px-6"
-        >
-          <Text className="text-sm font-semibold text-white">
-            {t("quoteEditor.goBack")}
-          </Text>
-        </Pressable>
+      <SafeAreaView className="flex-1 bg-slate-50">
+        <View className="flex-1">
+          <NetworkErrorView onRetry={refetch} />
+        </View>
+        <View className="px-6 pb-8">
+          <Pressable
+            onPress={() => router.replace("/(tabs)/quotes")}
+            className="h-10 items-center justify-center rounded-lg border border-slate-200"
+            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          >
+            <Text className="text-sm font-semibold text-slate-600">
+              {t("quoteEditor.goBack")}
+            </Text>
+          </Pressable>
+        </View>
       </SafeAreaView>
     );
   }

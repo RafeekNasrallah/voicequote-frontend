@@ -1,4 +1,9 @@
 {
+  "errors": {
+    "noConnection": "لا يوجد اتصال",
+    "somethingWentWrong": "حدث خطأ. تحقق من اتصالك وحاول مرة أخرى.",
+    "retry": "حاول مرة أخرى"
+  },
   "common": {
     "appName": "VoiceQuote",
     "cancel": "إلغاء",
@@ -163,6 +168,10 @@
     "account": "الحساب",
     "signOut": "تسجيل الخروج",
     "signOutConfirm": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+    "deleteAccount": "حذف الحساب",
+    "deleteAccountDesc": "إزالة بياناتك نهائياً",
+    "deleteAccountConfirm": "هل أنت متأكد؟ سيتم حذف جميع عروض الأسعار والعملاء والإعدادات نهائياً. لا يمكن التراجع عن ذلك.",
+    "deleteAccountFailed": "تعذر حذف الحساب. يرجى المحاولة مرة أخرى.",
     "priceList": "قائمة الأسعار",
     "priceListDesc": "ملء الأسعار تلقائيًا في العروض الجديدة",
     "laborRate": "سعر الساعة",
@@ -192,7 +201,18 @@
     "taxSettings": "الضريبة / ضريبة القيمة المضافة",
     "taxSettingsDesc": "إضافة ضريبة إلى العروض",
     "taxDisabled": "معطل",
-    "appVersion": "VoiceQuote v1.0.0"
+    "legal": "قانوني",
+    "privacyPolicy": "سياسة الخصوصية",
+    "privacyPolicyDesc": "كيف نتعامل مع بياناتك",
+    "termsOfUse": "شروط الاستخدام",
+    "termsOfUseDesc": "شروط وأحكام التطبيق",
+    "openLinkFailed": "تعذر فتح الرابط.",
+    "appVersion": "VoiceQuote v1.0.0",
+    "pro": "احترافي",
+    "proActive": "اشتراكك نشط",
+    "quoteUsage": "استخدام العروض",
+    "upgradeToPro": "ترقية إلى احترافي",
+    "resetsOn": "إعادة التعيين في {{date}}"
   },
   "taxSettings": {
     "title": "إعدادات الضريبة",
@@ -299,5 +319,22 @@
     "saveFailed": "تعذر حفظ الشروط. يرجى المحاولة مرة أخرى.",
     "unsavedChanges": "لديك تغييرات غير محفوظة. ماذا تريد أن تفعل؟",
     "discard": "تجاهل"
+  },
+  "paywall": {
+    "title": "ترقية إلى احترافي",
+    "benefitsTitle": "ما الذي تحصل عليه",
+    "benefit1": "عروض غير محدودة شهرياً",
+    "benefit2": "بدون علامة مائية على ملفات PDF",
+    "benefit3": "دعم ذو أولوية",
+    "subscribeFor": "اشترك مقابل {{price}}/شهر",
+    "restorePurchases": "استعادة المشتريات",
+    "loading": "جاري التحميل...",
+    "noOffers": "لا توجد خيارات اشتراك.",
+    "purchaseFailed": "فشلت العملية. حاول مرة أخرى.",
+    "restoreSuccess": "تم الاستعادة",
+    "restoreSuccessMsg": "تم استعادة اشتراكك.",
+    "restoreNoSubscription": "لا يوجد اشتراك",
+    "restoreNoSubscriptionMsg": "لم يتم العثور على اشتراك نشط.",
+    "restoreFailed": "فشل الاستعادة. حاول مرة أخرى."
   }
 }

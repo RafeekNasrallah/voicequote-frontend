@@ -886,3 +886,221 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 - Toggle "Prices include tax" ON.
 - Preview shows: Total $100 = Subtotal (excl. tax) $84.03 + Tax $15.97.
 - Save and regenerate a PDF — verify calculation matches the selected mode.
+
+---
+
+## Phase 25: Offline & Network Error Handling ✅
+
+**Goal:** When the device is offline or the API fails, show a clear message and allow retry instead of generic errors.
+
+### Task 25.1: Network State (Optional)
+
+- **Action:** Optionally use `@react-native-community/netinfo` or handle via Axios error to detect offline.
+- **Alternative:** Rely on API failure (timeout / network error) to show the same UX.
+
+### Task 25.2: Global or Per-Screen Error UX
+
+- **Action:** In key screens (Home, Quotes, Clients, Quote Editor) or via a shared component:
+  - When a query fails with a network error (e.g. `error.code === 'ERR_NETWORK'` or timeout), show a friendly message: e.g. "No connection" / "Something went wrong. Check your connection and try again."
+  - Provide a "Try again" or "Retry" button that refetches (e.g. `refetch()` from `useQuery`).
+- **Action:** Reuse the same copy for mutation failures where appropriate (e.g. create quote failed).
+
+### Task 25.3: Translations
+
+- **Action:** Add translation keys in all languages, e.g. `errors.noConnection`, `errors.somethingWentWrong`, `errors.retry`.
+
+### ✅ Validation (Phase 25)
+
+- Turn off Wi‑Fi/data, open app or refresh a list — see friendly message and Retry.
+- Turn connection back on, tap Retry — data loads.
+
+---
+
+## Phase 26: Privacy Policy & Terms of Use Links ✅
+
+**Goal:** Add app-level Privacy Policy and Terms of Use links in Settings (required for store listings).
+
+### Task 26.1: Settings UI
+
+- **Action:** In `app/(tabs)/settings.tsx`, add a new section (e.g. "Legal" or under Account):
+  - Row: "Privacy Policy" — opens URL in browser (e.g. `Linking.openURL(PRIVACY_POLICY_URL)`).
+  - Row: "Terms of Use" — opens URL in browser (e.g. `Linking.openURL(TERMS_OF_USE_URL)`).
+- **Action:** URLs can come from env (e.g. `EXPO_PUBLIC_PRIVACY_POLICY_URL`, `EXPO_PUBLIC_TERMS_OF_USE_URL`) with fallback to placeholder or your site.
+
+### Task 26.2: Translations
+
+- **Action:** Add keys e.g. `settings.privacyPolicy`, `settings.termsOfUse`, `settings.legal` (section title).
+
+### ✅ Validation (Phase 26)
+
+- In Settings, tap Privacy Policy and Terms of Use — correct URLs open in browser.
+
+---
+
+## Phase 27: App Version from Build ✅
+
+**Goal:** Show the real app version in Settings (from app config), not hardcoded in translations.
+
+### Task 27.1: Read Version at Runtime
+
+- **Action:** Use `expo-constants`: `Constants.expoConfig?.version` or `Application.nativeApplicationVersion` (or Expo’s recommended approach for your SDK).
+- **Action:** Display in Settings where "App Version" is shown, e.g. `VoiceQuote v${version}` (or "Version 1.0.0" only).
+
+### Task 27.2: Optional Build Number
+
+- **Action:** If desired, show build number (e.g. `Constants.expoConfig?.android?.versionCode` / iOS equivalent) for support/debugging.
+
+### ✅ Validation (Phase 27)
+
+- Change version in `app.json`, rebuild or reload — Settings shows updated version.
+
+---
+
+## Phase 28: Pull-to-Refresh ✅
+
+**Goal:** Let users refresh lists by pulling down on Home, Quotes, and Clients.
+
+### Task 28.1: Home (Dashboard)
+
+- **Action:** In `app/(tabs)/index.tsx`, wrap the list/content in `ScrollView` with `refreshControl={<RefreshControl refreshing={...} onRefresh={...} />}` (or use `refetch` from `useQuery` for recent quotes/stats).
+
+### Task 28.2: Quotes Tab
+
+- **Action:** In `app/(tabs)/quotes.tsx`, add pull-to-refresh that triggers refetch of the quotes list.
+
+### Task 28.3: Clients Tab
+
+- **Action:** In `app/(tabs)/clients.tsx`, add pull-to-refresh that triggers refetch of the clients list.
+
+### ✅ Validation (Phase 28)
+
+- On Home, Quotes, and Clients, pull down — spinner appears and list refreshes.
+
+---
+
+## Phase 29: Delete Account (Frontend) ✅
+
+**Goal:** Allow user to delete their account from Settings; requires Backend Phase 27 (Delete Account).
+
+### Task 29.1: Settings UI
+
+- **Action:** In `app/(tabs)/settings.tsx`, under Account section, add "Delete account" (destructive style).
+- **Action:** On press, show confirmation alert: explain that data will be deleted and ask for explicit confirm (e.g. "Type DELETE" or two-step confirm).
+
+### Task 29.2: API Call
+
+- **Action:** Call `DELETE /api/me` (or endpoint from backend). On success, sign out via Clerk and redirect to sign-in.
+
+### Task 29.3: Error Handling
+
+- **Action:** On failure, show alert with backend error message or generic "Could not delete account. Try again."
+
+### Task 29.4: Translations
+
+- **Action:** Add keys e.g. `settings.deleteAccount`, `settings.deleteAccountConfirm`, `settings.deleteAccountSuccess`, `settings.deleteAccountFailed`.
+
+### ✅ Validation (Phase 29)
+
+- Tap Delete account → confirm → account deleted and user signed out. If backend not ready, show appropriate error.
+
+---
+
+## Phase 30: Friendlier Error Boundary
+
+**Goal:** When the app crashes (ErrorBoundary catches), show a friendly screen instead of a blank or technical error.
+
+### Task 30.1: Custom Error UI
+
+- **Action:** Customize the ErrorBoundary UI (expo-router exports one; override or wrap so that the fallback shows):
+  - Short message: e.g. "Something went wrong."
+  - Button: "Try again" that resets the error boundary (e.g. retry render) or navigates back to a safe screen (e.g. Home).
+- **Reference:** Use `expo-router`’s `ErrorBoundary` props or a custom error boundary component that wraps children.
+
+### Task 30.2: Optional Copy
+
+- **Action:** Add translation key for the message and button if you want it localized.
+
+### ✅ Validation (Phase 30)
+
+- Trigger a deliberate error (e.g. throw in a component) — friendly screen appears with Try again.
+
+---
+
+## Phase 31: Monetization (RevenueCat & Paywall)
+
+**Goal:** Integrate RevenueCat for subscriptions, show a paywall when free users hit the quote limit (403), and display Pro status / usage in Settings. Backend Phase 28 (Monetization & Limits) must be done first.
+
+**Context:** Backend returns 403 with `{ error: "Limit Reached. Upgrade to Pro.", code: "QUOTA_EXCEEDED" }` when a free user exceeds 3 quotes per period. Backend webhook receives RevenueCat events and sets `User.isPro`. Use the same Clerk User ID as RevenueCat app user ID so the webhook updates the correct user.
+
+### Task 31.1: Install RevenueCat SDK
+
+- **Action:** In the frontend project root:
+  - `npm install react-native-purchases`
+  - `npx expo install expo-application` (required for native identifying)
+- **Action:** Add to `.env` (or app config):
+  - `EXPO_PUBLIC_RC_API_KEY_IOS` — Public API key from RevenueCat dashboard (iOS)
+  - `EXPO_PUBLIC_RC_API_KEY_ANDROID` — Public API key from RevenueCat dashboard (Android)
+
+### Task 31.2: Initialize & Identify (Bridge to Backend)
+
+- **Action:** Create `src/lib/revenueCat.ts` (or equivalent).
+- **Logic:**
+  - Configure RevenueCat by platform: `Purchases.configure({ apiKey: ... })` using `EXPO_PUBLIC_RC_API_KEY_IOS` on iOS and `EXPO_PUBLIC_RC_API_KEY_ANDROID` on Android.
+  - Call `Purchases.logIn(clerkUserId)` with the **Clerk User ID** so RevenueCat (and the webhook) link purchases to your backend user.
+- **Action:** Call this init (e.g. `initRevenueCat(userId)`) from the root layout or auth gate whenever the signed-in user (Clerk) is available — e.g. inside `useEffect` when `user?.id` changes. Do not configure before user is known; login with Clerk ID is critical.
+
+### Task 31.3: Paywall Screen / Modal
+
+- **Action:** Create a paywall screen (e.g. `app/paywall.tsx`) or a full-screen modal reachable via route (e.g. `router.push("/paywall")`).
+- **Design:**
+  - Header: e.g. "Upgrade to Pro" with a close/cancel (X) button.
+  - Benefits list: e.g. "Unlimited Quotes", "Remove Watermark", "Custom Logo" (or as per your product).
+  - Price: **Fetch dynamically** from RevenueCat — do not hardcode. Use `Purchases.getOfferings()`, then `offerings.current`, and display the price from the default package (e.g. monthly).
+  - Buttons:
+    - Primary: "Subscribe for $X/mo" (or equivalent) — uses the fetched offering/package.
+    - Secondary: "Restore Purchases" (required for App Store).
+    - Cancel / X to close.
+- **Logic (fetching price):**
+  - On mount, call `Purchases.getOfferings()`, set state with `offerings.current` (e.g. `PurchasesOffering | null`).
+  - Display the current offering’s default package (e.g. monthly) price string.
+- **Logic (purchase):**
+  - On primary button press, call `Purchases.purchasePackage(offering.monthly)` (or the package you use).
+  - On success, check `customerInfo.entitlements.active['Esti Pro']` (or your entitlement ID); if active, close paywall (e.g. `router.back()`) and optionally show success feedback.
+  - On error: if not user cancel, show `Alert.alert` with error message.
+- **Logic (restore):**
+  - "Restore Purchases" calls `Purchases.restorePurchases()`.
+  - If `customerInfo.entitlements.active['Esti Pro']` is set, show success alert and close paywall; otherwise show "No active subscriptions found to restore."
+
+### Task 31.4: Intercept 403 Quota Exceeded
+
+- **Action:** In the flow that calls `POST /api/process-quote` (e.g. in `useCreateQuote` or the hook that triggers after recording), check response status and body.
+- **Logic:**
+  - If `response.status === 403` and response body has `code === "QUOTA_EXCEEDED"`, open the paywall (e.g. `router.push("/paywall")` or present paywall modal) instead of showing a generic error.
+  - Optionally pass a flag so the paywall can show a message like "You’ve reached the free limit. Upgrade to continue."
+- **Note:** Ensure this runs in the same code path that handles process-quote (and optionally regenerate-pdf if backend also enforces quota there).
+
+### Task 31.5: Settings / Profile – Pro Status & Usage
+
+- **Action:** Ensure `GET /api/me` is used where profile/settings are loaded (e.g. Settings tab). Backend now returns `isPro`, `quoteCount`, `periodEnd`.
+- **UI:**
+  - If **Pro:** Show a "Pro" badge or "Pro Active" (e.g. gold badge or distinct style).
+  - If **Free:** Show usage: e.g. "Quote usage: {quoteCount} / 3" with an optional progress bar; show `periodEnd` if useful (e.g. "Resets on …").
+  - **Upgrade:** If free, show a clear CTA: e.g. "Upgrade to Remove Limits" or "Upgrade to Pro" that navigates to the paywall.
+- **Action:** Invalidate or refetch profile after returning from paywall (e.g. after purchase or restore) so Pro status and quote count update.
+
+### Task 31.6: Restore Purchases (App Store Requirement)
+
+- **Action:** Implement "Restore Purchases" on the paywall (see Task 31.3). Call `Purchases.restorePurchases()`, then check `entitlements.active['Esti Pro']`; show success or "No active subscriptions found" and close paywall on success.
+- **Action:** Ensure the button is visible and clearly labeled (e.g. "Restore Purchases") for Apple review.
+
+### Task 31.7: Translations (Optional)
+
+- **Action:** Add translation keys for paywall and settings copy: e.g. `paywall.title`, `paywall.subscribe`, `paywall.restore`, `paywall.cancel`, `settings.pro`, `settings.quoteUsage`, `settings.upgradeToPro`, etc., for all supported languages.
+
+### ✅ Validation (Phase 31)
+
+- **Init:** Sign in with Clerk → RevenueCat configured and `logIn(clerkUserId)` called (check logs or RevenueCat dashboard).
+- **Limit:** As a free user, create 3 quotes then record a 4th → backend returns 403 → app opens paywall (no generic error only).
+- **Purchase:** On paywall, subscribe (sandbox) → webhook sets `isPro` → profile shows Pro; PDF has no watermark.
+- **Restore:** Restore purchases → Pro restored and reflected in app.
+- **Settings:** Free user sees quote usage (e.g. 2/3) and "Upgrade" CTA; Pro user sees Pro badge/status.

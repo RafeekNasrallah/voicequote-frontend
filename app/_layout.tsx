@@ -1,6 +1,6 @@
 import "../global.css";
 
-import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { ClerkLoaded, ClerkProvider, useAuth, useUser } from "@clerk/clerk-expo";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Slot, useRouter, useSegments } from "expo-router";
@@ -16,6 +16,7 @@ LogBox.ignoreLogs(["SafeAreaView has been deprecated"]);
 
 import { tokenCache, setGetToken } from "@/src/lib/auth";
 import { queryClient } from "@/src/lib/query";
+import { initRevenueCat } from "@/src/lib/revenueCat";
 import { initI18n } from "@/src/i18n";
 
 export {
@@ -78,6 +79,7 @@ export default function RootLayout() {
  */
 function AuthGate() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
+  const { user } = useUser();
   const segments = useSegments();
   const router = useRouter();
 
@@ -87,6 +89,15 @@ function AuthGate() {
       setGetToken(() => getToken());
     }
   }, [isLoaded, isSignedIn, getToken]);
+
+  // RevenueCat: identify user with Clerk ID so webhook updates correct backend user
+  useEffect(() => {
+    if (isSignedIn && user?.id) {
+      initRevenueCat(user.id).catch((e) =>
+        console.warn("RevenueCat init failed:", e)
+      );
+    }
+  }, [isSignedIn, user?.id]);
 
   // Auth-based routing
   useEffect(() => {
