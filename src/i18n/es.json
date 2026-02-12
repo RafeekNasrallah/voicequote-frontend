@@ -177,10 +177,13 @@
     "logoUploadedMsg": "Tu logo de empresa ha sido guardado.",
     "logoUploadFailed": "No se pudo subir el logo. Por favor, inténtalo de nuevo.",
     "photoPermissionRequired": "Se requiere acceso a la biblioteca de fotos para seleccionar una imagen.",
+    "termsAndConditions": "Términos y condiciones",
+    "termsAndConditionsDesc": "Personalizar términos del PDF",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {
     "tapToRecord": "Toca para grabar",
+    "tapToStop": "Toca para detener",
     "permissionRequired": "Permiso requerido",
     "microphoneAccess": "Se necesita acceso al micrófono para grabar audio.",
     "recordingError": "Error de grabación",
@@ -223,5 +226,22 @@
     "itemCount_one": "{{count}} artículo",
     "itemCount_other": "{{count}} artículos",
     "itemCount_zero": "Sin artículos"
+  },
+  "terms": {
+    "title": "Términos y condiciones",
+    "items": "términos",
+    "addTerm": "Agregar término",
+    "deleteTerm": "Eliminar término",
+    "resetToDefaults": "Restablecer valores predeterminados",
+    "reset": "Restablecer",
+    "resetConfirm": "Esto restablecerá sus términos a los valores predeterminados. Se eliminarán todos los términos personalizados.",
+    "usingDefaults": "Usando predeterminados",
+    "customTerms": "{{count}} términos personalizados",
+    "termPlaceholder": "Ingrese un término o condición...",
+    "saved": "Guardado",
+    "savedMsg": "Sus términos y condiciones han sido actualizados.",
+    "saveFailed": "No se pudieron guardar los términos. Por favor, inténtelo de nuevo.",
+    "unsavedChanges": "Tiene cambios sin guardar. ¿Qué desea hacer?",
+    "discard": "Descartar"
   }
 }

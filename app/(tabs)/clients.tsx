@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import AddClientModal from "@/components/AddClientModal";
+import MicFAB from "@/components/MicFAB";
 import api from "@/src/lib/api";
 import { ClientsListSkeleton } from "@/components/Skeleton";
 
@@ -95,8 +96,15 @@ export default function ClientsScreen() {
       />
 
       {/* Header */}
-      <View className="px-6 pt-4 pb-2">
+      <View className="px-6 pt-4 pb-2 flex-row items-center justify-between">
         <Text className="text-2xl font-bold text-slate-900">{t("clients.title")}</Text>
+        <Pressable
+          onPress={() => setAddModalVisible(true)}
+          className="h-10 w-10 items-center justify-center rounded-full bg-slate-900"
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        >
+          <Plus size={20} color="#ffffff" />
+        </Pressable>
       </View>
 
       {/* Search */}
@@ -139,21 +147,8 @@ export default function ClientsScreen() {
         />
       )}
 
-      {/* FAB */}
-      <Pressable
-        onPress={() => setAddModalVisible(true)}
-        className="absolute bottom-6 right-6 h-14 w-14 items-center justify-center rounded-full bg-slate-900"
-        style={({ pressed }) => ({
-          opacity: pressed ? 0.85 : 1,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.2,
-          shadowRadius: 8,
-          elevation: 8,
-        })}
-      >
-        <Plus size={24} color="#ffffff" />
-      </Pressable>
+      {/* Mic FAB */}
+      <MicFAB />
     </SafeAreaView>
   );
 }

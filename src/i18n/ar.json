@@ -177,10 +177,13 @@
     "logoUploadedMsg": "تم حفظ شعار عملك.",
     "logoUploadFailed": "تعذر رفع الشعار. يرجى المحاولة مرة أخرى.",
     "photoPermissionRequired": "مطلوب الوصول إلى مكتبة الصور لاختيار صورة.",
+    "termsAndConditions": "الشروط والأحكام",
+    "termsAndConditionsDesc": "تخصيص شروط PDF",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {
     "tapToRecord": "اضغط للتسجيل",
+    "tapToStop": "اضغط للإيقاف",
     "permissionRequired": "مطلوب إذن",
     "microphoneAccess": "مطلوب الوصول إلى الميكروفون لتسجيل الصوت.",
     "recordingError": "خطأ في التسجيل",
@@ -223,5 +226,22 @@
     "itemCount_one": "صنف {{count}}",
     "itemCount_other": "{{count}} أصناف",
     "itemCount_zero": "لا توجد أصناف"
+  },
+  "terms": {
+    "title": "الشروط والأحكام",
+    "items": "شروط",
+    "addTerm": "إضافة شرط",
+    "deleteTerm": "حذف الشرط",
+    "resetToDefaults": "إعادة التعيين للافتراضي",
+    "reset": "إعادة تعيين",
+    "resetConfirm": "سيؤدي هذا إلى إعادة تعيين الشروط إلى القيم الافتراضية. ستتم إزالة أي شروط مخصصة.",
+    "usingDefaults": "استخدام الافتراضي",
+    "customTerms": "{{count}} شروط مخصصة",
+    "termPlaceholder": "أدخل شرطًا أو حكمًا...",
+    "saved": "تم الحفظ",
+    "savedMsg": "تم تحديث الشروط والأحكام الخاصة بك.",
+    "saveFailed": "تعذر حفظ الشروط. يرجى المحاولة مرة أخرى.",
+    "unsavedChanges": "لديك تغييرات غير محفوظة. ماذا تريد أن تفعل؟",
+    "discard": "تجاهل"
   }
 }

@@ -177,10 +177,13 @@
     "logoUploadedMsg": "Your business logo has been saved.",
     "logoUploadFailed": "Failed to upload logo. Please try again.",
     "photoPermissionRequired": "Photo library access is required to select an image.",
+    "termsAndConditions": "Terms & Conditions",
+    "termsAndConditionsDesc": "Customize PDF footer terms",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {
     "tapToRecord": "Tap to record",
+    "tapToStop": "Tap to stop",
     "permissionRequired": "Permission Required",
     "microphoneAccess": "Microphone access is needed to record audio.",
     "recordingError": "Recording Error",
@@ -223,5 +226,22 @@
     "itemCount_one": "{{count}} item",
     "itemCount_other": "{{count}} items",
     "itemCount_zero": "No items"
+  },
+  "terms": {
+    "title": "Terms & Conditions",
+    "items": "terms",
+    "addTerm": "Add Term",
+    "deleteTerm": "Delete Term",
+    "resetToDefaults": "Reset to Defaults",
+    "reset": "Reset",
+    "resetConfirm": "This will reset your terms to the default values. Any custom terms will be removed.",
+    "usingDefaults": "Using defaults",
+    "customTerms": "{{count}} custom terms",
+    "termPlaceholder": "Enter a term or condition...",
+    "saved": "Saved",
+    "savedMsg": "Your terms and conditions have been updated.",
+    "saveFailed": "Failed to save terms. Please try again.",
+    "unsavedChanges": "You have unsaved changes. What would you like to do?",
+    "discard": "Discard"
   }
 }

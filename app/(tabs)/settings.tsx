@@ -1,7 +1,7 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Camera, Check, ChevronRight, Clock, Coins, DollarSign, Globe, LogOut, User } from "lucide-react-native";
+import { Camera, Check, ChevronRight, Clock, Coins, DollarSign, FileText, Globe, LogOut, User } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
@@ -33,6 +33,7 @@ interface UserProfile {
   laborRate: number | null;
   currency: string;
   logoKey: string | null;
+  termsAndConditions: string[] | null;
 }
 
 interface UploadUrlResponse {
@@ -522,6 +523,40 @@ export default function SettingsScreen() {
                 </View>
               ) : (
                 <Text className="text-sm text-slate-400">{t("settings.uploadLogo")}</Text>
+              )}
+              <ChevronRight size={16} color="#cbd5e1" style={{ marginLeft: 4 }} />
+            </View>
+          </Pressable>
+
+          {/* Terms & Conditions */}
+          <Pressable
+            onPress={() => router.push("/terms")}
+            className="flex-row items-center px-4 py-3.5 border-b border-slate-100"
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          >
+            <View className="h-9 w-9 items-center justify-center rounded-lg bg-amber-50">
+              <FileText size={18} color="#f59e0b" />
+            </View>
+            <View className="ml-3 flex-1">
+              <Text className="text-sm font-medium text-slate-900">
+                {t("settings.termsAndConditions")}
+              </Text>
+              <Text className="mt-0.5 text-xs text-slate-400">
+                {t("settings.termsAndConditionsDesc")}
+              </Text>
+            </View>
+            <View className="flex-row items-center">
+              {profile?.termsAndConditions && profile.termsAndConditions.length > 0 ? (
+                <View className="flex-row items-center">
+                  <View className="h-5 w-5 items-center justify-center rounded-full bg-green-100 mr-1">
+                    <Check size={12} color="#16a34a" />
+                  </View>
+                  <Text className="text-sm text-slate-400">
+                    {profile.termsAndConditions.length} {t("terms.items")}
+                  </Text>
+                </View>
+              ) : (
+                <Text className="text-sm text-slate-400">{t("terms.usingDefaults")}</Text>
               )}
               <ChevronRight size={16} color="#cbd5e1" style={{ marginLeft: 4 }} />
             </View>

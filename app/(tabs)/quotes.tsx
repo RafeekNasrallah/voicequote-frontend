@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import api from "@/src/lib/api";
 import { getCurrencySymbol, DEFAULT_CURRENCY } from "@/src/lib/currency";
 import { QuotesListSkeleton } from "@/components/Skeleton";
+import MicFAB from "@/components/MicFAB";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -246,7 +247,7 @@ export default function AllQuotesScreen() {
           data={filteredQuotes}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderQuote}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 24 }}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -257,6 +258,9 @@ export default function AllQuotesScreen() {
           }
         />
       )}
+
+      {/* Mic FAB */}
+      <MicFAB />
     </SafeAreaView>
   );
 }

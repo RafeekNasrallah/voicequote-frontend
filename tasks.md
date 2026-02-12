@@ -608,3 +608,62 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 - Create a new quote — stats update to reflect the new total.
 - Delete a quote — stats decrease accordingly.
 - Assign a client to a quote — "With Client" count increases.
+
+---
+
+## Phase 20: Customizable Terms & Conditions
+
+**Goal:** Allow users to view and edit their PDF terms and conditions from the Settings screen.
+
+### Task 20.1: Create Terms & Conditions Screen ✅
+
+- **Action:** Create `app/terms.tsx` — a dedicated screen for managing terms.
+- **UI:**
+  - Header with back button and title "Terms & Conditions"
+  - List of editable term items (TextInput for each)
+  - "Add Term" button to add new terms
+  - "Delete" button (trash icon) on each term to remove it
+  - "Save" button in header (enabled when changes exist)
+  - "Reset to Defaults" button to restore standard terms
+
+### Task 20.2: Add Terms Setting Row ✅
+
+- **Action:** In `app/(tabs)/settings.tsx`, add a "Terms & Conditions" row in the Preferences section.
+- **UI:** Shows count of current terms (e.g., "4 terms") or "Default" if using defaults.
+- **Navigation:** Taps navigate to `app/terms.tsx`.
+
+### Task 20.3: Fetch and Save Terms ✅
+
+- **Action:** Fetch `termsAndConditions` from `GET /api/me`.
+- **Action:** Save terms via `PATCH /api/me` with `{ termsAndConditions: string[] }`.
+- **Action:** Send `null` to reset to defaults.
+
+### Task 20.4: Default Terms Display ✅
+
+- **Action:** Define default terms in a constant (matching backend defaults):
+  ```typescript
+  const DEFAULT_TERMS = [
+    "This quote is valid for 30 days from the date of issue.",
+    "Payment is due upon completion of work unless otherwise agreed.",
+    "Prices are subject to change if project scope is altered.",
+    "All materials and labor are guaranteed as specified above.",
+  ];
+  ```
+- **Action:** When user has no custom terms (`null`), display defaults with a note "Using default terms".
+
+### Task 20.5: Translations ✅
+
+- **Action:** Add translation keys in all 5 languages (en, de, he, ar, es):
+  - `settings.termsAndConditions`, `settings.termsAndConditionsDesc`
+  - `terms.title`, `terms.addTerm`, `terms.deleteTerm`, `terms.resetToDefaults`
+  - `terms.usingDefaults`, `terms.customTerms`, `terms.termPlaceholder`
+  - `terms.saved`, `terms.savedMsg`, `terms.saveFailed`
+
+### ✅ Validation (Phase 20)
+
+- In Settings, tap "Terms & Conditions" — navigates to terms screen.
+- Default terms are shown with "Using default terms" indicator.
+- Edit a term, add a new term, delete a term — Save button enables.
+- Tap Save — terms are saved and reflected on next PDF.
+- Tap "Reset to Defaults" — custom terms are cleared, defaults restored.
+- Generate a PDF — verify custom/default terms appear correctly.

@@ -177,10 +177,13 @@
     "logoUploadedMsg": "הלוגו העסקי שלך נשמר.",
     "logoUploadFailed": "לא ניתן להעלות את הלוגו. אנא נסה שוב.",
     "photoPermissionRequired": "נדרשת גישה לספריית התמונות כדי לבחור תמונה.",
+    "termsAndConditions": "תנאים והגבלות",
+    "termsAndConditionsDesc": "התאמה אישית של תנאי ה-PDF",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {
     "tapToRecord": "לחץ להקלטה",
+    "tapToStop": "לחץ לעצור",
     "permissionRequired": "נדרשת הרשאה",
     "microphoneAccess": "נדרשת גישה למיקרופון להקלטת אודיו.",
     "recordingError": "שגיאת הקלטה",
@@ -223,5 +226,22 @@
     "itemCount_one": "פריט {{count}}",
     "itemCount_other": "{{count}} פריטים",
     "itemCount_zero": "אין פריטים"
+  },
+  "terms": {
+    "title": "תנאים והגבלות",
+    "items": "תנאים",
+    "addTerm": "הוסף תנאי",
+    "deleteTerm": "מחק תנאי",
+    "resetToDefaults": "אפס לברירת מחדל",
+    "reset": "איפוס",
+    "resetConfirm": "פעולה זו תאפס את התנאים לערכי ברירת המחדל. כל התנאים המותאמים אישית יוסרו.",
+    "usingDefaults": "משתמש בברירת מחדל",
+    "customTerms": "{{count}} תנאים מותאמים אישית",
+    "termPlaceholder": "הזן תנאי או הגבלה...",
+    "saved": "נשמר",
+    "savedMsg": "התנאים וההגבלות שלך עודכנו.",
+    "saveFailed": "שמירת התנאים נכשלה. אנא נסה שוב.",
+    "unsavedChanges": "יש לך שינויים שלא נשמרו. מה תרצה לעשות?",
+    "discard": "התעלם"
   }
 }

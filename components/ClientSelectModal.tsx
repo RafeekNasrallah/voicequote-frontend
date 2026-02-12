@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Search, X, User } from "lucide-react-native";
+import { Search, X, User, Plus } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
@@ -13,6 +13,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 import api from "@/src/lib/api";
+import AddClientModal from "./AddClientModal";
 
 interface Client {
   id: number;
@@ -34,6 +35,7 @@ export default function ClientSelectModal({
   onSelect,
 }: ClientSelectModalProps) {
   const [search, setSearch] = useState("");
+  const [addModalVisible, setAddModalVisible] = useState(false);
   const { t } = useTranslation();
 
   const { data, isLoading } = useQuery({
@@ -68,18 +70,33 @@ export default function ClientSelectModal({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+      {/* Add Client Modal */}
+      <AddClientModal
+        visible={addModalVisible}
+        onClose={() => setAddModalVisible(false)}
+      />
+
       <View className="flex-1 bg-slate-50">
         {/* Header */}
         <View className="flex-row items-center justify-between border-b border-slate-200 bg-white px-4 pb-3 pt-4">
           <Text className="text-lg font-bold text-slate-900">
             {t("clients.selectClient")}
           </Text>
-          <Pressable
-            onPress={onClose}
-            className="h-9 w-9 items-center justify-center rounded-full bg-slate-100"
-          >
-            <X size={18} color="#64748b" />
-          </Pressable>
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={() => setAddModalVisible(true)}
+              className="h-9 w-9 items-center justify-center rounded-full bg-slate-900"
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              <Plus size={18} color="#ffffff" />
+            </Pressable>
+            <Pressable
+              onPress={onClose}
+              className="h-9 w-9 items-center justify-center rounded-full bg-slate-100"
+            >
+              <X size={18} color="#64748b" />
+            </Pressable>
+          </View>
         </View>
 
         {/* Search */}

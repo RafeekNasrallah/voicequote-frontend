@@ -177,10 +177,13 @@
     "logoUploadedMsg": "Dein Firmenlogo wurde gespeichert.",
     "logoUploadFailed": "Logo konnte nicht hochgeladen werden. Bitte versuche es erneut.",
     "photoPermissionRequired": "Zugriff auf die Fotobibliothek ist erforderlich, um ein Bild auszuwählen.",
+    "termsAndConditions": "AGB",
+    "termsAndConditionsDesc": "PDF-Fußzeilen anpassen",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {
     "tapToRecord": "Tippen zum Aufnehmen",
+    "tapToStop": "Tippen zum Stoppen",
     "permissionRequired": "Berechtigung erforderlich",
     "microphoneAccess": "Mikrofonzugriff wird benötigt, um Audio aufzunehmen.",
     "recordingError": "Aufnahmefehler",
@@ -223,5 +226,22 @@
     "itemCount_one": "{{count}} Artikel",
     "itemCount_other": "{{count}} Artikel",
     "itemCount_zero": "Keine Artikel"
+  },
+  "terms": {
+    "title": "AGB",
+    "items": "Bedingungen",
+    "addTerm": "Bedingung hinzufügen",
+    "deleteTerm": "Bedingung löschen",
+    "resetToDefaults": "Auf Standard zurücksetzen",
+    "reset": "Zurücksetzen",
+    "resetConfirm": "Dadurch werden Ihre Bedingungen auf die Standardwerte zurückgesetzt. Alle benutzerdefinierten Bedingungen werden entfernt.",
+    "usingDefaults": "Standard wird verwendet",
+    "customTerms": "{{count}} benutzerdefinierte Bedingungen",
+    "termPlaceholder": "Geben Sie eine Bedingung ein...",
+    "saved": "Gespeichert",
+    "savedMsg": "Ihre AGB wurden aktualisiert.",
+    "saveFailed": "Speichern der AGB fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "unsavedChanges": "Sie haben ungespeicherte Änderungen. Was möchten Sie tun?",
+    "discard": "Verwerfen"
   }
 }
