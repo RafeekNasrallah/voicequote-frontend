@@ -71,7 +71,10 @@
     "noMatchSearch": "Keine Angebote gefunden",
     "statusReady": "Bereit",
     "statusNoClient": "Kein Kunde",
-    "statusDraft": "Entwurf"
+    "statusDraft": "Entwurf",
+    "deleteQuote": "Angebot löschen",
+    "deleteQuoteConfirm": "Bist du sicher, dass du dieses Angebot löschen möchtest? Dies kann nicht rückgängig gemacht werden.",
+    "deleteQuoteFailed": "Angebot konnte nicht gelöscht werden."
   },
   "quoteEditor": {
     "client": "Kunde",
@@ -119,7 +122,15 @@
     "missingName": "Name fehlt",
     "nameRequired": "Kundenname ist erforderlich.",
     "createFailed": "Kunde konnte nicht erstellt werden.",
-    "selectClient": "Kunde auswählen"
+    "selectClient": "Kunde auswählen",
+    "editClient": "Kunde bearbeiten",
+    "saveChanges": "Änderungen speichern",
+    "changesSaved": "Gespeichert",
+    "changesSavedMsg": "Kundendaten wurden aktualisiert.",
+    "saveFailed": "Änderungen konnten nicht gespeichert werden.",
+    "deleteClient": "Kunde löschen",
+    "deleteClientConfirm": "Bist du sicher, dass du diesen Kunden löschen möchtest? Dies kann nicht rückgängig gemacht werden.",
+    "deleteClientFailed": "Kunde konnte nicht gelöscht werden."
   },
   "settings": {
     "title": "Einstellungen",

@@ -71,7 +71,10 @@
     "noMatchSearch": "لا توجد عروض مطابقة",
     "statusReady": "جاهز",
     "statusNoClient": "بدون عميل",
-    "statusDraft": "مسودة"
+    "statusDraft": "مسودة",
+    "deleteQuote": "حذف العرض",
+    "deleteQuoteConfirm": "هل أنت متأكد أنك تريد حذف هذا العرض؟ لا يمكن التراجع عن هذا الإجراء.",
+    "deleteQuoteFailed": "تعذر حذف العرض."
   },
   "quoteEditor": {
     "client": "العميل",
@@ -119,7 +122,15 @@
     "missingName": "الاسم مفقود",
     "nameRequired": "اسم العميل مطلوب.",
     "createFailed": "تعذر إنشاء العميل.",
-    "selectClient": "اختر عميل"
+    "selectClient": "اختر عميل",
+    "editClient": "تعديل العميل",
+    "saveChanges": "حفظ التغييرات",
+    "changesSaved": "تم الحفظ",
+    "changesSavedMsg": "تم تحديث بيانات العميل.",
+    "saveFailed": "تعذر حفظ التغييرات.",
+    "deleteClient": "حذف العميل",
+    "deleteClientConfirm": "هل أنت متأكد أنك تريد حذف هذا العميل؟ لا يمكن التراجع عن هذا الإجراء.",
+    "deleteClientFailed": "تعذر حذف العميل."
   },
   "settings": {
     "title": "الإعدادات",

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import { Search, ChevronRight, Plus, User } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import {
@@ -36,6 +37,7 @@ export default function ClientsScreen() {
   const [search, setSearch] = useState("");
   const [addModalVisible, setAddModalVisible] = useState(false);
   const { t } = useTranslation();
+  const router = useRouter();
 
   const { data, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -46,12 +48,22 @@ export default function ClientsScreen() {
   });
 
   const clients = data ?? [];
-  const filteredClients = clients.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredClients = clients.filter((c) => {
+    const term = search.toLowerCase();
+    return (
+      c.name.toLowerCase().includes(term) ||
+      (c.address && c.address.toLowerCase().includes(term)) ||
+      (c.email && c.email.toLowerCase().includes(term)) ||
+      (c.phone && c.phone.toLowerCase().includes(term))
+    );
+  });
 
   const renderClient = useCallback(({ item }: { item: Client }) => (
-    <View className="mb-3 flex-row items-center rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100">
+    <Pressable
+      onPress={() => router.push(`/client/${item.id}` as any)}
+      className="mb-3 flex-row items-center rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
+      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+    >
       {/* Avatar */}
       <View className="h-12 w-12 items-center justify-center rounded-full bg-slate-100">
         <Text className="text-base font-bold text-slate-600">
@@ -71,8 +83,8 @@ export default function ClientsScreen() {
       </View>
       {/* Arrow */}
       <ChevronRight size={20} color="#cbd5e1" />
-    </View>
-  ), []);
+    </Pressable>
+  ), [router]);
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>

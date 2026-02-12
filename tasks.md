@@ -278,3 +278,20 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 - Switch to Arabic -> RTL layout, Arabic strings.
 - Record a quote in German -> Backend transcribes in German.
 - Kill and reopen app -> Language preference persists.
+
+---
+
+## Phase 11: Enhanced Client Search
+
+### Task 11.1: Deep Client Search
+
+- **Action:** Update the search filter in the Clients tab (`app/(tabs)/clients.tsx`) to match against all client fields — not just `name`.
+- **Fields to search:** name, address, email, phone.
+- **Behavior:** Any field containing the search term should surface that client in the results.
+
+### ✅ Validation (Phase 11)
+
+- Type an address fragment in the Clients search bar -> Client with that address appears.
+- Search by email -> Matching client appears.
+- Search by phone number -> Matching client appears.
+- Search by name still works as before.

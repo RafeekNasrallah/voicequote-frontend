@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/clerk-expo";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   FileText,
   Clock,
@@ -81,10 +81,12 @@ function StatsCard({
 function QuoteCard({
   quote,
   onPress,
+  onLongPress,
   t,
 }: {
   quote: Quote;
   onPress: () => void;
+  onLongPress?: () => void;
   t: (key: string) => string;
 }) {
   const status = getQuoteStatus(quote, t);
@@ -92,6 +94,7 @@ function QuoteCard({
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
       className="mb-3 rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
     >
@@ -159,6 +162,33 @@ export default function HomeScreen() {
       return data.quotes;
     },
   });
+
+  // Delete quote
+  const deleteQuote = useMutation({
+    mutationFn: async (quoteId: number) => {
+      await api.delete(`/api/quotes/${quoteId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
+    },
+    onError: () => {
+      Alert.alert(t("common.error"), t("quotes.deleteQuoteFailed"));
+    },
+  });
+
+  const handleDeleteQuote = useCallback(
+    (quote: Quote) => {
+      Alert.alert(t("quotes.deleteQuote"), t("quotes.deleteQuoteConfirm"), [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.delete"),
+          style: "destructive",
+          onPress: () => deleteQuote.mutate(quote.id),
+        },
+      ]);
+    },
+    [deleteQuote, t]
+  );
 
   // Compute live stats
   const totalQuotes = quotes.length;
@@ -288,6 +318,7 @@ export default function HomeScreen() {
                 quote={quote}
                 t={t}
                 onPress={() => router.push(`/quote/${quote.id}` as any)}
+                onLongPress={() => handleDeleteQuote(quote)}
               />
             ))
           )}

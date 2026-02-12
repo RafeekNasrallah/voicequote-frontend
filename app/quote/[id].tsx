@@ -117,6 +117,31 @@ export default function QuoteScreen() {
     },
   });
 
+  // Delete Quote
+  const deleteQuote = useMutation({
+    mutationFn: async () => {
+      await api.delete(`/api/quotes/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      router.back();
+    },
+    onError: () => {
+      Alert.alert(t("common.error"), t("quotes.deleteQuoteFailed"));
+    },
+  });
+
+  const handleDeleteQuote = useCallback(() => {
+    Alert.alert(t("quotes.deleteQuote"), t("quotes.deleteQuoteConfirm"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("common.delete"),
+        style: "destructive",
+        onPress: () => deleteQuote.mutate(),
+      },
+    ]);
+  }, [deleteQuote, t]);
+
   // PDF Generation
   const generatePdf = useMutation({
     mutationFn: async () => {
@@ -313,6 +338,13 @@ export default function QuoteScreen() {
           </Text>
           <Text className="text-xs text-slate-400">{formattedDate}</Text>
         </View>
+        <Pressable
+          onPress={handleDeleteQuote}
+          className="ml-2 h-10 w-10 items-center justify-center rounded-lg"
+          style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+        >
+          <Trash2 size={20} color="#ef4444" />
+        </Pressable>
       </View>
 
       <KeyboardAvoidingView

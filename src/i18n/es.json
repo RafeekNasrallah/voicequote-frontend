@@ -71,7 +71,10 @@
     "noMatchSearch": "No se encontraron presupuestos",
     "statusReady": "Listo",
     "statusNoClient": "Sin cliente",
-    "statusDraft": "Borrador"
+    "statusDraft": "Borrador",
+    "deleteQuote": "Eliminar presupuesto",
+    "deleteQuoteConfirm": "¿Estás seguro de que quieres eliminar este presupuesto? Esta acción no se puede deshacer.",
+    "deleteQuoteFailed": "No se pudo eliminar el presupuesto."
   },
   "quoteEditor": {
     "client": "Cliente",
@@ -119,7 +122,15 @@
     "missingName": "Nombre faltante",
     "nameRequired": "El nombre del cliente es obligatorio.",
     "createFailed": "No se pudo crear el cliente.",
-    "selectClient": "Seleccionar cliente"
+    "selectClient": "Seleccionar cliente",
+    "editClient": "Editar cliente",
+    "saveChanges": "Guardar cambios",
+    "changesSaved": "Guardado",
+    "changesSavedMsg": "Los datos del cliente se han actualizado.",
+    "saveFailed": "No se pudieron guardar los cambios.",
+    "deleteClient": "Eliminar cliente",
+    "deleteClientConfirm": "¿Estás seguro de que quieres eliminar este cliente? Esta acción no se puede deshacer.",
+    "deleteClientFailed": "No se pudo eliminar el cliente."
   },
   "settings": {
     "title": "Configuración",

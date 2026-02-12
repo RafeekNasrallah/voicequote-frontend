@@ -71,7 +71,10 @@
     "noMatchSearch": "לא נמצאו הצעות מתאימות",
     "statusReady": "מוכן",
     "statusNoClient": "ללא לקוח",
-    "statusDraft": "טיוטה"
+    "statusDraft": "טיוטה",
+    "deleteQuote": "מחק הצעה",
+    "deleteQuoteConfirm": "האם אתה בטוח שברצונך למחוק הצעה זו? לא ניתן לבטל פעולה זו.",
+    "deleteQuoteFailed": "לא ניתן למחוק את ההצעה."
   },
   "quoteEditor": {
     "client": "לקוח",
@@ -119,7 +122,15 @@
     "missingName": "שם חסר",
     "nameRequired": "שם הלקוח נדרש.",
     "createFailed": "לא ניתן ליצור לקוח.",
-    "selectClient": "בחר לקוח"
+    "selectClient": "בחר לקוח",
+    "editClient": "ערוך לקוח",
+    "saveChanges": "שמור שינויים",
+    "changesSaved": "נשמר",
+    "changesSavedMsg": "פרטי הלקוח עודכנו.",
+    "saveFailed": "לא ניתן לשמור שינויים.",
+    "deleteClient": "מחק לקוח",
+    "deleteClientConfirm": "האם אתה בטוח שברצונך למחוק לקוח זה? לא ניתן לבטל פעולה זו.",
+    "deleteClientFailed": "לא ניתן למחוק את הלקוח."
   },
   "settings": {
     "title": "הגדרות",
