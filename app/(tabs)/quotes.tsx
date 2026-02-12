@@ -1,0 +1,211 @@
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import { FileText, Search } from "lucide-react-native";
+import { useCallback, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Pressable } from "react-native";
+import { useTranslation } from "react-i18next";
+
+import api from "@/src/lib/api";
+
+// ─── Types ──────────────────────────────────────────────────
+
+interface Quote {
+  id: number;
+  createdAt: string;
+  totalCost: number | null;
+  clientId: number | null;
+  clientName: string | null;
+}
+
+// ─── Helpers ────────────────────────────────────────────────
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getQuoteStatus(
+  quote: Quote,
+  t: (key: string) => string
+): { label: string; bg: string; text: string } {
+  if (quote.clientId && quote.totalCost) {
+    return { label: t("quotes.statusReady"), bg: "bg-emerald-50", text: "text-emerald-700" };
+  }
+  if (quote.totalCost) {
+    return { label: t("quotes.statusNoClient"), bg: "bg-amber-50", text: "text-amber-700" };
+  }
+  return { label: t("quotes.statusDraft"), bg: "bg-slate-100", text: "text-slate-600" };
+}
+
+function getQuoteTitle(quote: Quote): string {
+  if (quote.clientName) {
+    return `Quote #${quote.id} - ${quote.clientName}`;
+  }
+  return `Quote #${quote.id}`;
+}
+
+// ─── Components ─────────────────────────────────────────────
+
+function QuoteCard({
+  quote,
+  onPress,
+  t,
+}: {
+  quote: Quote;
+  onPress: () => void;
+  t: (key: string) => string;
+}) {
+  const status = getQuoteStatus(quote, t);
+
+  return (
+    <Pressable
+      onPress={onPress}
+      className="mb-3 rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
+      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+    >
+      <View className="flex-row items-center justify-between">
+        <Text
+          className="flex-1 text-base font-semibold text-slate-900 mr-3"
+          numberOfLines={1}
+        >
+          {getQuoteTitle(quote)}
+        </Text>
+        <View className={`rounded-full px-3 py-1 ${status.bg}`}>
+          <Text className={`text-xs font-semibold ${status.text}`}>
+            {status.label}
+          </Text>
+        </View>
+      </View>
+      <View className="mt-2 flex-row items-center">
+        <Text className="text-sm text-slate-400">
+          {formatDate(quote.createdAt)}
+        </Text>
+        {quote.totalCost != null && (
+          <Text className="ml-3 text-sm font-medium text-slate-600">
+            ${quote.totalCost.toFixed(2)}
+          </Text>
+        )}
+      </View>
+    </Pressable>
+  );
+}
+
+// ─── Main Screen ────────────────────────────────────────────
+
+export default function AllQuotesScreen() {
+  const router = useRouter();
+  const [search, setSearch] = useState("");
+  const { t } = useTranslation();
+
+  const {
+    data: quotes = [],
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["quotes"],
+    queryFn: async () => {
+      const { data } = await api.get<{ quotes: Quote[] }>("/api/quotes");
+      return data.quotes;
+    },
+  });
+
+  // Search across all fields
+  const filteredQuotes = useMemo(() => {
+    if (!search.trim()) return quotes;
+
+    const term = search.toLowerCase();
+    return quotes.filter((q) => {
+      const title = getQuoteTitle(q).toLowerCase();
+      const date = formatDate(q.createdAt).toLowerCase();
+      const cost = q.totalCost != null ? `$${q.totalCost.toFixed(2)}` : "";
+      const status = getQuoteStatus(q, t).label.toLowerCase();
+      const idStr = q.id.toString();
+
+      return (
+        title.includes(term) ||
+        date.includes(term) ||
+        cost.includes(term) ||
+        status.includes(term) ||
+        idStr.includes(term)
+      );
+    });
+  }, [quotes, search, t]);
+
+  const renderQuote = useCallback(
+    ({ item }: { item: Quote }) => (
+      <QuoteCard
+        quote={item}
+        t={t}
+        onPress={() => router.push(`/quote/${item.id}` as any)}
+      />
+    ),
+    [router, t]
+  );
+
+  return (
+    <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
+      {/* Header */}
+      <View className="px-6 pt-4 pb-2">
+        <Text className="text-2xl font-bold text-slate-900">{t("quotes.title")}</Text>
+      </View>
+
+      {/* Search */}
+      <View className="px-6 py-3">
+        <View className="flex-row items-center rounded-full bg-slate-100 px-4 h-11">
+          <Search size={18} color="#94a3b8" />
+          <TextInput
+            className="ml-3 flex-1 text-base text-slate-900"
+            placeholder={t("quotes.searchPlaceholder")}
+            placeholderTextColor="#94a3b8"
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+          />
+        </View>
+      </View>
+
+      {/* List */}
+      {isLoading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color="#0f172a" size="large" />
+        </View>
+      ) : filteredQuotes.length === 0 ? (
+        <View className="flex-1 items-center justify-center px-6">
+          <FileText size={40} color="#cbd5e1" />
+          <Text className="mt-3 text-base font-medium text-slate-400">
+            {search ? t("quotes.noMatchSearch") : t("quotes.noQuotesYet")}
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredQuotes}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderQuote}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 24 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              tintColor="#0f172a"
+            />
+          }
+        />
+      )}
+    </SafeAreaView>
+  );
+}

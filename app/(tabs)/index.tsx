@@ -1,31 +1,298 @@
-import { StyleSheet } from 'react-native';
+import { useUser } from "@clerk/clerk-expo";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  FileText,
+  Clock,
+  CheckCircle2,
+} from "lucide-react-native";
+import { useCallback } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+import ProcessingModal from "@/components/ProcessingModal";
+import RecordButton from "@/components/RecordButton";
+import { useCreateQuote } from "@/src/hooks/useCreateQuote";
+import api from "@/src/lib/api";
 
-export default function TabOneScreen() {
+// ─── Types ──────────────────────────────────────────────────
+
+interface Quote {
+  id: number;
+  createdAt: string;
+  totalCost: number | null;
+  clientId: number | null;
+  clientName: string | null;
+}
+
+// ─── Helpers ────────────────────────────────────────────────
+
+function getInitials(firstName?: string | null, lastName?: string | null): string {
+  const first = firstName?.[0]?.toUpperCase() || "";
+  const last = lastName?.[0]?.toUpperCase() || "";
+  return first + last || "VQ";
+}
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function getQuoteTitle(quote: Quote): string {
+  if (quote.clientName) {
+    return `Quote #${quote.id} - ${quote.clientName}`;
+  }
+  return `Quote #${quote.id}`;
+}
+
+// ─── Components ─────────────────────────────────────────────
+
+function StatsCard({
+  label,
+  value,
+  Icon,
+  color,
+}: {
+  label: string;
+  value: number;
+  Icon: React.ComponentType<{ size: number; color: string }>;
+  color: string;
+}) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
+    <View className="flex-1 rounded-xl bg-white p-4 shadow-sm border border-slate-100">
+      <View className="flex-row items-center justify-between">
+        <Text className="text-2xl font-bold text-slate-900">{value}</Text>
+        <Icon size={20} color={color} />
+      </View>
+      <Text className="mt-1 text-xs text-slate-500">{label}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-});
+function QuoteCard({
+  quote,
+  onPress,
+  t,
+}: {
+  quote: Quote;
+  onPress: () => void;
+  t: (key: string) => string;
+}) {
+  const status = getQuoteStatus(quote, t);
+
+  return (
+    <Pressable
+      onPress={onPress}
+      className="mb-3 rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
+      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+    >
+      <View className="flex-row items-center justify-between">
+        <Text className="flex-1 text-base font-semibold text-slate-900 mr-3" numberOfLines={1}>
+          {getQuoteTitle(quote)}
+        </Text>
+        <View className={`rounded-full px-3 py-1 ${status.bg}`}>
+          <Text className={`text-xs font-semibold ${status.text}`}>
+            {status.label}
+          </Text>
+        </View>
+      </View>
+      <View className="mt-2 flex-row items-center">
+        <Text className="text-sm text-slate-400">
+          {formatDate(quote.createdAt)}
+        </Text>
+        {quote.totalCost != null && (
+          <Text className="ml-3 text-sm font-medium text-slate-600">
+            ${quote.totalCost.toFixed(2)}
+          </Text>
+        )}
+      </View>
+    </Pressable>
+  );
+}
+
+function getQuoteStatus(quote: Quote, t: (key: string) => string): { label: string; bg: string; text: string } {
+  if (quote.clientId && quote.totalCost) {
+    return { label: t("quotes.statusReady"), bg: "bg-emerald-50", text: "text-emerald-700" };
+  }
+  if (quote.totalCost) {
+    return { label: t("quotes.statusNoClient"), bg: "bg-amber-50", text: "text-amber-700" };
+  }
+  return { label: t("quotes.statusDraft"), bg: "bg-slate-100", text: "text-slate-600" };
+}
+
+// ─── Main Screen ────────────────────────────────────────────
+
+export default function HomeScreen() {
+  const { user } = useUser();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const createQuote = useCreateQuote();
+  const { t } = useTranslation();
+
+  // Greeting based on time of day
+  function getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return t("greeting.morning");
+    if (hour < 17) return t("greeting.afternoon");
+    return t("greeting.evening");
+  }
+
+  // Fetch real quotes
+  const {
+    data: quotes = [],
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["quotes"],
+    queryFn: async () => {
+      const { data } = await api.get<{ quotes: Quote[] }>("/api/quotes");
+      return data.quotes;
+    },
+  });
+
+  // Compute live stats
+  const totalQuotes = quotes.length;
+  const withClient = quotes.filter((q) => q.clientId != null).length;
+  const ready = quotes.filter((q) => q.clientId != null && q.totalCost != null).length;
+
+  const handleRecordingComplete = useCallback(
+    (uri: string) => {
+      console.log("Recording complete! URI:", uri);
+
+      createQuote.mutate(
+        { localUri: uri },
+        {
+          onSuccess: () => {
+            // Refresh the quotes list after a new quote is created
+            queryClient.invalidateQueries({ queryKey: ["quotes"] });
+          },
+          onError: (error) => {
+            Alert.alert(
+              t("home.processingFailed"),
+              t("home.processingFailedMsg")
+            );
+            console.error("Create quote error:", error);
+          },
+        }
+      );
+    },
+    [createQuote, queryClient, t]
+  );
+
+  return (
+    <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
+      {/* Processing Modal */}
+      <ProcessingModal visible={createQuote.isPending} />
+
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor="#0f172a"
+          />
+        }
+      >
+        {/* ─── Header ─────────────────────────────────── */}
+        <View className="flex-row items-center justify-between px-6 pt-4 pb-2">
+          <View>
+            <Text className="text-2xl font-bold text-slate-900">
+              {getGreeting()},{" "}
+              {user?.firstName || "Pro"}
+            </Text>
+            <Text className="mt-0.5 text-sm text-slate-500">
+              {t("home.readyToCreate")}
+            </Text>
+          </View>
+          {/* Avatar */}
+          <View className="h-11 w-11 items-center justify-center rounded-full bg-slate-900">
+            <Text className="text-sm font-bold text-white">
+              {getInitials(user?.firstName, user?.lastName)}
+            </Text>
+          </View>
+        </View>
+
+        {/* ─── Stats Row ─────────────────────────────── */}
+        <View className="mt-4 flex-row gap-3 px-6">
+          <StatsCard
+            label={t("home.totalQuotes")}
+            value={totalQuotes}
+            Icon={FileText}
+            color="#0f172a"
+          />
+          <StatsCard
+            label={t("home.withClient")}
+            value={withClient}
+            Icon={Clock}
+            color="#ea580c"
+          />
+          <StatsCard
+            label={t("home.ready")}
+            value={ready}
+            Icon={CheckCircle2}
+            color="#16a34a"
+          />
+        </View>
+
+        {/* ─── Record Button (Hero) ──────────────────── */}
+        <View className="mt-8 mb-6 items-center">
+          <RecordButton onRecordingComplete={handleRecordingComplete} />
+        </View>
+
+        {/* ─── Recent Quotes ─────────────────────────── */}
+        <View className="px-6">
+          <View className="mb-3 flex-row items-center justify-between">
+            <Text className="text-base font-semibold text-slate-900">
+              {t("home.recentQuotes")}
+            </Text>
+            {quotes.length > 0 && (
+              <Pressable
+                onPress={() => router.push("/(tabs)/quotes" as any)}
+                style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+              >
+                <Text className="text-sm font-semibold text-orange-600">
+                  {t("home.viewAll")}
+                </Text>
+              </Pressable>
+            )}
+          </View>
+
+          {isLoading ? (
+            <View className="items-center py-8">
+              <ActivityIndicator color="#0f172a" />
+            </View>
+          ) : quotes.length === 0 ? (
+            <View className="items-center rounded-xl bg-white py-8 border border-slate-100">
+              <FileText size={32} color="#cbd5e1" />
+              <Text className="mt-2 text-sm text-slate-400">
+                {t("home.noQuotesYet")}
+              </Text>
+            </View>
+          ) : (
+            quotes.slice(0, 5).map((quote) => (
+              <QuoteCard
+                key={quote.id}
+                quote={quote}
+                t={t}
+                onPress={() => router.push(`/quote/${quote.id}` as any)}
+              />
+            ))
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
