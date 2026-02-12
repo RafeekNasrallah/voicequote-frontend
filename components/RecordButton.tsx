@@ -1,4 +1,10 @@
-import { Audio } from "expo-av";
+import {
+  useAudioRecorder,
+  useAudioRecorderState,
+  RecordingPresets,
+  AudioModule,
+  setAudioModeAsync,
+} from "expo-audio";
 import { Mic, Square } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
@@ -19,11 +25,25 @@ interface RecordButtonProps {
 export default function RecordButton({
   onRecordingComplete,
 }: RecordButtonProps) {
-  const [isRecording, setIsRecording] = useState(false);
-  const [duration, setDuration] = useState(0);
-  const recordingRef = useRef<Audio.Recording | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [permissionGranted, setPermissionGranted] = useState(false);
   const { t } = useTranslation();
+
+  // expo-audio recorder hook
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(audioRecorder);
+  const isRecording = recorderState.isRecording;
+
+  // Timer state (manual since recorderState.durationMillis can be laggy)
+  const [duration, setDuration] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Request permissions on mount
+  useEffect(() => {
+    (async () => {
+      const status = await AudioModule.requestRecordingPermissionsAsync();
+      setPermissionGranted(status.granted);
+    })();
+  }, []);
 
   // Pulse animation
   const pulseScale = useSharedValue(1);
@@ -39,8 +59,8 @@ export default function RecordButton({
     if (isRecording) {
       pulseScale.value = withRepeat(
         withTiming(1.4, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
-        -1, // infinite
-        true // reverse
+        -1,
+        true
       );
       pulseOpacity.value = withRepeat(
         withTiming(0, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
@@ -86,51 +106,42 @@ export default function RecordButton({
 
   const startRecording = useCallback(async () => {
     try {
-      // Request permissions
-      const permission = await Audio.requestPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert(
-          t("recording.permissionRequired"),
-          t("recording.microphoneAccess")
-        );
-        return;
+      if (!permissionGranted) {
+        const status = await AudioModule.requestRecordingPermissionsAsync();
+        if (!status.granted) {
+          Alert.alert(
+            t("recording.permissionRequired"),
+            t("recording.microphoneAccess")
+          );
+          return;
+        }
+        setPermissionGranted(true);
       }
 
-      // Set audio mode for recording
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+      // Configure audio mode for recording
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
 
-      // Create and start recording (High Quality M4A)
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-
-      recordingRef.current = recording;
-      setIsRecording(true);
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
     } catch (err) {
       console.error("Failed to start recording:", err);
       Alert.alert(t("recording.recordingError"), t("recording.failedToStart"));
     }
-  }, [t]);
+  }, [permissionGranted, audioRecorder, t]);
 
   const stopRecording = useCallback(async () => {
-    if (!recordingRef.current) return;
-
     try {
-      setIsRecording(false);
-
-      await recordingRef.current.stopAndUnloadAsync();
+      await audioRecorder.stop();
 
       // Reset audio mode
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
+      await setAudioModeAsync({
+        allowsRecording: false,
       });
 
-      const uri = recordingRef.current.getURI();
-      recordingRef.current = null;
-
+      const uri = audioRecorder.uri;
       if (uri) {
         onRecordingComplete(uri);
       }
@@ -138,7 +149,7 @@ export default function RecordButton({
       console.error("Failed to stop recording:", err);
       Alert.alert(t("recording.recordingError"), t("recording.failedToStop"));
     }
-  }, [onRecordingComplete, t]);
+  }, [audioRecorder, onRecordingComplete, t]);
 
   const handlePress = useCallback(() => {
     if (isRecording) {
@@ -161,7 +172,7 @@ export default function RecordButton({
                 width: 148,
                 height: 148,
                 borderRadius: 74,
-                backgroundColor: "#ea580c", // orange-600
+                backgroundColor: "#ea580c",
               },
             ]}
           />

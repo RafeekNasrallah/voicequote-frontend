@@ -7,8 +7,12 @@ import { Slot, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
+import { LogBox } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "react-native-reanimated";
+
+// Suppress SafeAreaView deprecation warning from third-party libraries (React Navigation internals)
+LogBox.ignoreLogs(["SafeAreaView has been deprecated"]);
 
 import { tokenCache, setGetToken } from "@/src/lib/auth";
 import { queryClient } from "@/src/lib/query";

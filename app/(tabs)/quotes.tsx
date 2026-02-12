@@ -21,6 +21,7 @@ import api from "@/src/lib/api";
 
 interface Quote {
   id: number;
+  name: string | null;
   createdAt: string;
   totalCost: number | null;
   clientId: number | null;
@@ -52,9 +53,8 @@ function getQuoteStatus(
 }
 
 function getQuoteTitle(quote: Quote): string {
-  if (quote.clientName) {
-    return `Quote #${quote.id} - ${quote.clientName}`;
-  }
+  if (quote.name) return quote.name;
+  if (quote.clientName) return `Quote #${quote.id} - ${quote.clientName}`;
   return `Quote #${quote.id}`;
 }
 
@@ -139,9 +139,11 @@ export default function AllQuotesScreen() {
       const cost = q.totalCost != null ? `$${q.totalCost.toFixed(2)}` : "";
       const status = getQuoteStatus(q, t).label.toLowerCase();
       const idStr = q.id.toString();
+      const name = (q.name || "").toLowerCase();
 
       return (
         title.includes(term) ||
+        name.includes(term) ||
         date.includes(term) ||
         cost.includes(term) ||
         status.includes(term) ||

@@ -295,3 +295,58 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 - Search by email -> Matching client appears.
 - Search by phone number -> Matching client appears.
 - Search by name still works as before.
+
+---
+
+## Phase 12: Fix Deprecation Warnings
+
+### Task 12.1: Replace `SafeAreaView` from React Native
+
+- **Warning:** `SafeAreaView` from `react-native` is deprecated.
+- **Action:** Ensure every import of `SafeAreaView` comes from `react-native-safe-area-context`, not from `react-native`. Audit all files for any stray `react-native` SafeAreaView imports.
+
+### Task 12.2: Migrate from `expo-av` to `expo-audio`
+
+- **Warning:** `expo-av` is deprecated as of SDK 54. Use `expo-audio` instead.
+- **Action:** Install `expo-audio`.
+- **Action:** Update `components/RecordButton.tsx` to use `expo-audio` APIs instead of `expo-av`:
+  - Replace `Audio.requestPermissionsAsync()` with the `expo-audio` equivalent.
+  - Replace `Audio.Recording.createAsync()` and `Audio.RecordingOptionsPresets` with the new recording API.
+  - Replace `Audio.setAudioModeAsync()` with the new API.
+  - Ensure start/stop/getURI still works identically.
+- **Action:** Uninstall `expo-av` after migration.
+
+### ✅ Validation (Phase 12)
+
+- No deprecation warnings in the console on app start.
+- SafeAreaView still works correctly on all screens (content respects notch/home indicator).
+- Recording still works: tap to record, tap to stop, audio file URI is returned.
+
+---
+
+## Phase 13: Quote Editor Enhancements — Unit Field & Editable Quote Name
+
+### Task 13.1: Add Unit Field to Quote Items
+
+- **Problem:** Each quote item currently only has Item (description), Quantity, and Price — but no Unit (e.g., "pcs", "m²", "kg", "hours").
+- **Action:** Add a "Unit" column/field to each quote item row in the Quote Editor (`app/quote/[id].tsx`).
+- **Action:** The unit field should be a text input so users can type any unit they need.
+- **Action:** Include the `unit` field when saving/patching items to the backend (`PATCH /api/quotes/:id/items`).
+- **Backend note:** The `unit` field already exists in the items JSON structure (AI extracts `{ name, qty, unit }`).
+
+### Task 13.2: Editable Quote Name
+
+- **Problem:** Quotes are currently displayed as "Quote #10", "Quote #23", etc. Users should be able to give quotes a custom name/title.
+- **Action:** In the Quote Editor header, make the quote title editable — tapping on "Quote #10" should let the user type a custom name (e.g., "Kitchen Renovation", "Office Repair").
+- **Action:** If the user hasn't set a custom name, fall back to "Quote #ID" as the default display.
+- **Action:** Save the custom name to the backend when changed (`PATCH /api/quotes/:id` with a `name` field).
+- **Action:** Update the QuoteCard components (Home, Quotes tab) to display the custom name when available, falling back to "Quote #ID".
+- **Backend requirement:** The `Quote` model needs a `name` (String, optional) field. See backend `tasks.md` Phase 14 for the required changes.
+
+### ✅ Validation (Phase 13)
+
+- In the Quote Editor, each item row shows Item, Unit, Qty, and Price fields.
+- The unit value is saved and persists after reloading the quote.
+- Tapping the quote title in the editor allows renaming.
+- Custom quote names appear on the Home dashboard and Quotes tab.
+- Quotes without a custom name still show "Quote #ID" as fallback.

@@ -28,6 +28,7 @@ import api from "@/src/lib/api";
 
 interface Quote {
   id: number;
+  name: string | null;
   createdAt: string;
   totalCost: number | null;
   clientId: number | null;
@@ -48,9 +49,8 @@ function formatDate(dateStr: string): string {
 }
 
 function getQuoteTitle(quote: Quote): string {
-  if (quote.clientName) {
-    return `Quote #${quote.id} - ${quote.clientName}`;
-  }
+  if (quote.name) return quote.name;
+  if (quote.clientName) return `Quote #${quote.id} - ${quote.clientName}`;
   return `Quote #${quote.id}`;
 }
 

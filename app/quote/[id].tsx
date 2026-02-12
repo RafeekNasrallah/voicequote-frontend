@@ -40,6 +40,7 @@ interface QuoteItem {
 
 interface QuoteData {
   id: number;
+  name: string | null;
   items: QuoteItem[] | null;
   totalCost: number | null;
   clientId: number | null;
@@ -58,6 +59,8 @@ export default function QuoteScreen() {
   const [clientModalVisible, setClientModalVisible] = useState(false);
   const [localItems, setLocalItems] = useState<QuoteItem[]>([]);
   const [localTotal, setLocalTotal] = useState<number | null>(null);
+  const [localName, setLocalName] = useState("");
+  const [isEditingName, setIsEditingName] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
 
@@ -81,6 +84,9 @@ export default function QuoteScreen() {
     }
     if (quote?.totalCost !== undefined) {
       setLocalTotal(quote.totalCost);
+    }
+    if (quote?.name !== undefined) {
+      setLocalName(quote.name || "");
     }
   }, [quote]);
 
@@ -116,6 +122,29 @@ export default function QuoteScreen() {
       Alert.alert(t("common.error"), t("quoteEditor.failedSaveItems"));
     },
   });
+
+  // Patch Quote Name
+  const patchName = useMutation({
+    mutationFn: async (name: string) => {
+      await api.patch(`/api/quotes/${id}`, { name: name || null });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quote", id] });
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
+    },
+    onError: () => {
+      Alert.alert(t("common.error"), t("quoteEditor.failedSaveName"));
+    },
+  });
+
+  const handleNameBlur = useCallback(() => {
+    setIsEditingName(false);
+    // Only save if name actually changed
+    const serverName = quote?.name || "";
+    if (localName.trim() !== serverName) {
+      patchName.mutate(localName.trim());
+    }
+  }, [localName, quote?.name, patchName]);
 
   // Delete Quote
   const deleteQuote = useMutation({
@@ -205,7 +234,7 @@ export default function QuoteScreen() {
       // Share
       await Sharing.shareAsync(localUri, {
         mimeType: "application/pdf",
-        dialogTitle: `Quote #${id}`,
+        dialogTitle: localName || `Quote #${id}`,
       });
     } catch (err) {
       console.error("Share failed:", err);
@@ -332,12 +361,31 @@ export default function QuoteScreen() {
         >
           <ArrowLeft size={22} color="#0f172a" />
         </Pressable>
-        <View className="flex-1">
-          <Text className="text-lg font-bold text-slate-900">
-            Quote #{quote.id}
+        <Pressable
+          className="flex-1"
+          onPress={() => setIsEditingName(true)}
+        >
+          {isEditingName ? (
+            <TextInput
+              className="text-lg font-bold text-slate-900 py-0"
+              value={localName}
+              onChangeText={setLocalName}
+              onBlur={handleNameBlur}
+              placeholder={t("quoteEditor.quoteNamePlaceholder")}
+              placeholderTextColor="#94a3b8"
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={handleNameBlur}
+            />
+          ) : (
+            <Text className="text-lg font-bold text-slate-900" numberOfLines={1}>
+              {localName || `Quote #${quote.id}`}
+            </Text>
+          )}
+          <Text className="text-xs text-slate-400">
+            {isEditingName ? "" : localName ? `#${quote.id} · ${formattedDate}` : formattedDate}
           </Text>
-          <Text className="text-xs text-slate-400">{formattedDate}</Text>
-        </View>
+        </Pressable>
         <Pressable
           onPress={handleDeleteQuote}
           className="ml-2 h-10 w-10 items-center justify-center rounded-lg"
@@ -398,6 +446,9 @@ export default function QuoteScreen() {
                 <Text className="flex-1 text-xs font-semibold uppercase text-slate-400">
                   {t("quoteEditor.item")}
                 </Text>
+                <Text className="w-16 text-center text-xs font-semibold uppercase text-slate-400">
+                  {t("quoteEditor.unit")}
+                </Text>
                 <Text className="w-14 text-center text-xs font-semibold uppercase text-slate-400">
                   {t("quoteEditor.qty")}
                 </Text>
@@ -415,11 +466,20 @@ export default function QuoteScreen() {
                 >
                   {/* Name */}
                   <TextInput
-                    className="flex-1 text-sm text-slate-900 mr-2"
+                    className="flex-1 text-sm text-slate-900 mr-1"
                     value={item.name}
                     onChangeText={(v) => updateItem(index, "name", v)}
                     onBlur={saveItems}
                     placeholder={t("quoteEditor.itemNamePlaceholder")}
+                    placeholderTextColor="#cbd5e1"
+                  />
+                  {/* Unit */}
+                  <TextInput
+                    className="w-16 text-center text-sm text-slate-900"
+                    value={item.unit || ""}
+                    onChangeText={(v) => updateItem(index, "unit", v)}
+                    onBlur={saveItems}
+                    placeholder={t("quoteEditor.unitPlaceholder")}
                     placeholderTextColor="#cbd5e1"
                   />
                   {/* Qty */}
