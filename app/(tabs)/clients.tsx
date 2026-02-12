@@ -100,7 +100,7 @@ export default function ClientsScreen() {
       </View>
 
       {/* Search */}
-      <View className="px-6 pb-3">
+      <View className="px-6 py-3">
         <View className="flex-row items-center rounded-full bg-slate-100 px-4 h-11">
           <Search size={18} color="#94a3b8" />
           <TextInput

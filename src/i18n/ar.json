@@ -169,6 +169,14 @@
     "currencyDesc": "عملة العرض للعروض",
     "selectCurrency": "اختر العملة",
     "currencyUpdateFailed": "تعذر تحديث العملة.",
+    "businessLogo": "شعار العمل",
+    "businessLogoDesc": "يظهر على عروض PDF الخاصة بك",
+    "uploadLogo": "رفع",
+    "uploaded": "تم الرفع",
+    "logoUploaded": "تم رفع الشعار",
+    "logoUploadedMsg": "تم حفظ شعار عملك.",
+    "logoUploadFailed": "تعذر رفع الشعار. يرجى المحاولة مرة أخرى.",
+    "photoPermissionRequired": "مطلوب الوصول إلى مكتبة الصور لاختيار صورة.",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {

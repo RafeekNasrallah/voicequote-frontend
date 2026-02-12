@@ -1,11 +1,12 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { ChevronRight, Clock, Coins, DollarSign, Globe, LogOut, User } from "lucide-react-native";
+import { Camera, Check, ChevronRight, Clock, Coins, DollarSign, Globe, LogOut, User } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -15,6 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import * as ImagePicker from "expo-image-picker";
 import api from "@/src/lib/api";
 import { SUPPORTED_LANGUAGES, changeLanguage } from "@/src/i18n";
 import {
@@ -30,6 +32,12 @@ interface UserProfile {
   priceList: { name: string; price: number; unit?: string }[] | null;
   laborRate: number | null;
   currency: string;
+  logoKey: string | null;
+}
+
+interface UploadUrlResponse {
+  uploadUrl: string;
+  fileKey: string;
 }
 
 export default function SettingsScreen() {
@@ -43,6 +51,7 @@ export default function SettingsScreen() {
   const [laborRateModalVisible, setLaborRateModalVisible] = useState(false);
   const [laborRateInput, setLaborRateInput] = useState("");
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
 
   // Fetch user profile
   const { data: profile, isLoading } = useQuery({
@@ -96,6 +105,69 @@ export default function SettingsScreen() {
 
   const currentCurrency = profile?.currency || DEFAULT_CURRENCY;
   const currencySymbol = getCurrencySymbol(currentCurrency);
+
+  // Logo upload handler
+  const handleUploadLogo = useCallback(async () => {
+    try {
+      // Request permission
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert(t("common.error"), t("settings.photoPermissionRequired"));
+        return;
+      }
+
+      // Pick image
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled || !result.assets[0]) {
+        return;
+      }
+
+      const asset = result.assets[0];
+      const uri = asset.uri;
+      
+      // Determine file extension
+      const ext = uri.split(".").pop()?.toLowerCase() || "png";
+      const contentType = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/png";
+
+      setLogoUploading(true);
+
+      // Step 1: Get presigned S3 URL
+      const { data: uploadData } = await api.post<UploadUrlResponse>(
+        "/api/upload-url",
+        { ext, contentType }
+      );
+      const { uploadUrl, fileKey } = uploadData;
+
+      // Step 2: Upload image to S3
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": contentType },
+        body: blob,
+      });
+
+      // Step 3: Save logo key to backend
+      await api.post("/api/me/logo", { fileKey });
+
+      // Refresh profile
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+
+      Alert.alert(t("settings.logoUploaded"), t("settings.logoUploadedMsg"));
+    } catch (error) {
+      console.error("Logo upload error:", error);
+      Alert.alert(t("common.error"), t("settings.logoUploadFailed"));
+    } finally {
+      setLogoUploading(false);
+    }
+  }, [queryClient, t]);
 
   const handleOpenLaborRateModal = useCallback(() => {
     setLaborRateInput(profile?.laborRate?.toString() || "");
@@ -420,6 +492,42 @@ export default function SettingsScreen() {
           {t("settings.account")}
         </Text>
         <View className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden">
+          {/* Business Logo */}
+          <Pressable
+            onPress={handleUploadLogo}
+            disabled={logoUploading}
+            className="flex-row items-center px-4 py-3.5 border-b border-slate-100"
+            style={({ pressed }) => ({ opacity: pressed || logoUploading ? 0.7 : 1 })}
+          >
+            <View className="h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 overflow-hidden">
+              <Camera size={18} color="#6366f1" />
+            </View>
+            <View className="ml-3 flex-1">
+              <Text className="text-sm font-medium text-slate-900">
+                {t("settings.businessLogo")}
+              </Text>
+              <Text className="mt-0.5 text-xs text-slate-400">
+                {t("settings.businessLogoDesc")}
+              </Text>
+            </View>
+            <View className="flex-row items-center">
+              {logoUploading ? (
+                <ActivityIndicator size="small" color="#94a3b8" />
+              ) : profile?.logoKey ? (
+                <View className="flex-row items-center">
+                  <View className="h-5 w-5 items-center justify-center rounded-full bg-green-100 mr-1">
+                    <Check size={12} color="#16a34a" />
+                  </View>
+                  <Text className="text-sm text-slate-400">{t("settings.uploaded")}</Text>
+                </View>
+              ) : (
+                <Text className="text-sm text-slate-400">{t("settings.uploadLogo")}</Text>
+              )}
+              <ChevronRight size={16} color="#cbd5e1" style={{ marginLeft: 4 }} />
+            </View>
+          </Pressable>
+
+          {/* Sign Out */}
           <Pressable
             onPress={handleSignOut}
             className="flex-row items-center px-4 py-3.5"

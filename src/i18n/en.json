@@ -169,6 +169,14 @@
     "currencyDesc": "Display currency for quotes",
     "selectCurrency": "Select Currency",
     "currencyUpdateFailed": "Failed to update currency.",
+    "businessLogo": "Business Logo",
+    "businessLogoDesc": "Appears on your PDF quotes",
+    "uploadLogo": "Upload",
+    "uploaded": "Uploaded",
+    "logoUploaded": "Logo Uploaded",
+    "logoUploadedMsg": "Your business logo has been saved.",
+    "logoUploadFailed": "Failed to upload logo. Please try again.",
+    "photoPermissionRequired": "Photo library access is required to select an image.",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {

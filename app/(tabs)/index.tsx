@@ -23,7 +23,7 @@ import RecordButton from "@/components/RecordButton";
 import { useCreateQuote } from "@/src/hooks/useCreateQuote";
 import api from "@/src/lib/api";
 import { getCurrencySymbol, DEFAULT_CURRENCY } from "@/src/lib/currency";
-import { QuoteCardSkeleton } from "@/components/Skeleton";
+import { QuoteCardSkeleton, Skeleton } from "@/components/Skeleton";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -34,6 +34,12 @@ interface Quote {
   totalCost: number | null;
   clientId: number | null;
   clientName: string | null;
+}
+
+interface QuoteStats {
+  total: number;
+  withClient: number;
+  ready: number;
 }
 
 // ─── Helpers ────────────────────────────────────────────────
@@ -62,16 +68,22 @@ function StatsCard({
   value,
   Icon,
   color,
+  isLoading,
 }: {
   label: string;
   value: number;
   Icon: React.ComponentType<{ size: number; color: string }>;
   color: string;
+  isLoading?: boolean;
 }) {
   return (
     <View className="flex-1 rounded-xl bg-white p-4 shadow-sm border border-slate-100">
       <View className="flex-row items-center justify-between">
-        <Text className="text-2xl font-bold text-slate-900">{value}</Text>
+        {isLoading ? (
+          <Skeleton width={32} height={28} borderRadius={6} />
+        ) : (
+          <Text className="text-2xl font-bold text-slate-900">{value}</Text>
+        )}
         <Icon size={20} color={color} />
       </View>
       <Text className="mt-1 text-xs text-slate-500">{label}</Text>
@@ -181,6 +193,15 @@ export default function HomeScreen() {
     },
   });
 
+  // Fetch quote stats (separate query for accurate counts)
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ["quoteStats"],
+    queryFn: async () => {
+      const { data } = await api.get<QuoteStats>("/api/quotes/stats");
+      return data;
+    },
+  });
+
   // Delete quote
   const deleteQuote = useMutation({
     mutationFn: async (quoteId: number) => {
@@ -189,6 +210,7 @@ export default function HomeScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
       queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      queryClient.invalidateQueries({ queryKey: ["quoteStats"] });
     },
     onError: () => {
       Alert.alert(t("common.error"), t("quotes.deleteQuoteFailed"));
@@ -209,10 +231,10 @@ export default function HomeScreen() {
     [deleteQuote, t]
   );
 
-  // Compute live stats
-  const totalQuotes = quotes.length;
-  const withClient = quotes.filter((q) => q.clientId != null).length;
-  const ready = quotes.filter((q) => q.clientId != null && q.totalCost != null).length;
+  // Stats from backend (or fallback to 0)
+  const totalQuotes = stats?.total ?? 0;
+  const withClient = stats?.withClient ?? 0;
+  const ready = stats?.ready ?? 0;
 
   const handleRecordingComplete = useCallback(
     (uri: string) => {
@@ -222,9 +244,10 @@ export default function HomeScreen() {
         { localUri: uri },
         {
           onSuccess: () => {
-            // Refresh the quotes list after a new quote is created
+            // Refresh the quotes list and stats after a new quote is created
             queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
             queryClient.invalidateQueries({ queryKey: ["quotes"] });
+            queryClient.invalidateQueries({ queryKey: ["quoteStats"] });
           },
           onError: (error) => {
             Alert.alert(
@@ -282,18 +305,21 @@ export default function HomeScreen() {
             value={totalQuotes}
             Icon={FileText}
             color="#0f172a"
+            isLoading={statsLoading}
           />
           <StatsCard
             label={t("home.withClient")}
             value={withClient}
             Icon={Clock}
             color="#ea580c"
+            isLoading={statsLoading}
           />
           <StatsCard
             label={t("home.ready")}
             value={ready}
             Icon={CheckCircle2}
             color="#16a34a"
+            isLoading={statsLoading}
           />
         </View>
 

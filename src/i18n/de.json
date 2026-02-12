@@ -169,6 +169,14 @@
     "currencyDesc": "Anzeigewährung für Angebote",
     "selectCurrency": "Währung auswählen",
     "currencyUpdateFailed": "Währung konnte nicht aktualisiert werden.",
+    "businessLogo": "Firmenlogo",
+    "businessLogoDesc": "Erscheint auf deinen PDF-Angeboten",
+    "uploadLogo": "Hochladen",
+    "uploaded": "Hochgeladen",
+    "logoUploaded": "Logo hochgeladen",
+    "logoUploadedMsg": "Dein Firmenlogo wurde gespeichert.",
+    "logoUploadFailed": "Logo konnte nicht hochgeladen werden. Bitte versuche es erneut.",
+    "photoPermissionRequired": "Zugriff auf die Fotobibliothek ist erforderlich, um ein Bild auszuwählen.",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {

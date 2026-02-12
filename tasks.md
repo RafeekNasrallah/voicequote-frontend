@@ -529,3 +529,82 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 - Quotes tab shows amounts in €.
 - Price List shows prices in €.
 - Change back to USD ($) — all displays update accordingly.
+
+---
+
+## Phase 18: Business Logo Upload
+
+**Goal:** Allow users to upload a business logo that will appear on their PDF quotes.
+
+### Task 18.1: Add Logo Upload in Settings
+
+- **Action:** In `app/(tabs)/settings.tsx`, add a "Business Logo" row in the "Account" section.
+- **UI:**
+  - Display the current logo as a small preview (if uploaded), or a placeholder icon.
+  - Tap to open image picker (`expo-image-picker`).
+  - Show upload progress indicator.
+- **Flow:**
+  1. User taps "Business Logo" row.
+  2. Opens image picker (camera roll / gallery).
+  3. On selection, get presigned S3 URL via `POST /api/upload-url` with `{ ext: "png" }` (or jpg).
+  4. Upload image to S3.
+  5. Call `POST /api/me/logo` with `{ fileKey }` to save the logo key.
+  6. Invalidate `["me"]` query to refresh profile.
+  7. Show success message.
+
+### Task 18.2: Install Dependencies
+
+- **Action:** Install `expo-image-picker`:
+  ```bash
+  npx expo install expo-image-picker
+  ```
+
+### Task 18.3: Display Logo Preview
+
+- **Action:** Fetch `logoKey` from `GET /api/me` (if it's returned) or infer logo existence.
+- **Note:** The backend generates a signed URL when needed for PDF. For settings preview, you may need a separate endpoint or store a permanent public URL. For MVP, display a checkmark/success state if `logoKey` exists.
+
+### Task 18.4: Translations
+
+- **Action:** Add translation keys in all 5 languages (en, de, he, ar, es):
+  - `settings.businessLogo`, `settings.businessLogoDesc`, `settings.uploadLogo`, `settings.logoUploaded`, `settings.logoUploadFailed`
+
+### ✅ Validation (Phase 18)
+
+- In Settings, tap "Business Logo".
+- Select an image from camera roll.
+- Confirm upload succeeds and shows confirmation.
+- Generate a PDF for any quote — logo should appear in top-left corner.
+- If no logo uploaded, PDF still generates without a logo.
+
+---
+
+## Phase 19: Home Dashboard Stats (Live Data)
+
+**Goal:** Display accurate quote statistics on the home dashboard using the backend stats endpoint.
+
+### Task 19.1: Fetch Stats from Backend
+
+- **Problem:** The home dashboard currently computes stats from the limited 4 recent quotes, which is inaccurate.
+- **Action:** In `app/(tabs)/index.tsx`, add a separate query to fetch stats from `GET /api/quotes/stats`.
+- **Response type:**
+  ```typescript
+  interface QuoteStats {
+    total: number;
+    withClient: number;
+    ready: number;
+  }
+  ```
+
+### Task 19.2: Update Stats Display
+
+- **Action:** Replace the locally computed stats (`totalQuotes`, `withClient`, `ready`) with data from the stats query.
+- **Action:** Show skeleton or loading state for stats while fetching.
+- **Action:** Invalidate stats query when a quote is created or deleted.
+
+### ✅ Validation (Phase 19)
+
+- Home dashboard shows accurate total count (not limited to 4).
+- Create a new quote — stats update to reflect the new total.
+- Delete a quote — stats decrease accordingly.
+- Assign a client to a quote — "With Client" count increases.

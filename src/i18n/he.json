@@ -169,6 +169,14 @@
     "currencyDesc": "מטבע תצוגה להצעות מחיר",
     "selectCurrency": "בחר מטבע",
     "currencyUpdateFailed": "לא ניתן לעדכן את המטבע.",
+    "businessLogo": "לוגו עסקי",
+    "businessLogoDesc": "מופיע על הצעות המחיר שלך ב-PDF",
+    "uploadLogo": "העלאה",
+    "uploaded": "הועלה",
+    "logoUploaded": "הלוגו הועלה",
+    "logoUploadedMsg": "הלוגו העסקי שלך נשמר.",
+    "logoUploadFailed": "לא ניתן להעלות את הלוגו. אנא נסה שוב.",
+    "photoPermissionRequired": "נדרשת גישה לספריית התמונות כדי לבחור תמונה.",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {

@@ -169,6 +169,14 @@
     "currencyDesc": "Moneda de visualización para presupuestos",
     "selectCurrency": "Seleccionar moneda",
     "currencyUpdateFailed": "No se pudo actualizar la moneda.",
+    "businessLogo": "Logo de empresa",
+    "businessLogoDesc": "Aparece en tus presupuestos PDF",
+    "uploadLogo": "Subir",
+    "uploaded": "Subido",
+    "logoUploaded": "Logo subido",
+    "logoUploadedMsg": "Tu logo de empresa ha sido guardado.",
+    "logoUploadFailed": "No se pudo subir el logo. Por favor, inténtalo de nuevo.",
+    "photoPermissionRequired": "Se requiere acceso a la biblioteca de fotos para seleccionar una imagen.",
     "appVersion": "VoiceQuote v1.0.0"
   },
   "recording": {
