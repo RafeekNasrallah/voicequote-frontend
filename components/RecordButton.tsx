@@ -1,22 +1,23 @@
 import {
+  AudioModule,
+  RecordingPresets,
+  setAudioModeAsync,
   useAudioRecorder,
   useAudioRecorderState,
-  RecordingPresets,
-  AudioModule,
-  setAudioModeAsync,
 } from "expo-audio";
+import * as Haptics from "expo-haptics";
 import { Mic, Square } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Alert, Pressable, Text, View } from "react-native";
 import Animated, {
+  cancelAnimation,
+  Easing,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
-  cancelAnimation,
-  Easing,
 } from "react-native-reanimated";
-import { useTranslation } from "react-i18next";
 
 interface RecordButtonProps {
   onRecordingComplete: (uri: string) => void;
@@ -28,6 +29,10 @@ export default function RecordButton({
   const [permissionGranted, setPermissionGranted] = useState(false);
   const { t } = useTranslation();
 
+  // 10 min max; red warning at 9 min
+  const MAX_DURATION_SEC = 600;
+  const WARNING_AT_SEC = 540;
+
   // expo-audio recorder hook
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(audioRecorder);
@@ -35,6 +40,8 @@ export default function RecordButton({
 
   // Timer state (manual since recorderState.durationMillis can be laggy)
   const [duration, setDuration] = useState(0);
+  const [isNearLimit, setIsNearLimit] = useState(false);
+  const [hitMaxDuration, setHitMaxDuration] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Request permissions on mount
@@ -60,12 +67,12 @@ export default function RecordButton({
       pulseScale.value = withRepeat(
         withTiming(1.4, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
         -1,
-        true
+        true,
       );
       pulseOpacity.value = withRepeat(
         withTiming(0, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
         -1,
-        true
+        true,
       );
     } else {
       cancelAnimation(pulseScale);
@@ -75,25 +82,57 @@ export default function RecordButton({
     }
   }, [isRecording, pulseScale, pulseOpacity]);
 
-  // Timer
+  // Timer + duration guardrails (red at 9m, hard stop at 10m)
   useEffect(() => {
     if (isRecording) {
       setDuration(0);
+      setIsNearLimit(false);
       timerRef.current = setInterval(() => {
-        setDuration((prev) => prev + 1);
+        setDuration((prev) => {
+          const next = prev + 1;
+          if (next >= MAX_DURATION_SEC) {
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+            (async () => {
+              try {
+                await audioRecorder.stop();
+                await setAudioModeAsync({ allowsRecording: false });
+                await Haptics.notificationAsync(
+                  Haptics.NotificationFeedbackType.Warning,
+                );
+                Alert.alert(t("errors.maxDurationReached"));
+                const uri = audioRecorder.uri;
+                if (uri) onRecordingComplete(uri);
+              } catch (err) {
+                console.error("Max duration stop failed:", err);
+              }
+            })();
+          }
+          return next;
+        });
       }, 1000);
     } else {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
+      setIsNearLimit(false);
     }
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
     };
-  }, [isRecording]);
+  }, [isRecording, audioRecorder, onRecordingComplete, t]);
+
+  // Visual warning: red when >= 9 min
+  useEffect(() => {
+    if (duration >= WARNING_AT_SEC) {
+      setIsNearLimit(true);
+    }
+  }, [duration]);
 
   // Format seconds to MM:SS
   const formatTime = (seconds: number) => {
@@ -111,7 +150,7 @@ export default function RecordButton({
         if (!status.granted) {
           Alert.alert(
             t("recording.permissionRequired"),
-            t("recording.microphoneAccess")
+            t("recording.microphoneAccess"),
           );
           return;
         }
@@ -162,7 +201,10 @@ export default function RecordButton({
   return (
     <View className="items-center">
       {/* Pulse ring (behind button) */}
-      <View className="relative items-center justify-center" style={{ width: 148, height: 148 }}>
+      <View
+        className="relative items-center justify-center"
+        style={{ width: 148, height: 148 }}
+      >
         {isRecording && (
           <Animated.View
             style={[
@@ -207,10 +249,16 @@ export default function RecordButton({
       {/* Timer / Label */}
       <Text
         className={`mt-4 text-lg font-semibold ${
-          isRecording ? "text-orange-600" : "text-slate-400"
+          isRecording
+            ? isNearLimit
+              ? "text-red-600"
+              : "text-orange-600"
+            : "text-slate-400"
         }`}
       >
-        {isRecording ? formatTime(duration) : t("recording.tapToRecord")}
+        {isRecording
+          ? `${formatTime(duration)} / ${formatTime(MAX_DURATION_SEC)}`
+          : t("recording.tapToRecord")}
       </Text>
     </View>
   );

@@ -1140,3 +1140,54 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 ### ✅ Validation (Phase 32)
 
 - Create a quote from voice → open quote screen → see “Play recording” (or similar). Tap → recording plays. Quote without recording does not show the control or shows a disabled/unavailable state.
+
+---
+
+## Phase 33: UX Guardrails (Frontend Limits)
+
+**Goal:** Provide immediate feedback to the user before they hit backend limits, saving them time and saving you bandwidth/processing costs.
+
+### Task 33.1: Recording Duration Limit
+
+- **Action:** Update `components/RecordButton.tsx`.
+- **Logic:**
+  - Use a `useEffect` or an interval to monitor the recording duration while active.
+  - **Visual Warning:** When the user reaches 9 minutes (if the limit is 10), change the timer color to **Red**.
+  - **Hard Stop:** At 10 minutes (600,000 ms), automatically call `stopAsync()`, trigger a haptic feedback, and show a message: "Maximum recording length reached (10m)."
+- **Benefit:** Prevents the user from talking forever and ensures the file stays within your cost/size budget.
+
+### Task 33.2: File Size Pre-Check
+
+- **Action:** In `src/hooks/useCreateQuote.ts`.
+- **Logic:**
+  - After recording stops but **before** calling `POST /api/upload-url`, check the file size using `expo-file-system`:
+    - `const fileInfo = await FileSystem.getInfoAsync(uri, { size: true });`
+  - If `fileInfo.size > 20 * 1024 * 1024` (20 MB):
+    - Stop the process.
+    - Show an **Alert:** "File is too large. Please try a shorter recording."
+- **Benefit:** Saves user data and prevents "zombie" uploads that the backend would eventually reject anyway.
+
+### Task 33.3: "Pro" Soft Limit UI
+
+- **Action:** In `app/(tabs)/index.tsx` (Dashboard).
+- **Logic:**
+  - If `user.isPro === true`, check the `quoteCount` from your `GET /api/me` query.
+  - If `quoteCount >= 90` (approaching the 100 soft limit):
+    - Show a small, non-intrusive **warning banner:** "You are approaching your monthly high-volume limit."
+  - If `quoteCount >= 100`:
+    - **Disable** the Record button and show a message to contact support.
+- **Note:** Extend the `UserProfile` type (or the type used for `/api/me`) with `isPro?: boolean` and `quoteCount?: number` if not already present.
+
+### Task 33.4: Translations
+
+- **Action:** Add keys to `en.json`, `de.json`, etc.:
+  - `errors.maxDurationReached`
+  - `errors.fileTooLarge`
+  - `errors.softLimitApproaching`
+  - `errors.softLimitReached`
+
+### ✅ Validation (Phase 33)
+
+- Start recording → Wait 10 minutes (or test with 10 seconds by temporarily lowering the limit) → App stops automatically.
+- Mock a large file → Attempt upload → App alerts "File too large" immediately.
+- Mock a Pro user with 100 quotes → Record button is disabled with a clear explanation.

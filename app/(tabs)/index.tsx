@@ -153,6 +153,8 @@ function getQuoteStatus(quote: Quote, t: (key: string) => string): { label: stri
 
 interface UserProfile {
   currency: string;
+  isPro?: boolean;
+  quoteCount?: number;
 }
 
 export default function HomeScreen() {
@@ -172,6 +174,10 @@ export default function HomeScreen() {
   });
 
   const currencySymbol = getCurrencySymbol(userProfile?.currency || DEFAULT_CURRENCY);
+  const isPro = userProfile?.isPro === true;
+  const quoteCount = userProfile?.quoteCount ?? 0;
+  const softLimitApproaching = isPro && quoteCount >= 90 && quoteCount < 100;
+  const softLimitReached = isPro && quoteCount >= 100;
 
   // Greeting based on time of day
   function getGreeting(): string {
@@ -242,18 +248,20 @@ export default function HomeScreen() {
 
   const handleRecordingComplete = useCallback(
     (uri: string) => {
-      console.log("Recording complete! URI:", uri);
-
       createQuote.mutate(
         { localUri: uri },
         {
           onSuccess: () => {
-            // Refresh the quotes list and stats after a new quote is created
+            // Refresh the quotes list, stats, and profile (for Pro quoteCount)
             queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
             queryClient.invalidateQueries({ queryKey: ["quotes"] });
             queryClient.invalidateQueries({ queryKey: ["quoteStats"] });
+            queryClient.invalidateQueries({ queryKey: ["me"] });
           },
           onError: (error: any) => {
+            if (error?.fileTooLarge) {
+              return; // useCreateQuote already showed the alert
+            }
             if (error?.response?.status === 403) {
               const code = error?.response?.data?.code;
               if (code === "QUOTA_EXCEEDED") {
@@ -267,10 +275,11 @@ export default function HomeScreen() {
                 t("errors.somethingWentWrong")
               );
             } else {
-              Alert.alert(
-                t("home.processingFailed"),
-                t("home.processingFailedMsg")
-              );
+              const detail = error?.response?.data?.detail;
+              const message = detail
+                ? `${t("home.processingFailedMsg")}\n\n${detail}`
+                : t("home.processingFailedMsg");
+              Alert.alert(t("home.processingFailed"), message);
             }
             console.error("Create quote error:", error);
           },
@@ -341,9 +350,38 @@ export default function HomeScreen() {
           />
         </View>
 
+        {/* Pro soft limit warning banner */}
+        {softLimitApproaching && (
+          <View className="mx-6 mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+            <Text className="text-sm text-amber-800">
+              {t("errors.softLimitApproaching")}
+            </Text>
+          </View>
+        )}
+
         {/* ─── Record Button (Hero) ──────────────────── */}
         <View className="mt-8 mb-6 items-center">
-          <RecordButton onRecordingComplete={handleRecordingComplete} />
+          {softLimitReached ? (
+            <View className="items-center">
+              <View
+                className="h-32 w-32 items-center justify-center rounded-full bg-slate-300 opacity-70"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 8,
+                  elevation: 8,
+                }}
+              >
+                <FileText size={44} color="#64748b" />
+              </View>
+              <Text className="mt-4 max-w-[280] text-center text-base font-semibold text-slate-600">
+                {t("errors.softLimitReached")}
+              </Text>
+            </View>
+          ) : (
+            <RecordButton onRecordingComplete={handleRecordingComplete} />
+          )}
         </View>
 
         {/* ─── Recent Quotes ─────────────────────────── */}

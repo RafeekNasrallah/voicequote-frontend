@@ -1,8 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
+import * as FileSystem from "expo-file-system/legacy";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { Alert } from "react-native";
 
 import api from "@/src/lib/api";
+
+const MAX_FILE_BYTES = 20 * 1024 * 1024; // 20 MB
 
 interface UploadUrlResponse {
   uploadUrl: string;
@@ -44,10 +48,18 @@ function toBackendLanguage(i18nCode: string): BackendLanguage {
  */
 export function useCreateQuote() {
   const router = useRouter();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
 
   return useMutation({
     mutationFn: async ({ localUri }: CreateQuoteParams) => {
+      // File size pre-check (before upload)
+      const fileInfo = await FileSystem.getInfoAsync(localUri, { size: true });
+      if (fileInfo.exists && "size" in fileInfo && fileInfo.size > MAX_FILE_BYTES) {
+        const err = new Error("FILE_TOO_LARGE") as Error & { fileTooLarge?: boolean };
+        err.fileTooLarge = true;
+        throw err;
+      }
+
       // Backend only accepts en | ar | es | fr; map app language to one of these
       const language = toBackendLanguage(i18n.language || "en");
 
@@ -108,15 +120,16 @@ export function useCreateQuote() {
         throw e;
       }
 
-      console.log("Process quote response:", JSON.stringify(processData));
       return processData;
     },
     onSuccess: (data) => {
-      // Step 4: Navigate to the new quote editor
-      console.log("Navigating to quote with data:", JSON.stringify(data));
       router.push(`/quote/${data.quoteId}` as any);
     },
     onError: (error: any) => {
+      if (error?.fileTooLarge) {
+        Alert.alert(t("common.error"), t("errors.fileTooLarge"));
+        return;
+      }
       console.error("Create quote failed:", error?.message);
       if (error?.response) {
         console.error("Backend status:", error.response.status);

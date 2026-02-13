@@ -2,7 +2,11 @@
   "errors": {
     "noConnection": "No connection",
     "somethingWentWrong": "Something went wrong. Check your connection and try again.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "maxDurationReached": "Maximum recording length reached (10 min).",
+    "fileTooLarge": "File is too large. Please try a shorter recording.",
+    "softLimitApproaching": "You are approaching your monthly high-volume limit.",
+    "softLimitReached": "You have reached your monthly quote limit. Please contact support to continue."
   },
   "common": {
     "appName": "VoiceQuote",

@@ -2,7 +2,11 @@
   "errors": {
     "noConnection": "لا يوجد اتصال",
     "somethingWentWrong": "حدث خطأ. تحقق من اتصالك وحاول مرة أخرى.",
-    "retry": "حاول مرة أخرى"
+    "retry": "حاول مرة أخرى",
+    "maxDurationReached": "تم الوصول إلى الحد الأقصى لمدة التسجيل (10 دقائق).",
+    "fileTooLarge": "الملف كبير جداً. يرجى تسجيل مقطع أقصر.",
+    "softLimitApproaching": "أنت تقترب من حد الحجم الشهري.",
+    "softLimitReached": "لقد وصلت إلى حد العروض الشهري. يرجى الاتصال بالدعم للمتابعة."
   },
   "common": {
     "appName": "VoiceQuote",

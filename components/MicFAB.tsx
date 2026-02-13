@@ -23,8 +23,6 @@ export default function MicFAB({ style }: MicFABProps) {
 
   const handleRecordingComplete = useCallback(
     (uri: string) => {
-      console.log("Recording complete from FAB! URI:", uri);
-
       createQuote.mutate(
         { localUri: uri },
         {
@@ -35,6 +33,9 @@ export default function MicFAB({ style }: MicFABProps) {
             queryClient.invalidateQueries({ queryKey: ["quoteStats"] });
           },
           onError: (error: any) => {
+            if (error?.fileTooLarge) {
+              return; // useCreateQuote already showed the alert
+            }
             if (error?.response?.status === 403) {
               const code = error?.response?.data?.code;
               if (code === "QUOTA_EXCEEDED") {
@@ -48,10 +49,11 @@ export default function MicFAB({ style }: MicFABProps) {
                 t("errors.somethingWentWrong")
               );
             } else {
-              Alert.alert(
-                t("home.processingFailed"),
-                t("home.processingFailedMsg")
-              );
+              const detail = error?.response?.data?.detail;
+              const message = detail
+                ? `${t("home.processingFailedMsg")}\n\n${detail}`
+                : t("home.processingFailedMsg");
+              Alert.alert(t("home.processingFailed"), message);
             }
             console.error("Create quote error:", error);
           },

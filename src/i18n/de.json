@@ -2,7 +2,11 @@
   "errors": {
     "noConnection": "Keine Verbindung",
     "somethingWentWrong": "Etwas ist schiefgelaufen. Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "maxDurationReached": "Maximale Aufnahmelänge erreicht (10 Min.).",
+    "fileTooLarge": "Datei ist zu groß. Bitte nimm eine kürzere Aufnahme auf.",
+    "softLimitApproaching": "Du näherst du dich deinem monatlichen Volumenlimit.",
+    "softLimitReached": "Du hast dein monatliches Angebotslimit erreicht. Bitte kontaktiere den Support."
   },
   "common": {
     "appName": "VoiceQuote",

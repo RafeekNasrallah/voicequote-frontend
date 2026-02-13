@@ -2,7 +2,11 @@
   "errors": {
     "noConnection": "אין חיבור",
     "somethingWentWrong": "משהו השתבש. בדוק את החיבור ונסה שוב.",
-    "retry": "נסה שוב"
+    "retry": "נסה שוב",
+    "maxDurationReached": "הגעת למשך ההקלטה המרבי (10 דק').",
+    "fileTooLarge": "הקובץ גדול מדי. נא להקליט הקלטה קצרה יותר.",
+    "softLimitApproaching": "אתה מתקרב למגבלת הנפח החודשית.",
+    "softLimitReached": "הגעת למגבלת ההצעות החודשית. צור קשר עם התמיכה להמשך."
   },
   "common": {
     "appName": "VoiceQuote",

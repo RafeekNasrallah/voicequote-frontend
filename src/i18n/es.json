@@ -2,7 +2,11 @@
   "errors": {
     "noConnection": "Sin conexión",
     "somethingWentWrong": "Algo salió mal. Comprueba tu conexión e inténtalo de nuevo.",
-    "retry": "Intentar de nuevo"
+    "retry": "Intentar de nuevo",
+    "maxDurationReached": "Se ha alcanzado la duración máxima de grabación (10 min).",
+    "fileTooLarge": "El archivo es demasiado grande. Intenta con una grabación más corta.",
+    "softLimitApproaching": "Te estás acercando a tu límite mensual de volumen.",
+    "softLimitReached": "Has alcanzado tu límite mensual de presupuestos. Contacta con soporte para continuar."
   },
   "common": {
     "appName": "VoiceQuote",
