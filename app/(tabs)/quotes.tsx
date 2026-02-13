@@ -57,9 +57,8 @@ function getQuoteStatus(
 }
 
 function getQuoteTitle(quote: Quote): string {
-  if (quote.name) return quote.name;
-  if (quote.clientName) return `Quote #${quote.id} - ${quote.clientName}`;
-  return `Quote #${quote.id}`;
+  const base = quote.name || `Quote #${quote.id}`;
+  return quote.clientName ? `${base} - ${quote.clientName}` : base;
 }
 
 // ─── Components ─────────────────────────────────────────────

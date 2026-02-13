@@ -541,7 +541,9 @@ export default function QuoteScreen() {
               className="text-lg font-bold text-slate-900"
               numberOfLines={1}
             >
-              {localName || `Quote #${quote.id}`}
+              {quote.clientName
+                ? `${localName || `Quote #${quote.id}`} - ${quote.clientName}`
+                : localName || `Quote #${quote.id}`}
             </Text>
           )}
           <Text className="text-xs text-slate-400">
