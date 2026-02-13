@@ -120,7 +120,11 @@
     "materials": "المواد",
     "labor": "العمل",
     "laborRate": "سعر الساعة",
-    "laborCost": "تكلفة العمل"
+    "laborCost": "تكلفة العمل",
+    "recording": "التسجيل",
+    "playRecording": "تشغيل التسجيل",
+    "pauseRecording": "إيقاف مؤقت",
+    "recordingUnavailable": "التسجيل غير متاح"
   },
   "clients": {
     "title": "العملاء",

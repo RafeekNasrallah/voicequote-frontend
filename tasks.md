@@ -1104,3 +1104,39 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 - **Purchase:** On paywall, subscribe (sandbox) → webhook sets `isPro` → profile shows Pro; PDF has no watermark.
 - **Restore:** Restore purchases → Pro restored and reflected in app.
 - **Settings:** Free user sees quote usage (e.g. 2/3) and "Upgrade" CTA; Pro user sees Pro badge/status.
+
+---
+
+## Phase 32: Voice Playback on Quote Screen
+
+**Goal:** After creating a quote from voice, the user can play the original recording from the quote editor screen.
+
+### Backend tasks (copy to backend repo `tasks.md`)
+
+- **Task 32.B.1: Persist audio key on quote**
+  - When processing a quote (`POST /api/process-quote`), ensure the quote record stores the S3 (or storage) key for the uploaded audio file (e.g. `audioKey` or reuse the same key used for upload). If the backend already stores this, no change needed; otherwise add a column and persist it when creating the quote.
+
+- **Task 32.B.2: Endpoint to get playable audio URL**
+  - Add one of:
+    - **Option A:** `GET /api/quotes/:id/audio-url` that returns `{ url: string }` (a short-lived signed URL for the quote’s recording). Return 404 if the quote has no recording.
+    - **Option B:** Include an optional `audioUrl` (signed URL) or `hasRecording: boolean` in `GET /api/quotes/:id` and, if you prefer not to put short-lived URLs in the main response, a separate `GET /api/quotes/:id/audio-url` that returns the signed URL.
+  - Generate a presigned GET URL for the stored audio object (same bucket/key as used for upload). Use a reasonable TTL (e.g. 1 hour). Ensure only the quote owner can request the URL (same auth as other quote endpoints).
+
+- **Task 32.B.3: CORS / response**
+  - If the signed URL is used from a mobile app (e.g. fetch/stream for playback), no CORS change is needed. If played in a web view, ensure the storage bucket allows the app origin if required.
+
+### Frontend tasks (this repo)
+
+- **Task 32.1: API and types**
+  - Add a way to get the quote’s audio URL: e.g. call `GET /api/quotes/:id/audio-url` when the user opens the quote screen (or when they tap “Play recording”). Extend quote type or add a small hook/query that returns `audioUrl | null` so the UI can show a play control only when a recording exists.
+
+- **Task 32.2: Playback UI on quote screen**
+  - On the quote editor screen (`app/quote/[id].tsx`), add a compact “Play recording” or “Listen to recording” control (e.g. icon button + label) that is visible when the quote has an audio URL.
+  - Use a simple in-app audio player (e.g. `expo-av` / `Audio.Sound` or expo-audio) to play the URL: load the URI, play/pause, and show a simple playing state (e.g. playing indicator or progress). Handle errors (e.g. 404 or network) with a short message or toast.
+
+- **Task 32.3: Copy and accessibility**
+  - Add translation keys (e.g. `quoteEditor.playRecording`, `quoteEditor.recordingUnavailable`) for all supported locales. Ensure the control is accessible (e.g. accessible label for screen readers).
+
+### ✅ Validation (Phase 32)
+
+- Create a quote from voice → open quote screen → see “Play recording” (or similar). Tap → recording plays. Quote without recording does not show the control or shows a disabled/unavailable state.

@@ -120,7 +120,11 @@
     "materials": "Materiales",
     "labor": "Mano de obra",
     "laborRate": "Tarifa por hora",
-    "laborCost": "Costo de mano de obra"
+    "laborCost": "Costo de mano de obra",
+    "recording": "Grabación",
+    "playRecording": "Reproducir grabación",
+    "pauseRecording": "Pausar",
+    "recordingUnavailable": "Grabación no disponible"
   },
   "clients": {
     "title": "Clientes",

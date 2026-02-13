@@ -19,6 +19,21 @@ interface CreateQuoteParams {
 }
 
 /**
+ * Backend process-quote only accepts these languages for transcription.
+ * Keep in sync with backend validation (e.g. Zod enum). Any other locale falls back to "en".
+ */
+const BACKEND_LANGUAGES = ["en", "ar", "es", "fr"] as const;
+type BackendLanguage = (typeof BACKEND_LANGUAGES)[number];
+
+function toBackendLanguage(i18nCode: string): BackendLanguage {
+  const base = (i18nCode || "en").split("-")[0].toLowerCase();
+  if (BACKEND_LANGUAGES.includes(base as BackendLanguage)) {
+    return base as BackendLanguage;
+  }
+  return "en";
+}
+
+/**
  * useCreateQuote - TanStack Mutation hook
  *
  * Full flow:
@@ -33,8 +48,8 @@ export function useCreateQuote() {
 
   return useMutation({
     mutationFn: async ({ localUri }: CreateQuoteParams) => {
-      // Use the current i18n language for transcription
-      const language = i18n.language || "en";
+      // Backend only accepts en | ar | es | fr; map app language to one of these
+      const language = toBackendLanguage(i18n.language || "en");
 
       // Step 1: Get a signed upload URL from the backend
       let uploadData: UploadUrlResponse;

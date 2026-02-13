@@ -120,7 +120,11 @@
     "materials": "חומרים",
     "labor": "עבודה",
     "laborRate": "תעריף שעתי",
-    "laborCost": "עלות עבודה"
+    "laborCost": "עלות עבודה",
+    "recording": "הקלטה",
+    "playRecording": "השמע הקלטה",
+    "pauseRecording": "השהה",
+    "recordingUnavailable": "ההקלטה לא זמינה"
   },
   "clients": {
     "title": "לקוחות",

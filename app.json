@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "voicequote-frontend",
-    "slug": "voicequote-frontend",
+    "name": "Quotio",
+    "slug": "quotio",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "voicequotefrontend",
+    "scheme": "quotio",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -14,9 +14,16 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.getquotio.quotio",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Quotio needs access to your microphone to transcribe your voice into professional estimates."
+      }
     },
     "android": {
+      "package": "com.getquotio.quotio",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -30,11 +37,7 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": [
-      "expo-router",
-      "expo-secure-store",
-      "expo-audio"
-    ],
+    "plugins": ["expo-router", "expo-secure-store", "expo-audio"],
     "experiments": {
       "typedRoutes": true
     }

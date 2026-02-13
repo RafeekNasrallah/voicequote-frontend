@@ -120,7 +120,11 @@
     "materials": "Materials",
     "labor": "Labor",
     "laborRate": "Hourly Rate",
-    "laborCost": "Labor Cost"
+    "laborCost": "Labor Cost",
+    "recording": "Recording",
+    "playRecording": "Play recording",
+    "pauseRecording": "Pause",
+    "recordingUnavailable": "Recording unavailable"
   },
   "clients": {
     "title": "Clients",

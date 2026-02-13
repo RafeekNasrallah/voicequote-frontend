@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import {
   ArrowLeft,
   Clock,
+  Pause,
+  Play,
   Plus,
   Share2,
   Trash2,
@@ -95,6 +98,30 @@ export default function QuoteScreen() {
       return data;
     },
   });
+
+  // ─── Audio playback URL (for "Play recording") ───────────
+  const { data: audioUrl } = useQuery({
+    queryKey: ["quote", id, "audio-url"],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get<{ url: string }>(
+          `/api/quotes/${id}/audio-url`
+        );
+        return data.url;
+      } catch (e: any) {
+        if (e?.response?.status === 404) return null;
+        throw e;
+      }
+    },
+    enabled: !!quote?.id,
+    staleTime: 25 * 60 * 1000, // 25 min (URL TTL is 1h)
+  });
+
+  const audioPlayer = useAudioPlayer(audioUrl ?? null, {
+    updateInterval: 500,
+    downloadFirst: true, // download remote URL before playback for reliable sound
+  });
+  const audioStatus = useAudioPlayerStatus(audioPlayer);
 
   // ─── Fetch User Profile (for default labor rate) ──────────────────
   const { data: userProfile } = useQuery({
@@ -577,6 +604,55 @@ export default function QuoteScreen() {
                 </Pressable>
               )}
             </View>
+
+            {/* ─── Play recording (when quote has audio) ─────── */}
+            {audioUrl && (
+              <View className="border-b border-slate-100 p-4">
+                <Text className="mb-2 text-xs font-semibold uppercase text-slate-400">
+                  {t("quoteEditor.recording")}
+                </Text>
+                <Pressable
+                  onPress={async () => {
+                    if (audioStatus.playing) {
+                      audioPlayer.pause();
+                    } else {
+                      // Ensure playback is audible (iOS: play even in silent mode)
+                      await setAudioModeAsync({
+                        allowsRecording: false,
+                        playsInSilentMode: true,
+                      });
+                      const dur = audioStatus.duration ?? 0;
+                      if (dur > 0 && audioStatus.currentTime >= dur - 0.5) {
+                        audioPlayer.seekTo(0);
+                      }
+                      audioPlayer.play();
+                    }
+                  }}
+                  className="flex-row items-center rounded-lg border border-slate-200 bg-slate-50 p-3"
+                  style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+                  accessibilityLabel={audioStatus.playing ? t("quoteEditor.pauseRecording") : t("quoteEditor.playRecording")}
+                  accessibilityRole="button"
+                >
+                  {audioStatus.playing ? (
+                    <Pause size={20} color="#0f172a" />
+                  ) : (
+                    <Play size={20} color="#0f172a" />
+                  )}
+                  <Text className="ml-2 text-sm font-medium text-slate-900">
+                    {audioStatus.playing
+                      ? t("quoteEditor.pauseRecording")
+                      : t("quoteEditor.playRecording")}
+                  </Text>
+                  {audioStatus.playing && (audioStatus.duration ?? 0) > 0 && (
+                    <Text className="ml-2 text-xs text-slate-500">
+                      {Math.floor(audioStatus.currentTime / 60)}:
+                      {String(Math.floor(audioStatus.currentTime % 60)).padStart(2, "0")} / {Math.floor((audioStatus.duration ?? 0) / 60)}:
+                      {String(Math.floor((audioStatus.duration ?? 0) % 60)).padStart(2, "0")}
+                    </Text>
+                  )}
+                </Pressable>
+              </View>
+            )}
 
             {/* ─── Line Items ──────────────────────── */}
             <View className="p-4">

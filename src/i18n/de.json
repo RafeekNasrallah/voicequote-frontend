@@ -120,7 +120,11 @@
     "materials": "Material",
     "labor": "Arbeit",
     "laborRate": "Stundensatz",
-    "laborCost": "Arbeitskosten"
+    "laborCost": "Arbeitskosten",
+    "recording": "Aufnahme",
+    "playRecording": "Aufnahme abspielen",
+    "pauseRecording": "Pause",
+    "recordingUnavailable": "Aufnahme nicht verfügbar"
   },
   "clients": {
     "title": "Kunden",
