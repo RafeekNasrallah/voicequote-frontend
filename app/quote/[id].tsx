@@ -472,8 +472,6 @@ export default function QuoteScreen() {
     day: "numeric",
   });
 
-  const hasPdf = quote.pdfKey || pdfUrl;
-
   // ─── Render ─────────────────────────────────────────────
 
   return (
@@ -801,56 +799,27 @@ export default function QuoteScreen() {
             </View>
           </View>
 
-          {/* ─── Action Buttons ────────────────────── */}
-          <View className="mx-4 mt-4 gap-3">
-            {/* Finalize PDF */}
+          {/* ─── Action: Generate & Share PDF (one button) ────────────────────── */}
+          <View className="mx-4 mt-4">
             <Pressable
               className="h-12 flex-row items-center justify-center rounded-lg bg-orange-600"
-              onPress={() => {
-                generatePdf.mutate(undefined, {
-                  onSuccess: () => {
-                    Alert.alert(t("quoteEditor.pdfReady"), t("quoteEditor.pdfReadyMsg"));
-                  },
-                });
-              }}
-              disabled={generatePdf.isPending}
+              onPress={handleShare}
+              disabled={isSharing || generatePdf.isPending}
               style={({ pressed }) => ({
-                opacity: pressed || generatePdf.isPending ? 0.85 : 1,
+                opacity: pressed || isSharing || generatePdf.isPending ? 0.85 : 1,
               })}
             >
-              {generatePdf.isPending ? (
+              {(isSharing || generatePdf.isPending) ? (
                 <ActivityIndicator color="#ffffff" />
               ) : (
-                <Text className="text-base font-semibold text-white">
-                  {hasPdf
-                    ? t("quoteEditor.regeneratePdf")
-                    : t("quoteEditor.finalizePdf")}
-                </Text>
+                <>
+                  <Share2 size={18} color="#ffffff" />
+                  <Text className="ml-2 text-base font-semibold text-white">
+                    {t("quoteEditor.sharePdf")}
+                  </Text>
+                </>
               )}
             </Pressable>
-
-            {/* Share PDF (only when PDF exists) */}
-            {hasPdf && (
-              <Pressable
-                className="h-12 flex-row items-center justify-center rounded-lg border border-slate-200 bg-white"
-                onPress={handleShare}
-                disabled={isSharing}
-                style={({ pressed }) => ({
-                  opacity: pressed || isSharing ? 0.85 : 1,
-                })}
-              >
-                {isSharing ? (
-                  <ActivityIndicator color="#0f172a" />
-                ) : (
-                  <>
-                    <Share2 size={18} color="#0f172a" />
-                    <Text className="ml-2 text-base font-semibold text-slate-900">
-                      {t("quoteEditor.sharePdf")}
-                    </Text>
-                  </>
-                )}
-              </Pressable>
-            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

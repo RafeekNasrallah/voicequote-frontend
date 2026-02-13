@@ -37,13 +37,22 @@ export function useCreateQuote() {
       const language = i18n.language || "en";
 
       // Step 1: Get a signed upload URL from the backend
-      const { data: uploadData } = await api.post<UploadUrlResponse>(
-        "/api/upload-url",
-        {
-          ext: "m4a",
-          contentType: "audio/mp4",
-        }
-      );
+      let uploadData: UploadUrlResponse;
+      try {
+        const res = await api.post<UploadUrlResponse>(
+          "/api/upload-url",
+          {
+            ext: "m4a",
+            contentType: "audio/mp4",
+          }
+        );
+        uploadData = res.data;
+      } catch (e: any) {
+        const msg = e?.response?.data?.message || e?.response?.data?.error || e?.message;
+        const status = e?.response?.status;
+        console.error("Create quote error (step 1 upload-url):", status, msg ?? e?.response?.data);
+        throw e;
+      }
 
       const { uploadUrl, fileKey } = uploadData;
 
@@ -60,19 +69,29 @@ export function useCreateQuote() {
       });
 
       if (!uploadResult.ok) {
+        console.error("Create quote error (step 2 S3 upload):", uploadResult.status, uploadResult.statusText);
         throw new Error(
           `Upload failed with status ${uploadResult.status}`
         );
       }
 
       // Step 3: Tell backend to process the uploaded audio
-      const { data: processData } = await api.post<ProcessQuoteResponse>(
-        "/api/process-quote",
-        {
-          fileKey,
-          language,
-        }
-      );
+      let processData: ProcessQuoteResponse;
+      try {
+        const res = await api.post<ProcessQuoteResponse>(
+          "/api/process-quote",
+          {
+            fileKey,
+            language,
+          }
+        );
+        processData = res.data;
+      } catch (e: any) {
+        const msg = e?.response?.data?.message || e?.response?.data?.error || e?.message;
+        const status = e?.response?.status;
+        console.error("Create quote error (step 3 process-quote):", status, msg ?? e?.response?.data);
+        throw e;
+      }
 
       console.log("Process quote response:", JSON.stringify(processData));
       return processData;
@@ -83,11 +102,10 @@ export function useCreateQuote() {
       router.push(`/quote/${data.quoteId}` as any);
     },
     onError: (error: any) => {
-      console.error("Create quote failed:", error);
-      // Log the full backend response for debugging
+      console.error("Create quote failed:", error?.message);
       if (error?.response) {
-        console.error("Status:", error.response.status);
-        console.error("Response data:", JSON.stringify(error.response.data));
+        console.error("Backend status:", error.response.status);
+        console.error("Backend response:", JSON.stringify(error.response.data));
       }
     },
   });
