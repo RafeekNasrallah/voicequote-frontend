@@ -257,8 +257,10 @@ export default function SettingsScreen() {
     );
   }, [deleteAccount, t]);
 
-  const privacyPolicyUrl = process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ?? "";
-  const termsOfUseUrl = process.env.EXPO_PUBLIC_TERMS_OF_USE_URL ?? "";
+  const privacyPolicyUrl =
+    process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ?? "https://www.getquotio.com/privacy";
+  const termsOfUseUrl =
+    process.env.EXPO_PUBLIC_TERMS_OF_USE_URL ?? "https://www.getquotio.com/terms";
 
   const getAppVersionString = useCallback(() => {
     const version = Constants.expoConfig?.version;
