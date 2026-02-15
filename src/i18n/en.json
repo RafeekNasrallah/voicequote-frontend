@@ -6,7 +6,10 @@
     "maxDurationReached": "Maximum recording length reached (10 min).",
     "fileTooLarge": "File is too large. Please try a shorter recording.",
     "softLimitApproaching": "You are approaching your monthly high-volume limit.",
-    "softLimitReached": "You have reached your monthly quote limit. Please contact support to continue."
+    "softLimitReached": "You have reached your monthly quote limit. Please contact support to continue.",
+    "showingCachedData": "Showing cached data. You're offline.",
+    "quoteNameTooLong": "Quote name must be 255 characters or less.",
+    "itemNameTooLong": "Item name must be 200 characters or less."
   },
   "common": {
     "appName": "VoiceQuote",

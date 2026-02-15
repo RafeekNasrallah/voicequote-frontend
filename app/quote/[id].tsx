@@ -1,38 +1,63 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+    setAudioModeAsync,
+    useAudioPlayer,
+    useAudioPlayerStatus,
+} from "expo-audio";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
-import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import {
-  ArrowLeft,
-  Clock,
-  Pause,
-  Play,
-  Plus,
-  Share2,
-  Trash2,
-  UserPlus,
+    ArrowLeft,
+    Clock,
+    Pause,
+    Play,
+    Plus,
+    Share2,
+    Trash2,
+    UserPlus,
 } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Switch,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    Switch,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ClientSelectModal from "@/components/ClientSelectModal";
 import NetworkErrorView from "@/components/NetworkErrorView";
 import api from "@/src/lib/api";
-import { getCurrencySymbol, DEFAULT_CURRENCY } from "@/src/lib/currency";
-import { isNetworkError } from "@/src/lib/networkError";
+import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/src/lib/currency";
+
+const QUOTE_NAME_MAX = 255;
+const ITEM_NAME_MAX = 200;
+
+/** Get a user-friendly validation message from an API error response (e.g. 400 from Zod). */
+function getValidationMessage(
+  error: unknown,
+  fallbackKey: string,
+  t: (key: string) => string,
+): string {
+  const data = (
+    error as {
+      response?: {
+        data?: { message?: string; errors?: Array<{ message?: string }> };
+      };
+    }
+  )?.response?.data;
+  if (data?.message) return data.message;
+  const first = data?.errors?.[0]?.message;
+  if (first) return first;
+  return t(fallbackKey);
+}
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -105,7 +130,7 @@ export default function QuoteScreen() {
     queryFn: async () => {
       try {
         const { data } = await api.get<{ url: string }>(
-          `/api/quotes/${id}/audio-url`
+          `/api/quotes/${id}/audio-url`,
         );
         return data.url;
       } catch (e: any) {
@@ -139,7 +164,9 @@ export default function QuoteScreen() {
     }
   }, [userProfile?.laborRate]);
 
-  const currencySymbol = getCurrencySymbol(userProfile?.currency || DEFAULT_CURRENCY);
+  const currencySymbol = getCurrencySymbol(
+    userProfile?.currency || DEFAULT_CURRENCY,
+  );
   const laborRateNum = parseFloat(localLaborRate) || 0;
   const laborHoursNum = parseFloat(localLaborHours) || 0;
   const laborCost =
@@ -147,7 +174,8 @@ export default function QuoteScreen() {
       ? laborHoursNum * laborRateNum
       : null;
   const materialsCost = localTotal ?? 0;
-  const subtotalBeforeTax = materialsCost + (localLaborEnabled ? (laborCost ?? 0) : 0);
+  const subtotalBeforeTax =
+    materialsCost + (localLaborEnabled ? (laborCost ?? 0) : 0);
 
   // Tax calculation
   const taxEnabled = userProfile?.taxEnabled ?? false;
@@ -226,32 +254,35 @@ export default function QuoteScreen() {
       setPdfUrl(null); // Clear PDF so share will regenerate
       queryClient.invalidateQueries({ queryKey: ["quote", id] });
     },
-    onError: () => {
-      Alert.alert(t("common.error"), t("quoteEditor.failedSaveItems"));
+    onError: (err) => {
+      const message = getValidationMessage(err, "errors.itemNameTooLong", t);
+      Alert.alert(t("common.error"), message);
     },
   });
 
   // Patch Quote Name
   const patchName = useMutation({
     mutationFn: async (name: string) => {
-      await api.patch(`/api/quotes/${id}`, { name: name || null });
+      const value = name.trim().slice(0, QUOTE_NAME_MAX) || null;
+      await api.patch(`/api/quotes/${id}`, { name: value });
     },
     onSuccess: () => {
       setPdfUrl(null); // Clear PDF so share will regenerate
       queryClient.invalidateQueries({ queryKey: ["quote", id] });
       queryClient.invalidateQueries({ queryKey: ["quotes"] });
     },
-    onError: () => {
-      Alert.alert(t("common.error"), t("quoteEditor.failedSaveName"));
+    onError: (err) => {
+      const message = getValidationMessage(err, "errors.quoteNameTooLong", t);
+      Alert.alert(t("common.error"), message);
     },
   });
 
   const handleNameBlur = useCallback(() => {
     setIsEditingName(false);
-    // Only save if name actually changed
-    const serverName = quote?.name || "";
-    if (localName.trim() !== serverName) {
-      patchName.mutate(localName.trim());
+    const trimmed = localName.trim().slice(0, QUOTE_NAME_MAX);
+    if (trimmed !== localName) setLocalName(trimmed); // Keep UI in sync with limit
+    if (trimmed !== (quote?.name ?? "")) {
+      patchName.mutate(trimmed);
     }
   }, [localName, quote?.name, patchName]);
 
@@ -436,7 +467,12 @@ export default function QuoteScreen() {
   );
 
   const saveItems = useCallback(() => {
-    patchItems.mutate(localItems);
+    const normalized = localItems.map((it) => ({
+      ...it,
+      name: (it.name ?? "").trim().slice(0, ITEM_NAME_MAX),
+    }));
+    setLocalItems(normalized); // Keep UI in sync with limit
+    patchItems.mutate(normalized);
   }, [localItems, patchItems]);
 
   const addItem = useCallback(() => {
@@ -535,6 +571,7 @@ export default function QuoteScreen() {
               autoFocus
               returnKeyType="done"
               onSubmitEditing={handleNameBlur}
+              maxLength={QUOTE_NAME_MAX}
             />
           ) : (
             <Text
@@ -632,7 +669,11 @@ export default function QuoteScreen() {
                   }}
                   className="flex-row items-center rounded-lg border border-slate-200 bg-slate-50 p-3"
                   style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
-                  accessibilityLabel={audioStatus.playing ? t("quoteEditor.pauseRecording") : t("quoteEditor.playRecording")}
+                  accessibilityLabel={
+                    audioStatus.playing
+                      ? t("quoteEditor.pauseRecording")
+                      : t("quoteEditor.playRecording")
+                  }
                   accessibilityRole="button"
                 >
                   {audioStatus.playing ? (
@@ -648,8 +689,13 @@ export default function QuoteScreen() {
                   {audioStatus.playing && (audioStatus.duration ?? 0) > 0 && (
                     <Text className="ml-2 text-xs text-slate-500">
                       {Math.floor(audioStatus.currentTime / 60)}:
-                      {String(Math.floor(audioStatus.currentTime % 60)).padStart(2, "0")} / {Math.floor((audioStatus.duration ?? 0) / 60)}:
-                      {String(Math.floor((audioStatus.duration ?? 0) % 60)).padStart(2, "0")}
+                      {String(
+                        Math.floor(audioStatus.currentTime % 60),
+                      ).padStart(2, "0")}{" "}
+                      / {Math.floor((audioStatus.duration ?? 0) / 60)}:
+                      {String(
+                        Math.floor((audioStatus.duration ?? 0) % 60),
+                      ).padStart(2, "0")}
                     </Text>
                   )}
                 </Pressable>
@@ -681,15 +727,18 @@ export default function QuoteScreen() {
                   key={index}
                   className="flex-row items-center border-b border-slate-100 py-2.5"
                 >
-                  {/* Name */}
-                  <TextInput
-                    className="flex-1 text-sm text-slate-900 mr-1"
-                    value={item.name}
-                    onChangeText={(v) => updateItem(index, "name", v)}
-                    onBlur={saveItems}
-                    placeholder={t("quoteEditor.itemNamePlaceholder")}
-                    placeholderTextColor="#cbd5e1"
-                  />
+                  {/* Name — constrained width so table stays compact; long names scroll inside input */}
+                  <View style={{ flex: 1, maxWidth: 220 }} className="mr-1">
+                    <TextInput
+                      className="text-sm text-slate-900 flex-1 min-w-0"
+                      value={item.name}
+                      onChangeText={(v) => updateItem(index, "name", v)}
+                      onBlur={saveItems}
+                      placeholder={t("quoteEditor.itemNamePlaceholder")}
+                      placeholderTextColor="#cbd5e1"
+                      maxLength={ITEM_NAME_MAX}
+                    />
+                  </View>
                   {/* Unit */}
                   <TextInput
                     className="w-16 text-center text-sm text-slate-900"
@@ -790,7 +839,9 @@ export default function QuoteScreen() {
                       className="flex-row items-center border border-slate-200 rounded-md px-2"
                       style={{ paddingVertical: 10 }}
                     >
-                      <Text className="text-sm text-slate-500">{currencySymbol}</Text>
+                      <Text className="text-sm text-slate-500">
+                        {currencySymbol}
+                      </Text>
                       <TextInput
                         className="w-12 text-center text-sm font-semibold text-slate-900"
                         style={{
@@ -811,7 +862,8 @@ export default function QuoteScreen() {
                   </View>
                   {/* Result */}
                   <Text className="text-sm font-semibold text-slate-700">
-                    = {currencySymbol}{(laborCost ?? 0).toFixed(2)}
+                    = {currencySymbol}
+                    {(laborCost ?? 0).toFixed(2)}
                   </Text>
                 </View>
               )}
@@ -827,7 +879,8 @@ export default function QuoteScreen() {
                       {t("quoteEditor.materials")}
                     </Text>
                     <Text className="text-sm text-slate-500">
-                      {currencySymbol}{materialsCost.toFixed(2)}
+                      {currencySymbol}
+                      {materialsCost.toFixed(2)}
                     </Text>
                   </View>
                   <View className="flex-row items-center justify-between mb-2">
@@ -835,7 +888,8 @@ export default function QuoteScreen() {
                       {t("quoteEditor.labor")}
                     </Text>
                     <Text className="text-sm text-slate-500">
-                      {currencySymbol}{laborCost.toFixed(2)}
+                      {currencySymbol}
+                      {laborCost.toFixed(2)}
                     </Text>
                   </View>
                 </>
@@ -851,7 +905,8 @@ export default function QuoteScreen() {
                         : t("taxSettings.subtotal")}
                     </Text>
                     <Text className="text-sm text-slate-500">
-                      {currencySymbol}{displaySubtotal.toFixed(2)}
+                      {currencySymbol}
+                      {displaySubtotal.toFixed(2)}
                     </Text>
                   </View>
                   <View className="flex-row items-center justify-between mb-2">
@@ -859,7 +914,8 @@ export default function QuoteScreen() {
                       {taxLabel} ({taxRate}%)
                     </Text>
                     <Text className="text-sm text-slate-500">
-                      {currencySymbol}{taxAmount.toFixed(2)}
+                      {currencySymbol}
+                      {taxAmount.toFixed(2)}
                     </Text>
                   </View>
                 </>
@@ -871,7 +927,8 @@ export default function QuoteScreen() {
                   {t("quoteEditor.total")}
                 </Text>
                 <Text className="text-xl font-bold text-slate-900">
-                  {currencySymbol}{grandTotal.toFixed(2)}
+                  {currencySymbol}
+                  {grandTotal.toFixed(2)}
                 </Text>
               </View>
             </View>
@@ -884,10 +941,11 @@ export default function QuoteScreen() {
               onPress={handleShare}
               disabled={isSharing || generatePdf.isPending}
               style={({ pressed }) => ({
-                opacity: pressed || isSharing || generatePdf.isPending ? 0.85 : 1,
+                opacity:
+                  pressed || isSharing || generatePdf.isPending ? 0.85 : 1,
               })}
             >
-              {(isSharing || generatePdf.isPending) ? (
+              {isSharing || generatePdf.isPending ? (
                 <ActivityIndicator color="#ffffff" />
               ) : (
                 <>

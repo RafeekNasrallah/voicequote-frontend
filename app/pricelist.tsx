@@ -1,29 +1,29 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import {
-  ArrowLeft,
-  DollarSign,
-  Plus,
-  Search,
-  Trash2,
+    ArrowLeft,
+    DollarSign,
+    Plus,
+    Search,
+    Trash2,
 } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTranslation } from "react-i18next";
 
 import api from "@/src/lib/api";
-import { getCurrencySymbol, DEFAULT_CURRENCY } from "@/src/lib/currency";
+import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/src/lib/currency";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -58,7 +58,9 @@ export default function PriceListScreen() {
     },
   });
 
-  const currencySymbol = getCurrencySymbol(profile?.currency || DEFAULT_CURRENCY);
+  const currencySymbol = getCurrencySymbol(
+    profile?.currency || DEFAULT_CURRENCY,
+  );
 
   // Sync server data to local state on first load
   useEffect(() => {
@@ -105,26 +107,30 @@ export default function PriceListScreen() {
       });
       setHasChanges(true);
     },
-    []
+    [],
   );
 
   const deleteItem = useCallback(
     (index: number) => {
       const item = items[index];
       const itemName = item.name || t("priceList.itemName");
-      Alert.alert(t("priceList.deleteItem"), `${t("priceList.deleteItemConfirm")}\n\n${itemName}`, [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("common.delete"),
-          style: "destructive",
-          onPress: () => {
-            setItems((prev) => prev.filter((_, i) => i !== index));
-            setHasChanges(true);
+      Alert.alert(
+        t("priceList.deleteItem"),
+        `${t("priceList.deleteItemConfirm")}\n\n${itemName}`,
+        [
+          { text: t("common.cancel"), style: "cancel" },
+          {
+            text: t("common.delete"),
+            style: "destructive",
+            onPress: () => {
+              setItems((prev) => prev.filter((_, i) => i !== index));
+              setHasChanges(true);
+            },
           },
-        },
-      ]);
+        ],
+      );
     },
-    [items, t]
+    [items, t],
   );
 
   const handleSave = useCallback(() => {
@@ -149,7 +155,9 @@ export default function PriceListScreen() {
           {
             text: t("common.save"),
             onPress: () => {
-              const validItems = items.filter((item) => item.name.trim().length > 0);
+              const validItems = items.filter(
+                (item) => item.name.trim().length > 0,
+              );
               savePriceList.mutate(validItems, {
                 onSuccess: () => {
                   queryClient.invalidateQueries({ queryKey: ["me"] });
@@ -158,7 +166,7 @@ export default function PriceListScreen() {
               });
             },
           },
-        ]
+        ],
       );
     } else {
       router.replace("/(tabs)/settings");
@@ -173,14 +181,14 @@ export default function PriceListScreen() {
     return items.filter(
       (item) =>
         item.name.toLowerCase().includes(term) ||
-        (item.unit && item.unit.toLowerCase().includes(term))
+        (item.unit && item.unit.toLowerCase().includes(term)),
     );
   }, [items, search]);
 
   // Map filtered items back to their original index
   const getOriginalIndex = useCallback(
     (item: PriceItem) => items.indexOf(item),
-    [items]
+    [items],
   );
 
   // ─── Render Item ──────────────────────────────────────────
@@ -199,6 +207,7 @@ export default function PriceListScreen() {
               placeholder={t("priceList.itemNamePlaceholder")}
               placeholderTextColor="#94a3b8"
               autoCapitalize="words"
+              maxLength={200}
             />
           </View>
 
@@ -241,7 +250,7 @@ export default function PriceListScreen() {
         </View>
       );
     },
-    [getOriginalIndex, updateItem, deleteItem, t, currencySymbol]
+    [getOriginalIndex, updateItem, deleteItem, t, currencySymbol],
   );
 
   // ─── Render ───────────────────────────────────────────────
@@ -317,8 +326,8 @@ export default function PriceListScreen() {
             {items.length === 0
               ? t("priceList.itemCount_zero")
               : items.length === 1
-              ? t("priceList.itemCount_one", { count: 1 })
-              : t("priceList.itemCount_other", { count: items.length })}
+                ? t("priceList.itemCount_one", { count: 1 })
+                : t("priceList.itemCount_other", { count: items.length })}
           </Text>
         </View>
 

@@ -1,31 +1,27 @@
 import { useUser } from "@clerk/clerk-expo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  FileText,
-  Clock,
-  CheckCircle2,
-} from "lucide-react-native";
+import { useRouter } from "expo-router";
+import { CheckCircle2, Clock, FileText } from "lucide-react-native";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
-  Alert,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  Text,
-  View,
+    Alert,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { useTranslation } from "react-i18next";
 
 import NetworkErrorView from "@/components/NetworkErrorView";
 import ProcessingModal from "@/components/ProcessingModal";
 import RecordButton from "@/components/RecordButton";
+import { QuoteCardSkeleton, Skeleton } from "@/components/Skeleton";
 import { useCreateQuote } from "@/src/hooks/useCreateQuote";
 import api from "@/src/lib/api";
+import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/src/lib/currency";
 import { isNetworkError } from "@/src/lib/networkError";
-import { getCurrencySymbol, DEFAULT_CURRENCY } from "@/src/lib/currency";
-import { QuoteCardSkeleton, Skeleton } from "@/components/Skeleton";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -46,7 +42,10 @@ interface QuoteStats {
 
 // ─── Helpers ────────────────────────────────────────────────
 
-function getInitials(firstName?: string | null, lastName?: string | null): string {
+function getInitials(
+  firstName?: string | null,
+  lastName?: string | null,
+): string {
   const first = firstName?.[0]?.toUpperCase() || "";
   const last = lastName?.[0]?.toUpperCase() || "";
   return first + last || "VQ";
@@ -115,7 +114,10 @@ function QuoteCard({
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
     >
       <View className="flex-row items-center justify-between">
-        <Text className="flex-1 text-base font-semibold text-slate-900 mr-3" numberOfLines={1}>
+        <Text
+          className="flex-1 text-base font-semibold text-slate-900 mr-3"
+          numberOfLines={1}
+        >
           {getQuoteTitle(quote)}
         </Text>
         <View className={`rounded-full px-3 py-1 ${status.bg}`}>
@@ -130,7 +132,8 @@ function QuoteCard({
         </Text>
         {quote.totalCost != null && (
           <Text className="ml-3 text-sm font-medium text-slate-600">
-            {currencySymbol}{quote.totalCost.toFixed(2)}
+            {currencySymbol}
+            {quote.totalCost.toFixed(2)}
           </Text>
         )}
       </View>
@@ -138,14 +141,29 @@ function QuoteCard({
   );
 }
 
-function getQuoteStatus(quote: Quote, t: (key: string) => string): { label: string; bg: string; text: string } {
+function getQuoteStatus(
+  quote: Quote,
+  t: (key: string) => string,
+): { label: string; bg: string; text: string } {
   if (quote.clientId && quote.totalCost) {
-    return { label: t("quotes.statusReady"), bg: "bg-emerald-50", text: "text-emerald-700" };
+    return {
+      label: t("quotes.statusReady"),
+      bg: "bg-emerald-50",
+      text: "text-emerald-700",
+    };
   }
   if (quote.totalCost) {
-    return { label: t("quotes.statusNoClient"), bg: "bg-amber-50", text: "text-amber-700" };
+    return {
+      label: t("quotes.statusNoClient"),
+      bg: "bg-amber-50",
+      text: "text-amber-700",
+    };
   }
-  return { label: t("quotes.statusDraft"), bg: "bg-slate-100", text: "text-slate-600" };
+  return {
+    label: t("quotes.statusDraft"),
+    bg: "bg-slate-100",
+    text: "text-slate-600",
+  };
 }
 
 // ─── Main Screen ────────────────────────────────────────────
@@ -172,7 +190,9 @@ export default function HomeScreen() {
     },
   });
 
-  const currencySymbol = getCurrencySymbol(userProfile?.currency || DEFAULT_CURRENCY);
+  const currencySymbol = getCurrencySymbol(
+    userProfile?.currency || DEFAULT_CURRENCY,
+  );
   const isPro = userProfile?.isPro === true;
   const quoteCount = userProfile?.quoteCount ?? 0;
   const softLimitApproaching = isPro && quoteCount >= 90 && quoteCount < 100;
@@ -197,7 +217,9 @@ export default function HomeScreen() {
   } = useQuery({
     queryKey: ["recentQuotes"],
     queryFn: async () => {
-      const { data } = await api.get<{ quotes: Quote[] }>("/api/quotes?limit=4");
+      const { data } = await api.get<{ quotes: Quote[] }>(
+        "/api/quotes?limit=4",
+      );
       return data.quotes;
     },
   });
@@ -237,7 +259,7 @@ export default function HomeScreen() {
         },
       ]);
     },
-    [deleteQuote, t]
+    [deleteQuote, t],
   );
 
   // Stats from backend (or fallback to 0)
@@ -271,7 +293,7 @@ export default function HomeScreen() {
             if (isNetworkError(error)) {
               Alert.alert(
                 t("errors.noConnection"),
-                t("errors.somethingWentWrong")
+                t("errors.somethingWentWrong"),
               );
             } else {
               const detail = error?.response?.data?.detail;
@@ -282,10 +304,10 @@ export default function HomeScreen() {
             }
             console.error("Create quote error:", error);
           },
-        }
+        },
       );
     },
-    [createQuote, queryClient, router, t]
+    [createQuote, queryClient, router, t],
   );
 
   return (
@@ -309,8 +331,7 @@ export default function HomeScreen() {
         <View className="flex-row items-center justify-between px-6 pt-4 pb-2">
           <View>
             <Text className="text-2xl font-bold text-slate-900">
-              {getGreeting()},{" "}
-              {user?.firstName || "Pro"}
+              {getGreeting()}, {user?.firstName || "Pro"}
             </Text>
             <Text className="mt-0.5 text-sm text-slate-500">
               {t("home.readyToCreate")}
@@ -407,7 +428,7 @@ export default function HomeScreen() {
               <QuoteCardSkeleton />
               <QuoteCardSkeleton />
             </>
-          ) : isError && isNetworkError(error) ? (
+          ) : isError && isNetworkError(error) && quotes.length === 0 ? (
             <NetworkErrorView onRetry={refetch} compact />
           ) : quotes.length === 0 ? (
             <View className="items-center rounded-xl bg-white py-8 border border-slate-100">
@@ -417,16 +438,34 @@ export default function HomeScreen() {
               </Text>
             </View>
           ) : (
-            quotes.map((quote) => (
-              <QuoteCard
-                key={quote.id}
-                quote={quote}
-                t={t}
-                currencySymbol={currencySymbol}
-                onPress={() => router.push(`/quote/${quote.id}` as any)}
-                onLongPress={() => handleDeleteQuote(quote)}
-              />
-            ))
+            <>
+              {isError && isNetworkError(error) && (
+                <View className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 flex-row items-center">
+                  <Text className="text-xs text-amber-800 flex-1">
+                    {t("errors.showingCachedData")}
+                  </Text>
+                  <Pressable
+                    onPress={() => refetch()}
+                    style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+                    className="bg-slate-900 px-2 py-1 rounded"
+                  >
+                    <Text className="text-xs font-semibold text-white">
+                      {t("errors.retry")}
+                    </Text>
+                  </Pressable>
+                </View>
+              )}
+              {quotes.map((quote) => (
+                <QuoteCard
+                  key={quote.id}
+                  quote={quote}
+                  t={t}
+                  currencySymbol={currencySymbol}
+                  onPress={() => router.push(`/quote/${quote.id}` as any)}
+                  onLongPress={() => handleDeleteQuote(quote)}
+                />
+              ))}
+            </>
           )}
         </View>
       </ScrollView>

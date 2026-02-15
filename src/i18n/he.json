@@ -6,7 +6,10 @@
     "maxDurationReached": "הגעת למשך ההקלטה המרבי (10 דק').",
     "fileTooLarge": "הקובץ גדול מדי. נא להקליט הקלטה קצרה יותר.",
     "softLimitApproaching": "אתה מתקרב למגבלת הנפח החודשית.",
-    "softLimitReached": "הגעת למגבלת ההצעות החודשית. צור קשר עם התמיכה להמשך."
+    "softLimitReached": "הגעת למגבלת ההצעות החודשית. צור קשר עם התמיכה להמשך.",
+    "showingCachedData": "מוצגים נתונים במטמון. אתה לא מחובר.",
+    "quoteNameTooLong": "שם ההצעה חייב להיות 255 תווים או פחות.",
+    "itemNameTooLong": "שם הפריט חייב להיות 200 תווים או פחות."
   },
   "common": {
     "appName": "VoiceQuote",

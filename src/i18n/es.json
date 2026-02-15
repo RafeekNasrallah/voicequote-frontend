@@ -6,7 +6,10 @@
     "maxDurationReached": "Se ha alcanzado la duración máxima de grabación (10 min).",
     "fileTooLarge": "El archivo es demasiado grande. Intenta con una grabación más corta.",
     "softLimitApproaching": "Te estás acercando a tu límite mensual de volumen.",
-    "softLimitReached": "Has alcanzado tu límite mensual de presupuestos. Contacta con soporte para continuar."
+    "softLimitReached": "Has alcanzado tu límite mensual de presupuestos. Contacta con soporte para continuar.",
+    "showingCachedData": "Mostrando datos en caché. No hay conexión.",
+    "quoteNameTooLong": "El nombre del presupuesto debe tener 255 caracteres o menos.",
+    "itemNameTooLong": "El nombre del concepto debe tener 200 caracteres o menos."
   },
   "common": {
     "appName": "VoiceQuote",

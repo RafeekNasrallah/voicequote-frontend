@@ -2,24 +2,24 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { FileText, Search } from "lucide-react-native";
 import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-  Alert,
-  FlatList,
-  RefreshControl,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    FlatList,
+    Pressable,
+    RefreshControl,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Pressable } from "react-native";
-import { useTranslation } from "react-i18next";
 
-import NetworkErrorView from "@/components/NetworkErrorView";
-import api from "@/src/lib/api";
-import { getCurrencySymbol, DEFAULT_CURRENCY } from "@/src/lib/currency";
-import { isNetworkError } from "@/src/lib/networkError";
-import { QuotesListSkeleton } from "@/components/Skeleton";
 import MicFAB from "@/components/MicFAB";
+import NetworkErrorView from "@/components/NetworkErrorView";
+import { QuotesListSkeleton } from "@/components/Skeleton";
+import api from "@/src/lib/api";
+import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/src/lib/currency";
+import { isNetworkError } from "@/src/lib/networkError";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -45,15 +45,27 @@ function formatDate(dateStr: string): string {
 
 function getQuoteStatus(
   quote: Quote,
-  t: (key: string) => string
+  t: (key: string) => string,
 ): { label: string; bg: string; text: string } {
   if (quote.clientId && quote.totalCost) {
-    return { label: t("quotes.statusReady"), bg: "bg-emerald-50", text: "text-emerald-700" };
+    return {
+      label: t("quotes.statusReady"),
+      bg: "bg-emerald-50",
+      text: "text-emerald-700",
+    };
   }
   if (quote.totalCost) {
-    return { label: t("quotes.statusNoClient"), bg: "bg-amber-50", text: "text-amber-700" };
+    return {
+      label: t("quotes.statusNoClient"),
+      bg: "bg-amber-50",
+      text: "text-amber-700",
+    };
   }
-  return { label: t("quotes.statusDraft"), bg: "bg-slate-100", text: "text-slate-600" };
+  return {
+    label: t("quotes.statusDraft"),
+    bg: "bg-slate-100",
+    text: "text-slate-600",
+  };
 }
 
 function getQuoteTitle(quote: Quote): string {
@@ -104,7 +116,8 @@ function QuoteCard({
         </Text>
         {quote.totalCost != null && (
           <Text className="ml-3 text-sm font-medium text-slate-600">
-            {currencySymbol}{quote.totalCost.toFixed(2)}
+            {currencySymbol}
+            {quote.totalCost.toFixed(2)}
           </Text>
         )}
       </View>
@@ -148,7 +161,9 @@ export default function AllQuotesScreen() {
     },
   });
 
-  const currencySymbol = getCurrencySymbol(userProfile?.currency || DEFAULT_CURRENCY);
+  const currencySymbol = getCurrencySymbol(
+    userProfile?.currency || DEFAULT_CURRENCY,
+  );
 
   // Search across all fields
   const filteredQuotes = useMemo(() => {
@@ -197,7 +212,7 @@ export default function AllQuotesScreen() {
         },
       ]);
     },
-    [deleteQuote, t]
+    [deleteQuote, t],
   );
 
   const renderQuote = useCallback(
@@ -210,14 +225,16 @@ export default function AllQuotesScreen() {
         onLongPress={() => handleDeleteQuote(item)}
       />
     ),
-    [router, t, handleDeleteQuote, currencySymbol]
+    [router, t, handleDeleteQuote, currencySymbol],
   );
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
       {/* Header */}
       <View className="px-6 pt-4 pb-2">
-        <Text className="text-2xl font-bold text-slate-900">{t("quotes.title")}</Text>
+        <Text className="text-2xl font-bold text-slate-900">
+          {t("quotes.title")}
+        </Text>
       </View>
 
       {/* Search */}
@@ -238,7 +255,7 @@ export default function AllQuotesScreen() {
       {/* List */}
       {isLoading ? (
         <QuotesListSkeleton count={6} />
-      ) : isError && isNetworkError(error) ? (
+      ) : isError && isNetworkError(error) && filteredQuotes.length === 0 ? (
         <NetworkErrorView onRetry={refetch} />
       ) : filteredQuotes.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
@@ -248,20 +265,41 @@ export default function AllQuotesScreen() {
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={filteredQuotes}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderQuote}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={refetch}
-              tintColor="#0f172a"
-            />
-          }
-        />
+        <>
+          {isError && isNetworkError(error) && (
+            <View className="mx-6 mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 flex-row items-center">
+              <Text className="text-xs text-amber-800 flex-1">
+                {t("errors.showingCachedData")}
+              </Text>
+              <Pressable
+                onPress={() => refetch()}
+                className="bg-slate-900 px-2 py-1 rounded"
+                style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+              >
+                <Text className="text-xs font-semibold text-white">
+                  {t("errors.retry")}
+                </Text>
+              </Pressable>
+            </View>
+          )}
+          <FlatList
+            data={filteredQuotes}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderQuote}
+            contentContainerStyle={{
+              paddingHorizontal: 24,
+              paddingBottom: 100,
+            }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefetching}
+                onRefresh={refetch}
+                tintColor="#0f172a"
+              />
+            }
+          />
+        </>
       )}
 
       {/* Mic FAB */}

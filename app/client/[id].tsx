@@ -2,19 +2,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, ChevronRight, FileText, Trash2 } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTranslation } from "react-i18next";
 
 import api from "@/src/lib/api";
 import { getCurrencySymbol } from "@/src/lib/currency";
@@ -73,7 +73,7 @@ export default function ClientDetailScreen() {
 
   const currencySymbol = getCurrencySymbol(profile?.currency ?? "USD");
 
-  // Fetch client
+  // Fetch client by ID
   const {
     data: client,
     isLoading,
@@ -81,19 +81,19 @@ export default function ClientDetailScreen() {
   } = useQuery({
     queryKey: ["client", id],
     queryFn: async () => {
-      // Get from the clients list since there's no GET /clients/:id
-      const { data } = await api.get<{ clients: Client[] }>("/api/clients");
-      const found = data.clients.find((c) => c.id === Number(id));
-      if (!found) throw new Error("Client not found");
-      return found;
+      const { data } = await api.get<Client>(`/api/clients/${id}`);
+      return data;
     },
+    enabled: !!id,
   });
 
   // Fetch client's quotes
   const { data: quotesData, isLoading: quotesLoading } = useQuery({
     queryKey: ["clientQuotes", id],
     queryFn: async () => {
-      const { data } = await api.get<ClientQuotesResponse>(`/api/clients/${id}/quotes`);
+      const { data } = await api.get<ClientQuotesResponse>(
+        `/api/clients/${id}/quotes`,
+      );
       return data;
     },
     enabled: !!id,
@@ -314,7 +314,10 @@ export default function ClientDetailScreen() {
               {quotesData && quotesData.totalQuotes > 0 && (
                 <View className="bg-slate-100 px-2.5 py-1 rounded-full">
                   <Text className="text-xs font-semibold text-slate-600">
-                    {quotesData.totalQuotes} {quotesData.totalQuotes === 1 ? t("clients.quote") : t("clients.quotesPlural")}
+                    {quotesData.totalQuotes}{" "}
+                    {quotesData.totalQuotes === 1
+                      ? t("clients.quote")
+                      : t("clients.quotesPlural")}
                   </Text>
                 </View>
               )}
@@ -325,13 +328,20 @@ export default function ClientDetailScreen() {
               <View className="mb-4 rounded-xl bg-white border border-slate-100 shadow-sm p-4">
                 <View className="flex-row justify-between">
                   <View className="flex-1">
-                    <Text className="text-xs text-slate-400 uppercase">{t("clients.totalQuotes")}</Text>
-                    <Text className="text-xl font-bold text-slate-900 mt-1">{quotesData.totalQuotes}</Text>
+                    <Text className="text-xs text-slate-400 uppercase">
+                      {t("clients.totalQuotes")}
+                    </Text>
+                    <Text className="text-xl font-bold text-slate-900 mt-1">
+                      {quotesData.totalQuotes}
+                    </Text>
                   </View>
                   <View className="flex-1 items-end">
-                    <Text className="text-xs text-slate-400 uppercase">{t("clients.totalValue")}</Text>
+                    <Text className="text-xs text-slate-400 uppercase">
+                      {t("clients.totalValue")}
+                    </Text>
                     <Text className="text-xl font-bold text-slate-900 mt-1">
-                      {currencySymbol}{quotesData.totalValue.toFixed(2)}
+                      {currencySymbol}
+                      {quotesData.totalValue.toFixed(2)}
                     </Text>
                   </View>
                 </View>
@@ -350,7 +360,9 @@ export default function ClientDetailScreen() {
                     key={quote.id}
                     onPress={() => router.push(`/quote/${quote.id}` as any)}
                     className={`flex-row items-center px-4 py-3.5 ${
-                      index < quotesData.quotes.length - 1 ? "border-b border-slate-100" : ""
+                      index < quotesData.quotes.length - 1
+                        ? "border-b border-slate-100"
+                        : ""
                     }`}
                     style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
                   >
@@ -358,7 +370,10 @@ export default function ClientDetailScreen() {
                       <FileText size={18} color="#64748b" />
                     </View>
                     <View className="ml-3 flex-1">
-                      <Text className="text-sm font-medium text-slate-900" numberOfLines={1}>
+                      <Text
+                        className="text-sm font-medium text-slate-900"
+                        numberOfLines={1}
+                      >
                         {quote.name || `${t("quotes.title")} #${quote.id}`}
                       </Text>
                       <Text className="text-xs text-slate-400 mt-0.5">
@@ -368,7 +383,8 @@ export default function ClientDetailScreen() {
                     <View className="flex-row items-center">
                       {quote.totalCost !== null && (
                         <Text className="text-sm font-semibold text-slate-700 mr-2">
-                          {currencySymbol}{quote.totalCost.toFixed(2)}
+                          {currencySymbol}
+                          {quote.totalCost.toFixed(2)}
                         </Text>
                       )}
                       <ChevronRight size={16} color="#cbd5e1" />

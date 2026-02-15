@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, FileText, Users, Settings } from "lucide-react-native";
+import { FileText, Home, Settings, Users } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 
 export default function TabLayout() {
