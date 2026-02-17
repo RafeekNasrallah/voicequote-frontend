@@ -26,7 +26,7 @@ interface CreateQuoteParams {
  * Backend process-quote only accepts these languages for transcription.
  * Keep in sync with backend validation (e.g. Zod enum). Any other locale falls back to "en".
  */
-const BACKEND_LANGUAGES = ["en", "ar", "es", "fr"] as const;
+const BACKEND_LANGUAGES = ["en", "ar", "es", "fr", "he"] as const;
 type BackendLanguage = (typeof BACKEND_LANGUAGES)[number];
 
 function toBackendLanguage(i18nCode: string): BackendLanguage {
@@ -102,15 +102,17 @@ export function useCreateQuote() {
         );
       }
 
-      // Step 3: Tell backend to process the uploaded audio
+      // Step 3: Tell backend to process the uploaded audio (long timeout for transcription)
       let processData: ProcessQuoteResponse;
+      const PROCESS_QUOTE_TIMEOUT_MS = 180000; // 3 min for long recordings / Hebrew etc.
       try {
         const res = await api.post<ProcessQuoteResponse>(
           "/api/process-quote",
           {
             fileKey,
             language,
-          }
+          },
+          { timeout: PROCESS_QUOTE_TIMEOUT_MS }
         );
         processData = res.data;
       } catch (e: any) {

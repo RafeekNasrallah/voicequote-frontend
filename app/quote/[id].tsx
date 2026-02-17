@@ -612,38 +612,6 @@ export default function QuoteScreen() {
         >
           {/* ─── Paper Container ─────────────────────── */}
           <View className="mx-4 mt-4 rounded-xl bg-white shadow-sm border border-slate-100">
-            {/* ─── Client Section ──────────────────── */}
-            <View className="border-b border-slate-100 p-4">
-              <Text className="mb-2 text-xs font-semibold uppercase text-slate-400">
-                {t("quoteEditor.client")}
-              </Text>
-              {quote.clientName ? (
-                <Pressable
-                  onPress={() => setClientModalVisible(true)}
-                  className="rounded-lg border border-slate-200 p-3"
-                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-                >
-                  <Text className="text-sm font-semibold text-slate-900">
-                    {quote.clientName}
-                  </Text>
-                  <Text className="mt-0.5 text-xs text-slate-400">
-                    {t("quoteEditor.tapToChange")}
-                  </Text>
-                </Pressable>
-              ) : (
-                <Pressable
-                  onPress={() => setClientModalVisible(true)}
-                  className="items-center rounded-lg border border-dashed border-slate-300 p-4"
-                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-                >
-                  <UserPlus size={20} color="#3b82f6" />
-                  <Text className="mt-1 text-sm font-semibold text-blue-500">
-                    {t("quoteEditor.selectClient")}
-                  </Text>
-                </Pressable>
-              )}
-            </View>
-
             {/* ─── Play recording (when quote has audio) ─────── */}
             {audioUrl && (
               <View className="border-b border-slate-100 p-4">
@@ -725,23 +693,26 @@ export default function QuoteScreen() {
               {localItems.map((item, index) => (
                 <View
                   key={index}
-                  className="flex-row items-center border-b border-slate-100 py-2.5"
+                  style={{ minHeight: 56 }}
+                  className="flex-row items-start border-b border-slate-100 py-4"
                 >
-                  {/* Name — constrained width so table stays compact; long names scroll inside input */}
+                  {/* Name — more height so long names can wrap */}
                   <View style={{ flex: 1, maxWidth: 220 }} className="mr-1">
                     <TextInput
                       className="text-sm text-slate-900 flex-1 min-w-0"
+                      style={{ minHeight: 44 }}
                       value={item.name}
                       onChangeText={(v) => updateItem(index, "name", v)}
                       onBlur={saveItems}
                       placeholder={t("quoteEditor.itemNamePlaceholder")}
                       placeholderTextColor="#cbd5e1"
                       maxLength={ITEM_NAME_MAX}
+                      multiline
                     />
                   </View>
                   {/* Unit */}
                   <TextInput
-                    className="w-16 text-center text-sm text-slate-900"
+                    className="w-16 text-center text-sm text-slate-900 mt-1"
                     value={item.unit || ""}
                     onChangeText={(v) => updateItem(index, "unit", v)}
                     onBlur={saveItems}
@@ -750,7 +721,7 @@ export default function QuoteScreen() {
                   />
                   {/* Qty */}
                   <TextInput
-                    className="w-14 text-center text-sm text-slate-900"
+                    className="w-14 text-center text-sm text-slate-900 mt-1"
                     value={item.qty?.toString() || ""}
                     onChangeText={(v) => updateItem(index, "qty", v)}
                     onBlur={saveItems}
@@ -760,7 +731,7 @@ export default function QuoteScreen() {
                   />
                   {/* Price */}
                   <TextInput
-                    className="w-20 text-right text-sm text-slate-900"
+                    className="w-20 text-right text-sm text-slate-900 mt-1"
                     value={item.price?.toString() || ""}
                     onChangeText={(v) => updateItem(index, "price", v)}
                     onBlur={saveItems}
@@ -771,7 +742,7 @@ export default function QuoteScreen() {
                   {/* Delete */}
                   <Pressable
                     onPress={() => removeItem(index)}
-                    className="ml-1 h-9 w-9 items-center justify-center"
+                    className="ml-1 h-9 w-9 items-center justify-center mt-1"
                     style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
                   >
                     <Trash2 size={16} color="#ef4444" />
@@ -931,6 +902,38 @@ export default function QuoteScreen() {
                   {grandTotal.toFixed(2)}
                 </Text>
               </View>
+            </View>
+
+            {/* ─── Client Section ──────────────────── */}
+            <View className="border-t border-slate-100 p-4">
+              <Text className="mb-2 text-xs font-semibold uppercase text-slate-400">
+                {t("quoteEditor.client")}
+              </Text>
+              {quote.clientName ? (
+                <Pressable
+                  onPress={() => setClientModalVisible(true)}
+                  className="rounded-lg border border-slate-200 p-3"
+                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                >
+                  <Text className="text-sm font-semibold text-slate-900">
+                    {quote.clientName}
+                  </Text>
+                  <Text className="mt-0.5 text-xs text-slate-400">
+                    {t("quoteEditor.tapToChange")}
+                  </Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  onPress={() => setClientModalVisible(true)}
+                  className="items-center rounded-lg border border-dashed border-slate-300 p-4"
+                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                >
+                  <UserPlus size={20} color="#3b82f6" />
+                  <Text className="mt-1 text-sm font-semibold text-blue-500">
+                    {t("quoteEditor.selectClient")}
+                  </Text>
+                </Pressable>
+              )}
             </View>
           </View>
 

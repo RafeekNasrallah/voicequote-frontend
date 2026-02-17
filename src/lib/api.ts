@@ -7,7 +7,7 @@ const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
 
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 30000,
+  timeout: 30000, // default; long-running requests (e.g. process-quote) can override
   headers: {
     "Content-Type": "application/json",
   },

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { Link } from "expo-router";
+import type { Href } from "expo-router";
 import { Search, ChevronRight, Plus, User } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import {
@@ -44,7 +45,6 @@ export default function ClientsScreen() {
   const [search, setSearch] = useState("");
   const [addModalVisible, setAddModalVisible] = useState(false);
   const { t } = useTranslation();
-  const router = useRouter();
 
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
     queryKey: ["clients"],
@@ -68,11 +68,15 @@ export default function ClientsScreen() {
   const renderClient = useCallback(({ item }: { item: Client }) => {
     const quoteCount = item._count?.quotes ?? 0;
     return (
-      <Pressable
-        onPress={() => router.push(`/client/${item.id}` as any)}
-        className="mb-3 flex-row items-center rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
-        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      <Link
+        href={(`/client/${item.id}`) as Href}
+        asChild
+        className="mb-3"
       >
+        <Pressable
+          className="flex-row items-center rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        >
         {/* Avatar */}
         <View className="h-12 w-12 items-center justify-center rounded-full bg-slate-100">
           <Text className="text-base font-bold text-slate-600">
@@ -102,8 +106,9 @@ export default function ClientsScreen() {
         {/* Arrow */}
         <ChevronRight size={20} color="#cbd5e1" />
       </Pressable>
+      </Link>
     );
-  }, [router, t]);
+  }, [t]);
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
