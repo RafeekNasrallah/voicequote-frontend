@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { FileText, Search } from "lucide-react-native";
+import { FileText, Plus, Search } from "lucide-react-native";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import MicFAB from "@/components/MicFAB";
 import NetworkErrorView from "@/components/NetworkErrorView";
 import { QuotesListSkeleton } from "@/components/Skeleton";
+import { useCreateManualQuote } from "@/src/hooks/useCreateManualQuote";
 import api from "@/src/lib/api";
 import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/src/lib/currency";
 import { isNetworkError } from "@/src/lib/networkError";
@@ -215,6 +216,8 @@ export default function AllQuotesScreen() {
     [deleteQuote, t],
   );
 
+  const createManualQuote = useCreateManualQuote();
+
   const renderQuote = useCallback(
     ({ item }: { item: Quote }) => (
       <QuoteCard
@@ -231,10 +234,18 @@ export default function AllQuotesScreen() {
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
       {/* Header */}
-      <View className="px-6 pt-4 pb-2">
+      <View className="px-6 pt-4 pb-2 flex-row items-center justify-between">
         <Text className="text-2xl font-bold text-slate-900">
           {t("quotes.title")}
         </Text>
+        <Pressable
+          onPress={() => createManualQuote.mutate()}
+          disabled={createManualQuote.isPending}
+          className="h-10 w-10 items-center justify-center rounded-full bg-slate-900"
+          style={({ pressed }) => ({ opacity: pressed || createManualQuote.isPending ? 0.7 : 1 })}
+        >
+          <Plus size={20} color="#ffffff" />
+        </Pressable>
       </View>
 
       {/* Search */}

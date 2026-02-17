@@ -9,7 +9,8 @@
     "softLimitReached": "You have reached your monthly quote limit. Please contact support to continue.",
     "showingCachedData": "Showing cached data. You're offline.",
     "quoteNameTooLong": "Quote name must be 255 characters or less.",
-    "itemNameTooLong": "Item name must be 200 characters or less."
+    "itemNameTooLong": "Item name must be 200 characters or less.",
+    "createQuoteFailed": "Could not create quote. Please try again."
   },
   "common": {
     "appName": "VoiceQuote",
@@ -74,7 +75,8 @@
     "viewAll": "View All",
     "noQuotesYet": "No quotes yet. Record your first!",
     "processingFailed": "Processing Failed",
-    "processingFailedMsg": "Could not process your recording. Please try again."
+    "processingFailedMsg": "Could not process your recording. Please try again.",
+    "newQuoteManual": "New quote (no recording)"
   },
   "quotes": {
     "title": "Quotes",
@@ -86,7 +88,8 @@
     "statusDraft": "Draft",
     "deleteQuote": "Delete Quote",
     "deleteQuoteConfirm": "Are you sure you want to delete this quote? This cannot be undone.",
-    "deleteQuoteFailed": "Failed to delete quote."
+    "deleteQuoteFailed": "Failed to delete quote.",
+    "newQuote": "New quote"
   },
   "quoteEditor": {
     "client": "Client",

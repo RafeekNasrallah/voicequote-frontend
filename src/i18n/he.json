@@ -9,7 +9,8 @@
     "softLimitReached": "הגעת למגבלת ההצעות החודשית. צור קשר עם התמיכה להמשך.",
     "showingCachedData": "מוצגים נתונים במטמון. אתה לא מחובר.",
     "quoteNameTooLong": "שם ההצעה חייב להיות 255 תווים או פחות.",
-    "itemNameTooLong": "שם הפריט חייב להיות 200 תווים או פחות."
+    "itemNameTooLong": "שם הפריט חייב להיות 200 תווים או פחות.",
+    "createQuoteFailed": "לא ניתן ליצור הצעה. נסה שוב."
   },
   "common": {
     "appName": "VoiceQuote",
@@ -74,7 +75,8 @@
     "viewAll": "הצג הכל",
     "noQuotesYet": "עדיין אין הצעות. הקלט את הראשונה!",
     "processingFailed": "העיבוד נכשל",
-    "processingFailedMsg": "לא ניתן לעבד את ההקלטה. נסה שוב."
+    "processingFailedMsg": "לא ניתן לעבד את ההקלטה. נסה שוב.",
+    "newQuoteManual": "הצעה חדשה (ללא הקלטה)"
   },
   "quotes": {
     "title": "הצעות מחיר",
@@ -86,7 +88,8 @@
     "statusDraft": "טיוטה",
     "deleteQuote": "מחק הצעה",
     "deleteQuoteConfirm": "האם אתה בטוח שברצונך למחוק הצעה זו? לא ניתן לבטל פעולה זו.",
-    "deleteQuoteFailed": "לא ניתן למחוק את ההצעה."
+    "deleteQuoteFailed": "לא ניתן למחוק את ההצעה.",
+    "newQuote": "הצעה חדשה"
   },
   "quoteEditor": {
     "client": "לקוח",

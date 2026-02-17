@@ -208,10 +208,12 @@ export default function QuoteScreen() {
     grandTotal = subtotalBeforeTax;
   }
 
-  // Sync server data to local state
+  // Sync server data to local state (manual quotes may have items: [] or null)
   useEffect(() => {
-    if (quote?.items) {
+    if (Array.isArray(quote?.items)) {
       setLocalItems(quote.items);
+    } else if (quote) {
+      setLocalItems([]);
     }
     if (quote?.totalCost !== undefined) {
       setLocalTotal(quote.totalCost);

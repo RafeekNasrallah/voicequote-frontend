@@ -9,7 +9,8 @@
     "softLimitReached": "Has alcanzado tu límite mensual de presupuestos. Contacta con soporte para continuar.",
     "showingCachedData": "Mostrando datos en caché. No hay conexión.",
     "quoteNameTooLong": "El nombre del presupuesto debe tener 255 caracteres o menos.",
-    "itemNameTooLong": "El nombre del concepto debe tener 200 caracteres o menos."
+    "itemNameTooLong": "El nombre del concepto debe tener 200 caracteres o menos.",
+    "createQuoteFailed": "No se pudo crear el presupuesto. Inténtalo de nuevo."
   },
   "common": {
     "appName": "VoiceQuote",
@@ -74,7 +75,8 @@
     "viewAll": "Ver todo",
     "noQuotesYet": "Aún no hay presupuestos. ¡Graba el primero!",
     "processingFailed": "Error de procesamiento",
-    "processingFailedMsg": "No se pudo procesar tu grabación. Inténtalo de nuevo."
+    "processingFailedMsg": "No se pudo procesar tu grabación. Inténtalo de nuevo.",
+    "newQuoteManual": "Nuevo presupuesto (sin grabación)"
   },
   "quotes": {
     "title": "Presupuestos",
@@ -86,7 +88,8 @@
     "statusDraft": "Borrador",
     "deleteQuote": "Eliminar presupuesto",
     "deleteQuoteConfirm": "¿Estás seguro de que quieres eliminar este presupuesto? Esta acción no se puede deshacer.",
-    "deleteQuoteFailed": "No se pudo eliminar el presupuesto."
+    "deleteQuoteFailed": "No se pudo eliminar el presupuesto.",
+    "newQuote": "Nuevo presupuesto"
   },
   "quoteEditor": {
     "client": "Cliente",

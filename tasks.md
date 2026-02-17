@@ -1259,3 +1259,40 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 - Record a quote and say e.g. "This is for the construction in Downtown" or "Kitchen renovation for the Smith family" → after processing, the quote appears with that title (e.g. "Construction in Downtown") in the list and in the editor header instead of only "Quote #ID".
 - Record a quote without mentioning what it’s for → quote still shows "Quote #ID" (or "Quote #ID - Client" when assigned).
 - User can edit or clear the auto-filled name in the Quote Editor; changes persist via existing `PATCH /api/quotes/:id` with `name`.
+
+---
+
+## Phase 36: Create Quote Without Recording (Manual Quote)
+
+**Goal:** Let users create a quote without recording voice. They can start with an empty quote and add all items (and optional name, client, labor hours, etc.) manually in the Quote Editor.
+
+**Context:** Today, quotes are created only via **Record → Upload → Process** (voice). This phase adds a second path: **Create empty quote** → open Quote Editor → add items and details by hand. The existing editor already supports editing items, name, client, labor; we only need a way to create the empty quote and navigate to it.
+
+### Task 36.1: API and Hook for Creating an Empty Quote
+
+- **Action:** Add a way to call the new backend endpoint that creates a quote without audio (e.g. `POST /api/quotes` with optional body `{ name?: string }`). See backend Phase 32.
+- **Action:** Create a mutation (e.g. in a hook like `useCreateManualQuote` or extend an existing one) that calls this endpoint and returns the new quote ID (or full quote). On success, invalidate the quotes list cache so the new quote appears.
+
+### Task 36.2: Entry Point in the UI
+
+- **Action:** Add an entry point for "Create quote without recording". Options (choose one or combine):
+  - **Home dashboard:** A button or FAB such as "New quote" / "Add quote manually" (in addition to or near the record button) that creates an empty quote and navigates to `/quote/[id]`.
+  - **Quotes tab:** A FAB or header button "New quote" that does the same.
+- **Action:** On tap, trigger the create-empty-quote API; show a short loading state; on success, navigate to `router.push(\`/quote/${quoteId}\`)` (or equivalent). On error, show an error message (e.g. toast or alert).
+
+### Task 36.3: Quote Editor Behaviour for Manual Quotes
+
+- **Action:** The Quote Editor (`app/quote/[id].tsx`) already supports empty or partial quotes (add items, set name, assign client, labor hours). Ensure that when the quote has no items initially, the UI shows an empty items list and the user can add rows (existing "Add item" or equivalent). No recording-related UI (e.g. "Play recording") should be shown or should be disabled when the quote has no recording; existing behaviour (e.g. audio URL 404) likely already handles this.
+- **Action:** Optional: If the backend returns a flag like `hasRecording: boolean` or the frontend infers from absence of audio URL, hide or disable the "Play recording" control for manual quotes.
+
+### Task 36.4: Translations
+
+- **Action:** Add translation keys in all 5 languages (en, de, he, ar, es), e.g.:
+  - `home.newQuote`, `home.newQuoteManual`, `quotes.newQuote`, `quotes.createManual`, or similar for the button labels and any tooltips. Add error keys if needed (e.g. `errors.createQuoteFailed`).
+
+### ✅ Validation (Phase 36)
+
+- User taps "New quote" (or equivalent) on Home or Quotes tab → loading → redirect to Quote Editor with a new, empty quote (no items, no recording).
+- User adds items manually (name, qty, unit, price), optionally sets quote name, assigns client, labor hours → can save and later "Finalize PDF" / "Regenerate PDF" as with voice-created quotes.
+- Manual quote appears in the quotes list and behaves like any other quote (edit, delete, assign client, generate PDF).
+- Creating a quote via voice (record → process) still works as before.
