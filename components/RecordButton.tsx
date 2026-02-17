@@ -224,9 +224,7 @@ export default function RecordButton({
         <Pressable onPress={handlePress}>
           {({ pressed }) => (
             <View
-              className={`h-32 w-32 items-center justify-center rounded-full ${
-                isRecording ? "bg-orange-600" : "bg-slate-900"
-              }`}
+              className="h-32 w-32 items-center justify-center rounded-full bg-orange-600"
               style={{
                 opacity: pressed ? 0.9 : 1,
                 shadowColor: "#000",
@@ -253,7 +251,7 @@ export default function RecordButton({
             ? isNearLimit
               ? "text-red-600"
               : "text-orange-600"
-            : "text-slate-400"
+            : "text-orange-600"
         }`}
       >
         {isRecording

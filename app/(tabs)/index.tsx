@@ -338,7 +338,7 @@ export default function HomeScreen() {
             </Text>
           </View>
           {/* Avatar */}
-          <View className="h-11 w-11 items-center justify-center rounded-full bg-slate-900">
+          <View className="h-11 w-11 items-center justify-center rounded-full bg-orange-600">
             <Text className="text-sm font-bold text-white">
               {getInitials(user?.firstName, user?.lastName)}
             </Text>
@@ -351,7 +351,7 @@ export default function HomeScreen() {
             label={t("home.totalQuotes")}
             value={totalQuotes}
             Icon={FileText}
-            color="#0f172a"
+            color="#ea580c"
             isLoading={statsLoading}
           />
           <StatsCard
@@ -365,7 +365,7 @@ export default function HomeScreen() {
             label={t("home.ready")}
             value={ready}
             Icon={CheckCircle2}
-            color="#16a34a"
+            color="#ea580c"
             isLoading={statsLoading}
           />
         </View>
@@ -447,7 +447,7 @@ export default function HomeScreen() {
                   <Pressable
                     onPress={() => refetch()}
                     style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
-                    className="bg-slate-900 px-2 py-1 rounded"
+                    className="bg-orange-600 px-2 py-1 rounded"
                   >
                     <Text className="text-xs font-semibold text-white">
                       {t("errors.retry")}

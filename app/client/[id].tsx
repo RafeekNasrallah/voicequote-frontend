@@ -61,6 +61,10 @@ export default function ClientDetailScreen() {
   const [address, setAddress] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [backPressed, setBackPressed] = useState(false);
+  const [deletePressed, setDeletePressed] = useState(false);
+  const [savePressed, setSavePressed] = useState(false);
+  const [pressedQuoteId, setPressedQuoteId] = useState<number | null>(null);
 
   // Fetch user profile for currency
   const { data: profile } = useQuery({
@@ -200,18 +204,22 @@ export default function ClientDetailScreen() {
             queryClient.invalidateQueries({ queryKey: ["clients"] });
             router.replace("/(tabs)/clients");
           }}
+          onPressIn={() => setBackPressed(true)}
+          onPressOut={() => setBackPressed(false)}
           className="mr-3 h-10 w-10 items-center justify-center rounded-lg"
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          style={{ opacity: backPressed ? 0.6 : 1 }}
         >
-          <ArrowLeft size={22} color="#0f172a" />
+          <ArrowLeft size={22} color="#ea580c" />
         </Pressable>
         <Text className="flex-1 text-lg font-bold text-slate-900">
           {t("clients.editClient")}
         </Text>
         <Pressable
           onPress={handleDelete}
+          onPressIn={() => setDeletePressed(true)}
+          onPressOut={() => setDeletePressed(false)}
           className="ml-2 h-10 w-10 items-center justify-center rounded-lg"
-          style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+          style={{ opacity: deletePressed ? 0.5 : 1 }}
         >
           <Trash2 size={20} color="#ef4444" />
         </Pressable>
@@ -291,10 +299,12 @@ export default function ClientDetailScreen() {
           <Pressable
             className="mt-2 h-12 items-center justify-center rounded-xl bg-slate-900"
             onPress={handleSave}
+            onPressIn={() => setSavePressed(true)}
+            onPressOut={() => setSavePressed(false)}
             disabled={saveClient.isPending}
-            style={({ pressed }) => ({
-              opacity: pressed || saveClient.isPending ? 0.8 : 1,
-            })}
+            style={{
+              opacity: savePressed || saveClient.isPending ? 0.8 : 1,
+            }}
           >
             {saveClient.isPending ? (
               <ActivityIndicator color="#ffffff" />
@@ -359,12 +369,14 @@ export default function ClientDetailScreen() {
                   <Pressable
                     key={quote.id}
                     onPress={() => router.push(`/quote/${quote.id}` as any)}
+                    onPressIn={() => setPressedQuoteId(quote.id)}
+                    onPressOut={() => setPressedQuoteId(null)}
                     className={`flex-row items-center px-4 py-3.5 ${
                       index < quotesData.quotes.length - 1
                         ? "border-b border-slate-100"
                         : ""
                     }`}
-                    style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                    style={{ opacity: pressedQuoteId === quote.id ? 0.7 : 1 }}
                   >
                     <View className="h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
                       <FileText size={18} color="#64748b" />

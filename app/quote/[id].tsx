@@ -608,7 +608,7 @@ export default function QuoteScreen() {
       />
 
       {/* Header Bar */}
-      <View className="flex-row items-center px-4 py-3 border-b border-slate-200">
+      <View className="flex-row items-center px-4 py-3 border-b border-slate-200 border-b-orange-200">
         <Pressable
           onPress={() => {
             queryClient.invalidateQueries({ queryKey: ["quotes"] });
@@ -618,7 +618,7 @@ export default function QuoteScreen() {
           className="mr-3 h-10 w-10 items-center justify-center rounded-lg"
           style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
         >
-          <ArrowLeft size={22} color="#0f172a" />
+          <ArrowLeft size={22} color="#ea580c" />
         </Pressable>
         <Pressable className="flex-1" onPress={() => setIsEditingName(true)}>
           {isEditingName ? (

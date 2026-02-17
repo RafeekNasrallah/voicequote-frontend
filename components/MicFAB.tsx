@@ -78,7 +78,7 @@ export default function MicFAB({ style }: MicFABProps) {
       {/* FAB Button */}
       <Pressable
         onPress={() => setRecordingModalVisible(true)}
-        className="absolute bottom-6 right-6 h-14 w-14 items-center justify-center rounded-full bg-slate-900"
+        className="absolute bottom-6 right-6 h-14 w-14 items-center justify-center rounded-full bg-orange-600"
         style={[
           {
             shadowColor: "#000",

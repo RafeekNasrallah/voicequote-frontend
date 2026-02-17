@@ -130,7 +130,7 @@ export default function ClientsScreen() {
         </Text>
         <Pressable
           onPress={() => setAddModalVisible(true)}
-          className="h-10 w-10 items-center justify-center rounded-full bg-slate-900"
+          className="h-10 w-10 items-center justify-center rounded-full bg-orange-600"
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
           <Plus size={20} color="#ffffff" />

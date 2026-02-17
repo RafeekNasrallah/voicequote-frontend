@@ -470,7 +470,7 @@ export default function SettingsScreen() {
       >
         {/* Profile Card */}
         <View className="mx-6 mb-4 flex-row items-center rounded-xl bg-white p-4 shadow-sm border border-slate-100">
-          <View className="h-12 w-12 items-center justify-center rounded-full bg-slate-900">
+          <View className="h-12 w-12 items-center justify-center rounded-full bg-orange-600">
             <User size={20} color="#ffffff" />
           </View>
           <View className="ml-3 flex-1">
