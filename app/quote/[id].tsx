@@ -74,6 +74,7 @@ interface QuoteData {
   name: string | null;
   items: QuoteItem[] | null;
   laborHours: number | null;
+  laborRate: number | null;
   laborEnabled: boolean;
   totalCost: number | null;
   clientId: number | null;
@@ -160,13 +161,6 @@ export default function QuoteScreen() {
     },
   });
 
-  // Initialize local labor rate from user profile (once)
-  useEffect(() => {
-    if (userProfile?.laborRate !== undefined && localLaborRate === "") {
-      setLocalLaborRate(userProfile.laborRate?.toString() || "");
-    }
-  }, [userProfile?.laborRate]);
-
   const currencySymbol = getCurrencySymbol(
     userProfile?.currency || DEFAULT_CURRENCY,
   );
@@ -224,6 +218,13 @@ export default function QuoteScreen() {
     if (quote?.laborHours !== undefined) {
       setLocalLaborHours(quote.laborHours?.toString() || "");
     }
+    if (quote?.laborRate !== undefined) {
+      setLocalLaborRate(
+        quote.laborRate != null
+          ? quote.laborRate.toString()
+          : (userProfile?.laborRate?.toString() ?? ""),
+      );
+    }
     if (quote?.laborEnabled !== undefined) {
       setLocalLaborEnabled(quote.laborEnabled);
     }
@@ -232,7 +233,7 @@ export default function QuoteScreen() {
         Array.isArray(quote.extraTerms) ? [...quote.extraTerms] : [],
       );
     }
-  }, [quote]);
+  }, [quote, userProfile?.laborRate]);
 
   // ─── Mutations ──────────────────────────────────────────
 
@@ -317,6 +318,28 @@ export default function QuoteScreen() {
       patchLaborHours.mutate(hours);
     }
   }, [localLaborHours, quote?.laborHours, patchLaborHours]);
+
+  // Patch Labor Rate (per-quote)
+  const patchLaborRate = useMutation({
+    mutationFn: async (rate: number | null) => {
+      await api.patch(`/api/quotes/${id}`, { laborRate: rate });
+    },
+    onSuccess: () => {
+      setPdfUrl(null);
+      queryClient.invalidateQueries({ queryKey: ["quote", id] });
+    },
+    onError: () => {
+      Alert.alert(t("common.error"), t("quoteEditor.failedSaveLaborHours"));
+    },
+  });
+
+  const handleLaborRateBlur = useCallback(() => {
+    const serverRate = quote?.laborRate?.toString() ?? "";
+    if (localLaborRate !== serverRate) {
+      const rate = localLaborRate.trim() === "" ? null : parseFloat(localLaborRate);
+      patchLaborRate.mutate(rate === undefined || isNaN(rate) ? null : rate);
+    }
+  }, [localLaborRate, quote?.laborRate, patchLaborRate]);
 
   // Patch Labor Enabled
   const patchLaborEnabled = useMutation({
@@ -883,6 +906,7 @@ export default function QuoteScreen() {
                         }}
                         value={localLaborRate}
                         onChangeText={setLocalLaborRate}
+                        onBlur={handleLaborRateBlur}
                         placeholder="0"
                         placeholderTextColor="#cbd5e1"
                         keyboardType="decimal-pad"
