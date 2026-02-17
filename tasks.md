@@ -1231,3 +1231,31 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 - Add a manual term for this quote only → save → it persists and appears on the PDF for this quote.
 - Generate PDF → user’s default/custom terms plus quote-specific extra terms all appear in the Terms section.
 - Default terms in Settings are unchanged; only this quote shows the extra terms.
+
+---
+
+## Phase 35: Voice-Extracted Quote Title
+
+**Goal:** When the customer mentions in the voice what the quote is for (e.g. "this is for the construction in Downtown", "for the Smith family kitchen"), use that as the quote’s title. If nothing is mentioned, keep the current behaviour: show "Quote #ID" or "Quote #ID - &lt;client name&gt;".
+
+**Context:** The quote is currently displayed as **Quote #ID** (or **Quote #ID - Client name** when a client is assigned). The user can already set a custom name in the editor (Phase 13). This phase **auto-fills** the quote name from the recording when the speaker describes the project—so the list and header show e.g. "Construction in Downtown" or "Kitchen renovation for Smith family" without the user typing it. The user can still edit or clear the name.
+
+### Task 35.1: Use Quote Name from API Everywhere
+
+- **Action:** Confirm that every place that shows the quote title uses `quote.name` with fallback to `Quote #${quote.id}` (and client name where applicable).
+- **Places to check:** Quote Editor header (`app/quote/[id].tsx`), Home dashboard cards (`app/(tabs)/index.tsx`), Quotes tab list (`app/quotes.tsx`), Client quote history (`app/client/[id].tsx`). Logic should be: display `quote.name || \`Quote #${quote.id}\``; when client is present, append " - {clientName}" where appropriate.
+- **Note:** Once the backend sets `name` from the extracted title on quote creation, the frontend will show it automatically—no new field required if backend writes into `name`.
+
+### Task 35.2: Optional — "From recording" Hint
+
+- **Action:** If the backend adds a flag such as `nameFromRecording?: boolean` (or equivalent) in `GET /api/quotes/:id` and list responses, show a small hint next to the quote title in the editor (e.g. "From recording" or an icon) when the name was auto-set from the voice, so users know they can edit it. If the backend does not expose this, skip this task.
+
+### Task 35.3: Translations
+
+- **Action:** If any new strings are added (e.g. "From recording"), add translation keys in all 5 languages (en, de, he, ar, es).
+
+### ✅ Validation (Phase 35)
+
+- Record a quote and say e.g. "This is for the construction in Downtown" or "Kitchen renovation for the Smith family" → after processing, the quote appears with that title (e.g. "Construction in Downtown") in the list and in the editor header instead of only "Quote #ID".
+- Record a quote without mentioning what it’s for → quote still shows "Quote #ID" (or "Quote #ID - Client" when assigned).
+- User can edit or clear the auto-filled name in the Quote Editor; changes persist via existing `PATCH /api/quotes/:id` with `name`.

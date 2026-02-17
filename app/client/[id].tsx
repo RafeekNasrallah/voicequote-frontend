@@ -374,7 +374,7 @@ export default function ClientDetailScreen() {
                         className="text-sm font-medium text-slate-900"
                         numberOfLines={1}
                       >
-                        {quote.name || `${t("quotes.title")} #${quote.id}`}
+                        {quote.name || `Quote #${quote.id}`}
                       </Text>
                       <Text className="text-xs text-slate-400 mt-0.5">
                         {new Date(quote.createdAt).toLocaleDateString()}
