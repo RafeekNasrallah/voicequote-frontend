@@ -131,7 +131,14 @@
     "recording": "Grabación",
     "playRecording": "Reproducir grabación",
     "pauseRecording": "Pausar",
-    "recordingUnavailable": "Grabación no disponible"
+    "recordingUnavailable": "Grabación no disponible",
+    "termsForThisQuote": "Términos para este presupuesto",
+    "additionalTermsFromRecording": "Términos adicionales de tu grabación (o agrega los tuyos). Solo se muestran en el PDF de este presupuesto.",
+    "noExtraTerms": "No hay términos adicionales de la grabación.",
+    "addQuoteTerm": "Agregar término",
+    "removeQuoteTerm": "Quitar término",
+    "extraTermsSaved": "Términos del presupuesto guardados.",
+    "extraTermsSaveFailed": "No se pudieron guardar los términos. Inténtalo de nuevo."
   },
   "clients": {
     "title": "Clientes",

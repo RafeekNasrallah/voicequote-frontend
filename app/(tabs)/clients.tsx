@@ -1,25 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "expo-router";
 import type { Href } from "expo-router";
-import { Search, ChevronRight, Plus, User } from "lucide-react-native";
+import { Link } from "expo-router";
+import { ChevronRight, Plus, Search, User } from "lucide-react-native";
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-  FlatList,
-  Pressable,
-  RefreshControl,
-  Text,
-  TextInput,
-  View,
+    FlatList,
+    Pressable,
+    RefreshControl,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTranslation } from "react-i18next";
 
 import AddClientModal from "@/components/AddClientModal";
 import MicFAB from "@/components/MicFAB";
 import NetworkErrorView from "@/components/NetworkErrorView";
+import { ClientsListSkeleton } from "@/components/Skeleton";
 import api from "@/src/lib/api";
 import { isNetworkError } from "@/src/lib/networkError";
-import { ClientsListSkeleton } from "@/components/Skeleton";
 
 interface Client {
   id: number;
@@ -65,50 +65,55 @@ export default function ClientsScreen() {
     );
   });
 
-  const renderClient = useCallback(({ item }: { item: Client }) => {
-    const quoteCount = item._count?.quotes ?? 0;
-    return (
-      <Link
-        href={(`/client/${item.id}`) as Href}
-        asChild
-        className="mb-3"
-      >
-        <Pressable
-          className="flex-row items-center rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
-          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-        >
-        {/* Avatar */}
-        <View className="h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-          <Text className="text-base font-bold text-slate-600">
-            {getInitials(item.name)}
-          </Text>
-        </View>
-        {/* Info */}
-        <View className="ml-4 flex-1">
-          <Text className="text-base font-semibold text-slate-900">
-            {item.name}
-          </Text>
-          <View className="flex-row items-center mt-1">
-            {item.address ? (
-              <Text className="text-sm text-slate-400 flex-1" numberOfLines={1}>
-                {item.address}
+  const renderClient = useCallback(
+    ({ item }: { item: Client }) => {
+      const quoteCount = item._count?.quotes ?? 0;
+      return (
+        <Link href={`/client/${item.id}` as Href} asChild className="mb-3">
+          <Pressable
+            className="flex-row items-center rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          >
+            {/* Avatar */}
+            <View className="h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+              <Text className="text-base font-bold text-slate-600">
+                {getInitials(item.name)}
               </Text>
-            ) : null}
-            {quoteCount > 0 && (
-              <View className="bg-slate-100 px-2 py-0.5 rounded-full ml-2">
-                <Text className="text-xs font-medium text-slate-500">
-                  {quoteCount} {quoteCount === 1 ? t("clients.quote") : t("clients.quotesPlural")}
-                </Text>
+            </View>
+            {/* Info */}
+            <View className="ml-4 flex-1">
+              <Text className="text-base font-semibold text-slate-900">
+                {item.name}
+              </Text>
+              <View className="flex-row items-center mt-1">
+                {item.address ? (
+                  <Text
+                    className="text-sm text-slate-400 flex-1"
+                    numberOfLines={1}
+                  >
+                    {item.address}
+                  </Text>
+                ) : null}
+                {quoteCount > 0 && (
+                  <View className="bg-slate-100 px-2 py-0.5 rounded-full ml-2">
+                    <Text className="text-xs font-medium text-slate-500">
+                      {quoteCount}{" "}
+                      {quoteCount === 1
+                        ? t("clients.quote")
+                        : t("clients.quotesPlural")}
+                    </Text>
+                  </View>
+                )}
               </View>
-            )}
-          </View>
-        </View>
-        {/* Arrow */}
-        <ChevronRight size={20} color="#cbd5e1" />
-      </Pressable>
-      </Link>
-    );
-  }, [t]);
+            </View>
+            {/* Arrow */}
+            <ChevronRight size={20} color="#cbd5e1" />
+          </Pressable>
+        </Link>
+      );
+    },
+    [t],
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
@@ -120,7 +125,9 @@ export default function ClientsScreen() {
 
       {/* Header */}
       <View className="px-6 pt-4 pb-2 flex-row items-center justify-between">
-        <Text className="text-2xl font-bold text-slate-900">{t("clients.title")}</Text>
+        <Text className="text-2xl font-bold text-slate-900">
+          {t("clients.title")}
+        </Text>
         <Pressable
           onPress={() => setAddModalVisible(true)}
           className="h-10 w-10 items-center justify-center rounded-full bg-slate-900"

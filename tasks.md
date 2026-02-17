@@ -1191,3 +1191,43 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 - Start recording → Wait 10 minutes (or test with 10 seconds by temporarily lowering the limit) → App stops automatically.
 - Mock a large file → Attempt upload → App alerts "File too large" immediately.
 - Mock a Pro user with 100 quotes → Record button is disabled with a clear explanation.
+
+---
+
+## Phase 34: Voice-Extracted Terms & Conditions (Quote-Specific)
+
+**Goal:** Extract terms and conditions mentioned in the voice recording (e.g. "this quote is valid for 30 days", "payment due in 14 days") and add them to the terms and conditions for **this quote only** — not as default user terms. Users can view, edit, and remove these quote-specific terms in the Quote Editor.
+
+**Context:** Users already have default/custom terms in Settings (Phase 20). This phase adds **quote-level** extra terms that come from the recording and appear only on that quote’s PDF. Combined terms on PDF = user’s terms (from Settings) + quote-specific extra terms (from voice).
+
+### Task 34.1: Types and API
+
+- **Action:** Update the quote type (e.g. in `app/quote/[id].tsx` or a shared types file) to include `extraTerms: string[] | null` (or the field name the backend returns).
+- **Action:** Ensure `GET /api/quotes/:id` is used and that the response includes the new field. No frontend API change if backend adds the field to the existing response.
+
+### Task 34.2: Quote Editor — Display Quote-Specific Terms
+
+- **Action:** In the Quote Editor (`app/quote/[id].tsx`), add a section **"Terms for this quote"** or **"Additional terms (from recording)"** (or similar).
+- **UI:**
+  - Show the list of quote-specific terms (from `extraTerms`). If empty or null, show an empty state (e.g. "No extra terms from recording" or hide the section).
+  - Each term is editable (e.g. TextInput or inline edit) and removable (e.g. trash icon).
+  - Optionally allow **adding** a new quote-specific term manually (e.g. "Add term" button).
+- **Behavior:** These terms are **only for this quote**; they do not affect the user’s default/custom terms in Settings.
+
+### Task 34.3: Save Quote-Specific Terms
+
+- **Action:** When the user edits, adds, or removes a quote-specific term, persist via `PATCH /api/quotes/:id` with a body that includes the extra terms (e.g. `{ extraTerms: string[] }`). Use the same field name as the backend.
+- **Action:** On blur/save or explicit "Save" for this section, call the PATCH and invalidate the quote query so the UI stays in sync.
+
+### Task 34.4: Translations
+
+- **Action:** Add translation keys in all 5 languages (en, de, he, ar, es), e.g.:
+  - `quoteEditor.termsForThisQuote`, `quoteEditor.additionalTermsFromRecording`, `quoteEditor.noExtraTerms`, `quoteEditor.addQuoteTerm`, `quoteEditor.removeQuoteTerm`, `quoteEditor.extraTermsSaved`, `quoteEditor.extraTermsSaveFailed`
+
+### ✅ Validation (Phase 34)
+
+- Record a quote saying e.g. "This price is valid for 30 days" → open the quote → see an extra term like "This price is valid for 30 days" in the "Terms for this quote" section.
+- Edit or remove the term and save → PATCH is called and the list updates.
+- Add a manual term for this quote only → save → it persists and appears on the PDF for this quote.
+- Generate PDF → user’s default/custom terms plus quote-specific extra terms all appear in the Terms section.
+- Default terms in Settings are unchanged; only this quote shows the extra terms.

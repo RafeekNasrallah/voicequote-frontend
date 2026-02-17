@@ -131,7 +131,14 @@
     "recording": "Recording",
     "playRecording": "Play recording",
     "pauseRecording": "Pause",
-    "recordingUnavailable": "Recording unavailable"
+    "recordingUnavailable": "Recording unavailable",
+    "termsForThisQuote": "Terms for this quote",
+    "additionalTermsFromRecording": "Additional terms from your recording (or add your own). Shown only on this quote's PDF.",
+    "noExtraTerms": "No extra terms from recording.",
+    "addQuoteTerm": "Add term",
+    "removeQuoteTerm": "Remove term",
+    "extraTermsSaved": "Quote terms saved.",
+    "extraTermsSaveFailed": "Failed to save quote terms. Please try again."
   },
   "clients": {
     "title": "Clients",

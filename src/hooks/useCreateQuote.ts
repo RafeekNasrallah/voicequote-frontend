@@ -54,8 +54,14 @@ export function useCreateQuote() {
     mutationFn: async ({ localUri }: CreateQuoteParams) => {
       // File size pre-check (before upload)
       const fileInfo = await FileSystem.getInfoAsync(localUri, { size: true });
-      if (fileInfo.exists && "size" in fileInfo && fileInfo.size > MAX_FILE_BYTES) {
-        const err = new Error("FILE_TOO_LARGE") as Error & { fileTooLarge?: boolean };
+      if (
+        fileInfo.exists &&
+        "size" in fileInfo &&
+        fileInfo.size > MAX_FILE_BYTES
+      ) {
+        const err = new Error("FILE_TOO_LARGE") as Error & {
+          fileTooLarge?: boolean;
+        };
         err.fileTooLarge = true;
         throw err;
       }
@@ -66,18 +72,20 @@ export function useCreateQuote() {
       // Step 1: Get a signed upload URL from the backend
       let uploadData: UploadUrlResponse;
       try {
-        const res = await api.post<UploadUrlResponse>(
-          "/api/upload-url",
-          {
-            ext: "m4a",
-            contentType: "audio/mp4",
-          }
-        );
+        const res = await api.post<UploadUrlResponse>("/api/upload-url", {
+          ext: "m4a",
+          contentType: "audio/mp4",
+        });
         uploadData = res.data;
       } catch (e: any) {
-        const msg = e?.response?.data?.message || e?.response?.data?.error || e?.message;
+        const msg =
+          e?.response?.data?.message || e?.response?.data?.error || e?.message;
         const status = e?.response?.status;
-        console.error("Create quote error (step 1 upload-url):", status, msg ?? e?.response?.data);
+        console.error(
+          "Create quote error (step 1 upload-url):",
+          status,
+          msg ?? e?.response?.data,
+        );
         throw e;
       }
 
@@ -96,10 +104,12 @@ export function useCreateQuote() {
       });
 
       if (!uploadResult.ok) {
-        console.error("Create quote error (step 2 S3 upload):", uploadResult.status, uploadResult.statusText);
-        throw new Error(
-          `Upload failed with status ${uploadResult.status}`
+        console.error(
+          "Create quote error (step 2 S3 upload):",
+          uploadResult.status,
+          uploadResult.statusText,
         );
+        throw new Error(`Upload failed with status ${uploadResult.status}`);
       }
 
       // Step 3: Tell backend to process the uploaded audio (long timeout for transcription)
@@ -112,13 +122,18 @@ export function useCreateQuote() {
             fileKey,
             language,
           },
-          { timeout: PROCESS_QUOTE_TIMEOUT_MS }
+          { timeout: PROCESS_QUOTE_TIMEOUT_MS },
         );
         processData = res.data;
       } catch (e: any) {
-        const msg = e?.response?.data?.message || e?.response?.data?.error || e?.message;
+        const msg =
+          e?.response?.data?.message || e?.response?.data?.error || e?.message;
         const status = e?.response?.status;
-        console.error("Create quote error (step 3 process-quote):", status, msg ?? e?.response?.data);
+        console.error(
+          "Create quote error (step 3 process-quote):",
+          status,
+          msg ?? e?.response?.data,
+        );
         throw e;
       }
 

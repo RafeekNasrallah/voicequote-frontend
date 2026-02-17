@@ -27,7 +27,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Response interceptor: handle common errors
@@ -39,7 +39,7 @@ api.interceptors.response.use(
       console.warn("Unauthorized request - token may be expired");
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

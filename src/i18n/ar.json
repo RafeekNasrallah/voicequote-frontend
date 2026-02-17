@@ -131,7 +131,14 @@
     "recording": "التسجيل",
     "playRecording": "تشغيل التسجيل",
     "pauseRecording": "إيقاف مؤقت",
-    "recordingUnavailable": "التسجيل غير متاح"
+    "recordingUnavailable": "التسجيل غير متاح",
+    "termsForThisQuote": "شروط هذا العرض",
+    "additionalTermsFromRecording": "شروط إضافية من التسجيل (أو أضف بنفسك). تظهر فقط على PDF هذا العرض.",
+    "noExtraTerms": "لا توجد شروط إضافية من التسجيل.",
+    "addQuoteTerm": "إضافة شرط",
+    "removeQuoteTerm": "إزالة الشرط",
+    "extraTermsSaved": "تم حفظ شروط العرض.",
+    "extraTermsSaveFailed": "تعذر حفظ شروط العرض. يرجى المحاولة مرة أخرى."
   },
   "clients": {
     "title": "العملاء",

@@ -131,7 +131,14 @@
     "recording": "Aufnahme",
     "playRecording": "Aufnahme abspielen",
     "pauseRecording": "Pause",
-    "recordingUnavailable": "Aufnahme nicht verfügbar"
+    "recordingUnavailable": "Aufnahme nicht verfügbar",
+    "termsForThisQuote": "Bedingungen für dieses Angebot",
+    "additionalTermsFromRecording": "Zusätzliche Bedingungen aus deiner Aufnahme (oder eigene). Nur auf dem PDF dieses Angebots.",
+    "noExtraTerms": "Keine zusätzlichen Bedingungen aus der Aufnahme.",
+    "addQuoteTerm": "Bedingung hinzufügen",
+    "removeQuoteTerm": "Bedingung entfernen",
+    "extraTermsSaved": "Angebotsbedingungen gespeichert.",
+    "extraTermsSaveFailed": "Angebotsbedingungen konnten nicht gespeichert werden. Bitte erneut versuchen."
   },
   "clients": {
     "title": "Kunden",

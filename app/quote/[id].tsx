@@ -79,6 +79,8 @@ interface QuoteData {
   clientId: number | null;
   clientName: string | null;
   pdfKey: boolean;
+  /** Quote-specific terms from voice (or manually added). Only for this quote. */
+  extraTerms: string[] | null;
 }
 
 interface UserProfile {
@@ -108,6 +110,7 @@ export default function QuoteScreen() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
+  const [localExtraTerms, setLocalExtraTerms] = useState<string[]>([]);
 
   // ─── Fetch Quote ────────────────────────────────────────
   const {
@@ -222,6 +225,11 @@ export default function QuoteScreen() {
     if (quote?.laborEnabled !== undefined) {
       setLocalLaborEnabled(quote.laborEnabled);
     }
+    if (quote?.extraTerms !== undefined) {
+      setLocalExtraTerms(
+        Array.isArray(quote.extraTerms) ? [...quote.extraTerms] : [],
+      );
+    }
   }, [quote]);
 
   // ─── Mutations ──────────────────────────────────────────
@@ -327,6 +335,57 @@ export default function QuoteScreen() {
     setPdfUrl(null); // Clear PDF so share will regenerate
     patchLaborEnabled.mutate(newValue);
   }, [localLaborEnabled, patchLaborEnabled]);
+
+  // Patch Extra Terms (quote-specific terms from recording / manual)
+  const patchExtraTerms = useMutation({
+    mutationFn: async (extraTerms: string[]) => {
+      await api.patch(`/api/quotes/${id}`, { extraTerms });
+    },
+    onSuccess: () => {
+      setPdfUrl(null);
+      queryClient.invalidateQueries({ queryKey: ["quote", id] });
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ["quote", id] });
+      Alert.alert(t("common.error"), t("quoteEditor.extraTermsSaveFailed"));
+    },
+  });
+
+  const updateExtraTerm = useCallback((index: number, value: string) => {
+    setLocalExtraTerms((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  }, []);
+
+  const removeExtraTerm = useCallback(
+    (index: number) => {
+      setLocalExtraTerms((prev) => {
+        const next = prev.filter((_, i) => i !== index);
+        patchExtraTerms.mutate(next);
+        return next;
+      });
+    },
+    [patchExtraTerms],
+  );
+
+  const addExtraTerm = useCallback(() => {
+    setLocalExtraTerms((prev) => [...prev, ""]);
+  }, []);
+
+  const saveExtraTerms = useCallback(() => {
+    const trimmed = localExtraTerms
+      .map((s) => (s ?? "").trim())
+      .filter((s) => s.length > 0);
+    setLocalExtraTerms(trimmed);
+    if (
+      JSON.stringify(trimmed) !==
+      JSON.stringify(Array.isArray(quote?.extraTerms) ? quote.extraTerms : [])
+    ) {
+      patchExtraTerms.mutate(trimmed);
+    }
+  }, [localExtraTerms, quote?.extraTerms, patchExtraTerms]);
 
   // Delete Quote
   const deleteQuote = useMutation({
@@ -934,6 +993,61 @@ export default function QuoteScreen() {
                   </Text>
                 </Pressable>
               )}
+            </View>
+
+            {/* ─── Terms for this quote (from recording / manual) ──────────────────── */}
+            <View className="border-t border-slate-100 p-4">
+              <Text className="mb-2 text-xs font-semibold uppercase text-slate-400">
+                {t("quoteEditor.termsForThisQuote")}
+              </Text>
+              <Text className="mb-3 text-xs text-slate-500">
+                {t("quoteEditor.additionalTermsFromRecording")}
+              </Text>
+              {localExtraTerms.length === 0 ? (
+                <View className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 py-4">
+                  <Text className="text-center text-sm text-slate-500">
+                    {t("quoteEditor.noExtraTerms")}
+                  </Text>
+                </View>
+              ) : (
+                <View className="gap-2">
+                  {localExtraTerms.map((term, index) => (
+                    <View
+                      key={index}
+                      className="flex-row items-center gap-2 border-b border-slate-100 pb-2"
+                    >
+                      <TextInput
+                        className="flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+                        style={{ minHeight: 40 }}
+                        value={term}
+                        onChangeText={(v) => updateExtraTerm(index, v)}
+                        onBlur={saveExtraTerms}
+                        placeholder={t("quoteEditor.addQuoteTerm")}
+                        placeholderTextColor="#cbd5e1"
+                        multiline
+                      />
+                      <Pressable
+                        onPress={() => removeExtraTerm(index)}
+                        className="h-9 w-9 items-center justify-center"
+                        style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+                        accessibilityLabel={t("quoteEditor.removeQuoteTerm")}
+                      >
+                        <Trash2 size={18} color="#ef4444" />
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+              )}
+              <Pressable
+                onPress={addExtraTerm}
+                className="mt-3 flex-row items-center justify-center rounded-lg border border-dashed border-slate-300 py-2.5"
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              >
+                <Plus size={16} color="#64748b" />
+                <Text className="ml-1.5 text-sm font-medium text-slate-500">
+                  {t("quoteEditor.addQuoteTerm")}
+                </Text>
+              </Pressable>
             </View>
           </View>
 

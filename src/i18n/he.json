@@ -131,7 +131,14 @@
     "recording": "הקלטה",
     "playRecording": "השמע הקלטה",
     "pauseRecording": "השהה",
-    "recordingUnavailable": "ההקלטה לא זמינה"
+    "recordingUnavailable": "ההקלטה לא זמינה",
+    "termsForThisQuote": "תנאים להצעה זו",
+    "additionalTermsFromRecording": "תנאים נוספים מההקלטה (או הוסף משלך). מופיעים רק ב-PDF של הצעה זו.",
+    "noExtraTerms": "אין תנאים נוספים מההקלטה.",
+    "addQuoteTerm": "הוסף תנאי",
+    "removeQuoteTerm": "הסר תנאי",
+    "extraTermsSaved": "תנאי ההצעה נשמרו.",
+    "extraTermsSaveFailed": "שמירת תנאי ההצעה נכשלה. נסה שוב."
   },
   "clients": {
     "title": "לקוחות",
