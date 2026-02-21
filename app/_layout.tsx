@@ -1,10 +1,10 @@
 import "../global.css";
 
 import {
-    ClerkLoaded,
-    ClerkProvider,
-    useAuth,
-    useUser,
+  ClerkLoaded,
+  ClerkProvider,
+  useAuth,
+  useUser,
 } from "@clerk/clerk-expo";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
@@ -12,7 +12,8 @@ import { Slot, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { LogBox } from "react-native";
+import { useTranslation } from "react-i18next";
+import { I18nManager, LogBox, View } from "react-native";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -23,11 +24,11 @@ import OfflineBanner from "@/components/OfflineBanner";
 import { initI18n } from "@/src/i18n";
 import { setGetToken, tokenCache } from "@/src/lib/auth";
 import { queryClient } from "@/src/lib/query";
-import { initRevenueCat } from "@/src/lib/revenueCat";
+import { configureRevenueCat, initRevenueCat } from "@/src/lib/revenueCat";
 
 export {
-    // Catch any errors thrown by the Layout component.
-    ErrorBoundary
+  // Catch any errors thrown by the Layout component.
+  ErrorBoundary
 } from "expo-router";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -35,6 +36,34 @@ SplashScreen.preventAutoHideAsync();
 
 const CLERK_PUBLISHABLE_KEY =
   process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
+
+const RTL_LANGUAGES = ["ar", "he"];
+
+/**
+ * Only wraps with explicit direction when we want RTL but native didn't pick it up.
+ * In Expo Go, I18nManager.isRTL is true after forceRTL(true), so we don't wrap and native RTL works.
+ * On standalone iOS, I18nManager.isRTL can stay false, so we wrap with direction: 'rtl' to fix layout.
+ * Applying our wrapper when native RTL already works (Expo Go) was breaking layout there.
+ */
+function LayoutDirectionWrapper({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { i18n } = useTranslation();
+  const lang = i18n.language?.split("-")[0] ?? "en";
+  const wantRTL = RTL_LANGUAGES.includes(lang);
+  const nativeRTL = I18nManager.isRTL;
+  const useWrapper = wantRTL && !nativeRTL;
+  if (useWrapper) {
+    return (
+      <View style={{ flex: 1, direction: "rtl" }}>
+        {children}
+      </View>
+    );
+  }
+  return <>{children}</>;
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -70,7 +99,9 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <SafeAreaProvider>
             <StatusBar style="dark" />
-            <AuthGate />
+            <LayoutDirectionWrapper>
+              <AuthGate />
+            </LayoutDirectionWrapper>
           </SafeAreaProvider>
         </QueryClientProvider>
       </ClerkLoaded>
@@ -88,6 +119,11 @@ function AuthGate() {
   const { user } = useUser();
   const segments = useSegments();
   const router = useRouter();
+
+  // Configure RevenueCat once on app load so the SDK singleton exists before paywall/getOfferings
+  useEffect(() => {
+    configureRevenueCat();
+  }, []);
 
   // Wire up the getToken function for our API interceptor
   useEffect(() => {

@@ -99,7 +99,7 @@ export default function SignInScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-slate-50"
+      className="flex-1 bg-white"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -107,15 +107,12 @@ export default function SignInScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex-1 items-center justify-center px-6 py-12">
-          {/* Card Container */}
-          <View className="w-full max-w-sm rounded-xl bg-white p-8 shadow-sm border border-slate-100">
+          <View className="w-full max-w-sm rounded-xl bg-white p-8">
             {/* Logo */}
             <Text className="text-center text-3xl font-bold text-slate-900">
               {t("common.appName")}
             </Text>
-
-            {/* Title */}
-            <Text className="mt-2 text-center text-base text-slate-500">
+            <Text className="mt-1 text-center text-sm font-medium text-orange-600">
               {t("auth.welcomeBack")}
             </Text>
 
@@ -125,7 +122,7 @@ export default function SignInScreen() {
                 {t("auth.email")}
               </Text>
               <View className="flex-row items-center rounded-lg border border-slate-200 bg-white px-4 h-12">
-                <Mail size={18} color="#94a3b8" />
+                <Mail size={18} color="#ea580c" />
                 <TextInput
                   className="ml-3 flex-1 text-base text-slate-900"
                   placeholder={t("auth.emailPlaceholder")}
@@ -146,7 +143,7 @@ export default function SignInScreen() {
                 {t("auth.password")}
               </Text>
               <View className="flex-row items-center rounded-lg border border-slate-200 bg-white px-4 h-12">
-                <Lock size={18} color="#94a3b8" />
+                <Lock size={18} color="#ea580c" />
                 <TextInput
                   className="ml-3 flex-1 text-base text-slate-900"
                   placeholder={t("auth.passwordPlaceholder")}
@@ -169,13 +166,13 @@ export default function SignInScreen() {
               </View>
             </View>
 
-            {/* Sign In Button */}
+            {/* Sign In Button — app primary orange */}
             <Pressable
-              className="mt-6 h-12 items-center justify-center rounded-lg bg-slate-900"
+              className="mt-6 h-12 items-center justify-center rounded-lg bg-orange-600"
               onPress={handleSignIn}
               disabled={isLoading || isGoogleLoading}
               style={({ pressed }) => ({
-                opacity: pressed || isLoading ? 0.8 : 1,
+                opacity: pressed || isLoading ? 0.9 : 1,
               })}
             >
               {isLoading ? (
@@ -204,7 +201,7 @@ export default function SignInScreen() {
               })}
             >
               {isGoogleLoading ? (
-                <ActivityIndicator color="#0f172a" />
+                <ActivityIndicator color="#ea580c" />
               ) : (
                 <>
                   <Text className="text-lg font-bold text-slate-600">G</Text>
@@ -221,7 +218,7 @@ export default function SignInScreen() {
                 {t("auth.noAccount")}{" "}
               </Text>
               <Pressable onPress={() => router.push("/auth/sign-up")}>
-                <Text className="text-sm font-semibold text-slate-900">
+                <Text className="text-sm font-semibold text-orange-600">
                   {t("auth.signUp")}
                 </Text>
               </Pressable>

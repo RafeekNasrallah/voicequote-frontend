@@ -233,6 +233,8 @@
     "proActive": "Tu suscripción está activa",
     "quoteUsage": "Uso de presupuestos",
     "upgradeToPro": "Pasar a Pro",
+    "manageSubscription": "Gestionar suscripción",
+    "manageSubscriptionHint": "Restaurar compras, cancelar o contactar soporte",
     "resetsOn": "Se reinicia el {{date}}"
   },
   "taxSettings": {
@@ -356,6 +358,8 @@
     "restoreSuccessMsg": "Tu suscripción se ha restaurado.",
     "restoreNoSubscription": "Sin suscripción",
     "restoreNoSubscriptionMsg": "No se encontró ninguna suscripción activa.",
-    "restoreFailed": "Error al restaurar. Inténtalo de nuevo."
+    "restoreFailed": "Error al restaurar. Inténtalo de nuevo.",
+    "configErrorTitle": "Configuración de suscripción no lista",
+    "configErrorMsg": "Hay un problema de configuración con el servicio de suscripción. Si eres el desarrollador, consulta docs/REVENUECAT_ERROR_23.md para solucionar el error 23."
   }
 }

@@ -16,6 +16,10 @@ export default function TabLayout() {
           borderTopColor: "#e2e8f0",
           borderTopWidth: 1,
           paddingTop: 6,
+          direction: "ltr",
+        },
+        tabBarItemStyle: {
+          direction: "ltr",
         },
         tabBarLabelStyle: {
           fontSize: 12,

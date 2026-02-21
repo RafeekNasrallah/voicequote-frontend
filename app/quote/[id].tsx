@@ -336,7 +336,8 @@ export default function QuoteScreen() {
   const handleLaborRateBlur = useCallback(() => {
     const serverRate = quote?.laborRate?.toString() ?? "";
     if (localLaborRate !== serverRate) {
-      const rate = localLaborRate.trim() === "" ? null : parseFloat(localLaborRate);
+      const rate =
+        localLaborRate.trim() === "" ? null : parseFloat(localLaborRate);
       patchLaborRate.mutate(rate === undefined || isNaN(rate) ? null : rate);
     }
   }, [localLaborRate, quote?.laborRate, patchLaborRate]);
@@ -1055,7 +1056,9 @@ export default function QuoteScreen() {
                       <Pressable
                         onPress={() => removeExtraTerm(index)}
                         className="h-9 w-9 items-center justify-center"
-                        style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+                        style={({ pressed }) => ({
+                          opacity: pressed ? 0.5 : 1,
+                        })}
                         accessibilityLabel={t("quoteEditor.removeQuoteTerm")}
                       >
                         <Trash2 size={18} color="#ef4444" />

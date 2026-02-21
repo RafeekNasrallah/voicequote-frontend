@@ -23,21 +23,6 @@ interface CreateQuoteParams {
 }
 
 /**
- * Backend process-quote only accepts these languages for transcription.
- * Keep in sync with backend validation (e.g. Zod enum). Any other locale falls back to "en".
- */
-const BACKEND_LANGUAGES = ["en", "ar", "es", "fr", "he"] as const;
-type BackendLanguage = (typeof BACKEND_LANGUAGES)[number];
-
-function toBackendLanguage(i18nCode: string): BackendLanguage {
-  const base = (i18nCode || "en").split("-")[0].toLowerCase();
-  if (BACKEND_LANGUAGES.includes(base as BackendLanguage)) {
-    return base as BackendLanguage;
-  }
-  return "en";
-}
-
-/**
  * useCreateQuote - TanStack Mutation hook
  *
  * Full flow:
@@ -48,7 +33,7 @@ function toBackendLanguage(i18nCode: string): BackendLanguage {
  */
 export function useCreateQuote() {
   const router = useRouter();
-  const { i18n, t } = useTranslation();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async ({ localUri }: CreateQuoteParams) => {
@@ -65,9 +50,6 @@ export function useCreateQuote() {
         err.fileTooLarge = true;
         throw err;
       }
-
-      // Backend only accepts en | ar | es | fr; map app language to one of these
-      const language = toBackendLanguage(i18n.language || "en");
 
       // Step 1: Get a signed upload URL from the backend
       let uploadData: UploadUrlResponse;
@@ -118,10 +100,7 @@ export function useCreateQuote() {
       try {
         const res = await api.post<ProcessQuoteResponse>(
           "/api/process-quote",
-          {
-            fileKey,
-            language,
-          },
+          { fileKey },
           { timeout: PROCESS_QUOTE_TIMEOUT_MS },
         );
         processData = res.data;

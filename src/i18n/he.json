@@ -233,6 +233,8 @@
     "proActive": "המנוי שלך פעיל",
     "quoteUsage": "שימוש בהצעות",
     "upgradeToPro": "שדרג ל-Pro",
+    "manageSubscription": "נהל מנוי",
+    "manageSubscriptionHint": "שחזר רכישות, בטל או פנה לתמיכה",
     "resetsOn": "מתאפס ב-{{date}}"
   },
   "taxSettings": {
@@ -356,6 +358,8 @@
     "restoreSuccessMsg": "המנוי שלך שוחזר.",
     "restoreNoSubscription": "אין מנוי",
     "restoreNoSubscriptionMsg": "לא נמצא מנוי פעיל.",
-    "restoreFailed": "שחזור נכשל. נסה שוב."
+    "restoreFailed": "שחזור נכשל. נסה שוב.",
+    "configErrorTitle": "הגדרת המנוי אינה מוכנה",
+    "configErrorMsg": "יש בעיית תצורה עם שירות המנוי. אם אתה המפתח, ראה docs/REVENUECAT_ERROR_23.md לתיקון שגיאה 23."
   }
 }

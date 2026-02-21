@@ -233,6 +233,8 @@
     "proActive": "Your subscription is active",
     "quoteUsage": "Quote usage",
     "upgradeToPro": "Upgrade to Pro",
+    "manageSubscription": "Manage subscription",
+    "manageSubscriptionHint": "Restore purchases, cancel, or contact support",
     "resetsOn": "Resets on {{date}}"
   },
   "taxSettings": {
@@ -356,6 +358,8 @@
     "restoreSuccessMsg": "Your subscription has been restored.",
     "restoreNoSubscription": "No subscription",
     "restoreNoSubscriptionMsg": "No active subscription found.",
-    "restoreFailed": "Restore failed. Please try again."
+    "restoreFailed": "Restore failed. Please try again.",
+    "configErrorTitle": "Subscription setup not ready",
+    "configErrorMsg": "There’s a configuration issue with the subscription service. If you’re the developer, see docs/REVENUECAT_ERROR_23.md for how to fix Error 23."
   }
 }

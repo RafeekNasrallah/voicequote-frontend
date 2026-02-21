@@ -233,6 +233,8 @@
     "proActive": "Ihr Abo ist aktiv",
     "quoteUsage": "Angebotsnutzung",
     "upgradeToPro": "Auf Pro upgraden",
+    "manageSubscription": "Abonnement verwalten",
+    "manageSubscriptionHint": "Käufe wiederherstellen, kündigen oder Support kontaktieren",
     "resetsOn": "Setzt sich am {{date}} zurück"
   },
   "taxSettings": {
@@ -356,6 +358,8 @@
     "restoreSuccessMsg": "Ihr Abo wurde wiederhergestellt.",
     "restoreNoSubscription": "Kein Abo",
     "restoreNoSubscriptionMsg": "Kein aktives Abo gefunden.",
-    "restoreFailed": "Wiederherstellung fehlgeschlagen. Bitte erneut versuchen."
+    "restoreFailed": "Wiederherstellung fehlgeschlagen. Bitte erneut versuchen.",
+    "configErrorTitle": "Abo-Einrichtung nicht bereit",
+    "configErrorMsg": "Es gibt ein Konfigurationsproblem mit dem Abo-Dienst. Wenn du der Entwickler bist, siehe docs/REVENUECAT_ERROR_23.md zur Behebung von Fehler 23."
   }
 }

@@ -17,8 +17,14 @@ import Purchases, {
   PurchasesPackage,
 } from "react-native-purchases";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const ENTITLEMENT_ID = "Esti Pro";
+import {
+  isRevenueCatConfigured,
+  REVENUECAT_ENTITLEMENT_ID,
+} from "@/src/lib/revenueCat";
+import {
+  isPurchaseOrRestore,
+  presentPaywall as presentRevenueCatPaywall,
+} from "@/src/lib/revenueCatUI";
 
 export default function PaywallScreen() {
   const router = useRouter();
@@ -28,8 +34,32 @@ export default function PaywallScreen() {
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [rcPaywallShown, setRcPaywallShown] = useState(false);
+  const [configError, setConfigError] = useState(false);
+
+  // Try to present RevenueCat Paywall (dashboard-configured) on mount. If user purchases/restores, we're done.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const result = await presentRevenueCatPaywall();
+      if (cancelled) return;
+      setRcPaywallShown(true);
+      if (isPurchaseOrRestore(result)) {
+        queryClient.invalidateQueries({ queryKey: ["me"] });
+        router.back();
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [queryClient, router]);
 
   const loadOfferings = useCallback(async () => {
+    if (!isRevenueCatConfigured()) {
+      setLoading(false);
+      setOffering(null);
+      return;
+    }
     try {
       setLoading(true);
       const offerings = await Purchases.getOfferings();
@@ -38,7 +68,13 @@ export default function PaywallScreen() {
       } else {
         setOffering(null);
       }
-    } catch (e) {
+    } catch (e: unknown) {
+      const err = e as { code?: number | string; message?: string };
+      const isConfigError =
+        err?.code === 23 ||
+        err?.code === "23" ||
+        String(err?.message ?? "").toLowerCase().includes("configuration");
+      if (isConfigError) setConfigError(true);
       console.error("Error fetching offerings", e);
       setOffering(null);
     } finally {
@@ -65,7 +101,7 @@ export default function PaywallScreen() {
     setPurchasing(true);
     try {
       const { customerInfo } = await Purchases.purchasePackage(monthlyPackage);
-      if (customerInfo.entitlements.active[ENTITLEMENT_ID]) {
+      if (customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]) {
         queryClient.invalidateQueries({ queryKey: ["me"] });
         router.back();
       }
@@ -85,7 +121,7 @@ export default function PaywallScreen() {
     setRestoring(true);
     try {
       const customerInfo: CustomerInfo = await Purchases.restorePurchases();
-      if (customerInfo.entitlements.active[ENTITLEMENT_ID]) {
+      if (customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]) {
         queryClient.invalidateQueries({ queryKey: ["me"] });
         Alert.alert(
           t("paywall.restoreSuccess"),
@@ -109,6 +145,9 @@ export default function PaywallScreen() {
     router.back();
   }, [router]);
 
+  // If RevenueCat Paywall was shown and we're still here, show custom fallback (e.g. Restore, or manual purchase).
+  const showCustomPaywall = !isRevenueCatConfigured() || rcPaywallShown;
+
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       {/* Header */}
@@ -126,6 +165,14 @@ export default function PaywallScreen() {
         </Pressable>
       </View>
 
+      {!showCustomPaywall ? (
+        <View className="flex-1 items-center justify-center py-12">
+          <ActivityIndicator size="large" color="#ea580c" />
+          <Text className="mt-3 text-sm text-slate-500">
+            {t("paywall.loading")}
+          </Text>
+        </View>
+      ) : (
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
@@ -181,6 +228,15 @@ export default function PaywallScreen() {
                   )}
                 </Pressable>
               </View>
+            ) : configError ? (
+              <View className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <Text className="mb-1 text-sm font-semibold text-amber-800">
+                  {t("paywall.configErrorTitle")}
+                </Text>
+                <Text className="text-sm text-amber-800">
+                  {t("paywall.configErrorMsg")}
+                </Text>
+              </View>
             ) : (
               !loading && (
                 <Text className="mb-6 text-center text-sm text-slate-500">
@@ -209,6 +265,7 @@ export default function PaywallScreen() {
           </>
         )}
       </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

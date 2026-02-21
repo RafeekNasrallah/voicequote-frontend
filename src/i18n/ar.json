@@ -233,6 +233,8 @@
     "proActive": "اشتراكك نشط",
     "quoteUsage": "استخدام العروض",
     "upgradeToPro": "ترقية إلى احترافي",
+    "manageSubscription": "إدارة الاشتراك",
+    "manageSubscriptionHint": "استعادة المشتريات أو الإلغاء أو الاتصال بالدعم",
     "resetsOn": "إعادة التعيين في {{date}}"
   },
   "taxSettings": {
@@ -356,6 +358,8 @@
     "restoreSuccessMsg": "تم استعادة اشتراكك.",
     "restoreNoSubscription": "لا يوجد اشتراك",
     "restoreNoSubscriptionMsg": "لم يتم العثور على اشتراك نشط.",
-    "restoreFailed": "فشل الاستعادة. حاول مرة أخرى."
+    "restoreFailed": "فشل الاستعادة. حاول مرة أخرى.",
+    "configErrorTitle": "إعداد الاشتراك غير جاهز",
+    "configErrorMsg": "هناك مشكلة في إعداد خدمة الاشتراك. إذا كنت المطور، راجع docs/REVENUECAT_ERROR_23.md لإصلاح الخطأ 23."
   }
 }

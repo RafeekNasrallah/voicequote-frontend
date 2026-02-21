@@ -55,8 +55,8 @@ export async function storeLanguage(lang: string): Promise<void> {
  */
 export function applyRTL(lang: string): boolean {
   const isRTL = RTL_LANGUAGES.includes(lang);
+  I18nManager.allowRTL(isRTL);
   if (I18nManager.isRTL !== isRTL) {
-    I18nManager.allowRTL(isRTL);
     I18nManager.forceRTL(isRTL);
     return true; // needs restart
   }

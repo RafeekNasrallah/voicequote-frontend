@@ -115,7 +115,7 @@ export default function SignUpScreen() {
   if (pendingVerification) {
     return (
       <KeyboardAvoidingView
-        className="flex-1 bg-slate-50"
+        className="flex-1 bg-white"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
@@ -123,11 +123,11 @@ export default function SignUpScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View className="flex-1 items-center justify-center px-6 py-12">
-            <View className="w-full max-w-sm rounded-xl bg-white p-8 shadow-sm border border-slate-100">
+            <View className="w-full max-w-sm rounded-xl bg-white p-8">
               {/* Icon */}
               <View className="items-center">
-                <View className="h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                  <ShieldCheck size={32} color="#0f172a" />
+                <View className="h-16 w-16 items-center justify-center rounded-full bg-orange-100">
+                  <ShieldCheck size={32} color="#ea580c" />
                 </View>
               </View>
 
@@ -157,13 +157,13 @@ export default function SignUpScreen() {
                 />
               </View>
 
-              {/* Verify Button */}
+              {/* Verify Button — app primary orange */}
               <Pressable
-                className="mt-6 h-12 items-center justify-center rounded-lg bg-slate-900"
+                className="mt-6 h-12 items-center justify-center rounded-lg bg-orange-600"
                 onPress={handleVerifyCode}
                 disabled={isVerifying}
                 style={({ pressed }) => ({
-                  opacity: pressed || isVerifying ? 0.8 : 1,
+                  opacity: pressed || isVerifying ? 0.9 : 1,
                 })}
               >
                 {isVerifying ? (
@@ -181,7 +181,7 @@ export default function SignUpScreen() {
                   {t("auth.didntReceiveCode")}{" "}
                 </Text>
                 <Pressable onPress={handleResendCode}>
-                  <Text className="text-sm font-semibold text-slate-900">
+                  <Text className="text-sm font-semibold text-orange-600">
                     {t("auth.resend")}
                   </Text>
                 </Pressable>
@@ -206,7 +206,7 @@ export default function SignUpScreen() {
   // ─── Sign Up Form Screen ──────────────────────────────────
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-slate-50"
+      className="flex-1 bg-white"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -214,15 +214,12 @@ export default function SignUpScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex-1 items-center justify-center px-6 py-12">
-          {/* Card Container */}
-          <View className="w-full max-w-sm rounded-xl bg-white p-8 shadow-sm border border-slate-100">
+          <View className="w-full max-w-sm rounded-xl bg-white p-8">
             {/* Logo */}
             <Text className="text-center text-3xl font-bold text-slate-900">
               {t("common.appName")}
             </Text>
-
-            {/* Title */}
-            <Text className="mt-2 text-center text-base text-slate-500">
+            <Text className="mt-1 text-center text-sm font-medium text-orange-600">
               {t("auth.createAccount")}
             </Text>
 
@@ -234,7 +231,7 @@ export default function SignUpScreen() {
                   {t("auth.firstName")}
                 </Text>
                 <View className="flex-row items-center rounded-lg border border-slate-200 bg-white px-4 h-12">
-                  <User size={18} color="#94a3b8" />
+                  <User size={18} color="#ea580c" />
                   <TextInput
                     className="ml-3 flex-1 text-base text-slate-900"
                     placeholder={t("auth.firstNamePlaceholder")}
@@ -272,7 +269,7 @@ export default function SignUpScreen() {
                 {t("auth.email")}
               </Text>
               <View className="flex-row items-center rounded-lg border border-slate-200 bg-white px-4 h-12">
-                <Mail size={18} color="#94a3b8" />
+                <Mail size={18} color="#ea580c" />
                 <TextInput
                   className="ml-3 flex-1 text-base text-slate-900"
                   placeholder={t("auth.emailPlaceholder")}
@@ -293,7 +290,7 @@ export default function SignUpScreen() {
                 {t("auth.password")}
               </Text>
               <View className="flex-row items-center rounded-lg border border-slate-200 bg-white px-4 h-12">
-                <Lock size={18} color="#94a3b8" />
+                <Lock size={18} color="#ea580c" />
                 <TextInput
                   className="ml-3 flex-1 text-base text-slate-900"
                   placeholder={t("auth.createPasswordPlaceholder")}
@@ -316,13 +313,13 @@ export default function SignUpScreen() {
               </View>
             </View>
 
-            {/* Sign Up Button */}
+            {/* Sign Up Button — app primary orange */}
             <Pressable
-              className="mt-6 h-12 items-center justify-center rounded-lg bg-slate-900"
+              className="mt-6 h-12 items-center justify-center rounded-lg bg-orange-600"
               onPress={handleSignUp}
               disabled={isLoading}
               style={({ pressed }) => ({
-                opacity: pressed || isLoading ? 0.8 : 1,
+                opacity: pressed || isLoading ? 0.9 : 1,
               })}
             >
               {isLoading ? (
@@ -340,7 +337,7 @@ export default function SignUpScreen() {
                 {t("auth.hasAccount")}{" "}
               </Text>
               <Pressable onPress={() => router.back()}>
-                <Text className="text-sm font-semibold text-slate-900">
+                <Text className="text-sm font-semibold text-orange-600">
                   {t("auth.signIn")}
                 </Text>
               </Pressable>

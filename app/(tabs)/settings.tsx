@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  I18nManager,
   Linking,
   Modal,
   Pressable,
@@ -27,6 +28,8 @@ import {
   getCurrencySymbol,
   DEFAULT_CURRENCY,
 } from "@/src/lib/currency";
+import { isRevenueCatConfigured } from "@/src/lib/revenueCat";
+import { presentCustomerCenter } from "@/src/lib/revenueCatUI";
 
 interface UserProfile {
   email: string;
@@ -53,12 +56,21 @@ interface UploadUrlResponse {
   fileKey: string;
 }
 
+const RTL_LANGUAGES = ["ar", "he"];
+
 export default function SettingsScreen() {
   const { signOut } = useAuth();
   const { user } = useUser();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { t, i18n } = useTranslation();
+  const languageIsRTL = RTL_LANGUAGES.includes((i18n.language || "").split("-")[0]);
+  const isRTL = I18nManager.isRTL || languageIsRTL;
+  const rtlText = isRTL
+    ? { textAlign: "right" as const, writingDirection: "rtl" as const }
+    : undefined;
+  const rtlAlignEnd = isRTL ? { alignItems: "flex-start" as const } : undefined;
+  const rtlRowReverse = isRTL ? { flexDirection: "row-reverse" as const } : undefined;
 
   // Modal states
   const [laborRateModalVisible, setLaborRateModalVisible] = useState(false);
@@ -306,7 +318,7 @@ export default function SettingsScreen() {
               {t("settings.laborRateModalDesc")}
             </Text>
             <View className="flex-row items-center border border-slate-200 rounded-lg px-4 py-3 mb-4">
-              <Text className="text-lg font-semibold text-slate-400 mr-2">{currencySymbol}</Text>
+              <Text className="text-lg font-semibold text-slate-400 me-2">{currencySymbol}</Text>
               <TextInput
                 className="flex-1 text-lg font-semibold text-slate-900"
                 value={laborRateInput}
@@ -377,7 +389,7 @@ export default function SettingsScreen() {
                     <Text className="text-lg font-semibold text-slate-700 w-10">
                       {currency.symbol}
                     </Text>
-                    <View className="ml-2">
+                    <View className="ms-2">
                       <Text className="text-sm font-medium text-slate-900">
                         {currency.code}
                       </Text>
@@ -460,7 +472,9 @@ export default function SettingsScreen() {
 
       {/* Header */}
       <View className="px-6 pt-4 pb-4">
-        <Text className="text-2xl font-bold text-slate-900">{t("settings.title")}</Text>
+        <Text className="text-2xl font-bold text-slate-900" style={rtlText}>
+          {t("settings.title")}
+        </Text>
       </View>
 
       <ScrollView 
@@ -473,11 +487,11 @@ export default function SettingsScreen() {
           <View className="h-12 w-12 items-center justify-center rounded-full bg-orange-600">
             <User size={20} color="#ffffff" />
           </View>
-          <View className="ml-3 flex-1">
-            <Text className="text-base font-semibold text-slate-900">
+          <View className="ms-3 flex-1" style={rtlAlignEnd}>
+            <Text className="text-base font-semibold text-slate-900" style={rtlText}>
               {user?.firstName} {user?.lastName}
             </Text>
-            <Text className="mt-0.5 text-sm text-slate-400">
+            <Text className="mt-0.5 text-sm text-slate-400" style={rtlText}>
               {user?.primaryEmailAddress?.emailAddress || profile?.email || ""}
             </Text>
           </View>
@@ -491,22 +505,22 @@ export default function SettingsScreen() {
                 <View className="h-10 w-10 items-center justify-center rounded-full bg-amber-100">
                   <Crown size={20} color="#d97706" />
                 </View>
-                <View className="ml-3 flex-1">
-                  <Text className="text-base font-semibold text-slate-900">
+                <View className="ms-3 flex-1" style={rtlAlignEnd}>
+                  <Text className="text-base font-semibold text-slate-900" style={rtlText}>
                     {t("settings.pro")}
                   </Text>
-                  <Text className="text-sm text-slate-500">
+                  <Text className="text-sm text-slate-500" style={rtlText}>
                     {t("settings.proActive")}
                   </Text>
                 </View>
               </View>
             ) : (
               <View>
-                <View className="flex-row items-center justify-between mb-2">
-                  <Text className="text-sm font-medium text-slate-700">
+                <View className="flex-row items-center justify-between mb-2" style={rtlRowReverse}>
+                  <Text className="text-sm font-medium text-slate-700" style={rtlText}>
                     {t("settings.quoteUsage")}
                   </Text>
-                  <Text className="text-sm text-slate-500">
+                  <Text className="text-sm text-slate-500" style={rtlText}>
                     {(profile?.quoteCount ?? 0)} / 3
                   </Text>
                 </View>
@@ -519,7 +533,7 @@ export default function SettingsScreen() {
                   />
                 </View>
                 {profile?.periodEnd ? (
-                  <Text className="text-xs text-slate-500 mb-4">
+                  <Text className="text-xs text-slate-500 mb-4" style={rtlText}>
                     {t("settings.resetsOn", {
                       date: new Date(profile.periodEnd).toLocaleDateString(undefined, {
                         month: "short",
@@ -545,9 +559,33 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Manage subscription (Customer Center) — restore, cancel, contact support */}
+        {isRevenueCatConfigured() && (
+          <View className="mx-6 mb-4">
+            <Pressable
+              onPress={() => presentCustomerCenter()}
+              className="flex-row items-center rounded-xl bg-white px-4 py-3.5 shadow-sm border border-slate-100"
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              <View className="h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
+                <Receipt size={18} color="#64748b" />
+              </View>
+              <View className="ms-3 flex-1" style={rtlAlignEnd}>
+                <Text className="text-sm font-medium text-slate-900" style={rtlText}>
+                  {t("settings.manageSubscription")}
+                </Text>
+                <Text className="mt-0.5 text-xs text-slate-400" style={rtlText}>
+                  {t("settings.manageSubscriptionHint")}
+                </Text>
+              </View>
+              <ChevronRight size={16} color="#cbd5e1" />
+            </Pressable>
+          </View>
+        )}
+
         {/* Preferences Section */}
         <View className="mx-6 mb-4">
-          <Text className="mb-2 text-xs font-semibold uppercase text-slate-400 px-1">
+          <Text className="mb-2 text-xs font-semibold uppercase text-slate-400 px-1" style={rtlText}>
             {t("settings.preferences")}
           </Text>
           <View className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden">
@@ -560,19 +598,19 @@ export default function SettingsScreen() {
             <View className="h-9 w-9 items-center justify-center rounded-lg bg-blue-50">
               <Globe size={18} color="#3b82f6" />
             </View>
-            <View className="ml-3 flex-1">
-              <Text className="text-sm font-medium text-slate-900">
+            <View className="ms-3 flex-1" style={rtlAlignEnd}>
+              <Text className="text-sm font-medium text-slate-900" style={rtlText}>
                 {t("settings.language")}
               </Text>
-              <Text className="mt-0.5 text-xs text-slate-400">
+              <Text className="mt-0.5 text-xs text-slate-400" style={rtlText}>
                 {t("settings.transcriptionLanguage")}
               </Text>
             </View>
-            <View className="flex-row items-center">
+            <View className="flex-row items-center" style={rtlRowReverse}>
               {updateBackendLanguage.isPending ? (
                 <ActivityIndicator size="small" color="#94a3b8" />
               ) : (
-                <Text className="mr-1 text-sm text-slate-400">
+                <Text className="me-1 text-sm text-slate-400" style={rtlText}>
                   {currentLangLabel}
                 </Text>
               )}
@@ -589,19 +627,19 @@ export default function SettingsScreen() {
             <View className="h-9 w-9 items-center justify-center rounded-lg bg-purple-50">
               <Coins size={18} color="#9333ea" />
             </View>
-            <View className="ml-3 flex-1">
-              <Text className="text-sm font-medium text-slate-900">
+            <View className="ms-3 flex-1" style={rtlAlignEnd}>
+              <Text className="text-sm font-medium text-slate-900" style={rtlText}>
                 {t("settings.currency")}
               </Text>
-              <Text className="mt-0.5 text-xs text-slate-400">
+              <Text className="mt-0.5 text-xs text-slate-400" style={rtlText}>
                 {t("settings.currencyDesc")}
               </Text>
             </View>
-            <View className="flex-row items-center">
+            <View className="flex-row items-center" style={rtlRowReverse}>
               {updateCurrency.isPending ? (
                 <ActivityIndicator size="small" color="#94a3b8" />
               ) : (
-                <Text className="mr-1 text-sm text-slate-400">
+                <Text className="me-1 text-sm text-slate-400" style={rtlText}>
                   {getCurrencyLabel(currentCurrency)}
                 </Text>
               )}
@@ -618,21 +656,21 @@ export default function SettingsScreen() {
             <View className="h-9 w-9 items-center justify-center rounded-lg bg-emerald-50">
               <Receipt size={18} color="#10b981" />
             </View>
-            <View className="ml-3 flex-1">
-              <Text className="text-sm font-medium text-slate-900">
+            <View className="ms-3 flex-1" style={rtlAlignEnd}>
+              <Text className="text-sm font-medium text-slate-900" style={rtlText}>
                 {t("settings.taxSettings")}
               </Text>
-              <Text className="mt-0.5 text-xs text-slate-400">
+              <Text className="mt-0.5 text-xs text-slate-400" style={rtlText}>
                 {t("settings.taxSettingsDesc")}
               </Text>
             </View>
-            <View className="flex-row items-center">
+            <View className="flex-row items-center" style={rtlRowReverse}>
               {profile?.taxEnabled && profile.taxRate ? (
-                <Text className="mr-1 text-sm text-slate-400">
+                <Text className="me-1 text-sm text-slate-400" style={rtlText}>
                   {profile.taxLabel || t("taxSettings.defaultLabel")} {profile.taxRate}%
                 </Text>
               ) : (
-                <Text className="mr-1 text-sm text-slate-400">
+                <Text className="me-1 text-sm text-slate-400" style={rtlText}>
                   {t("settings.taxDisabled")}
                 </Text>
               )}
@@ -649,16 +687,16 @@ export default function SettingsScreen() {
             <View className="h-9 w-9 items-center justify-center rounded-lg bg-emerald-50">
               <DollarSign size={18} color="#10b981" />
             </View>
-            <View className="ml-3 flex-1">
-              <Text className="text-sm font-medium text-slate-900">
+            <View className="ms-3 flex-1" style={rtlAlignEnd}>
+              <Text className="text-sm font-medium text-slate-900" style={rtlText}>
                 {t("settings.priceList")}
               </Text>
-              <Text className="mt-0.5 text-xs text-slate-400">
+              <Text className="mt-0.5 text-xs text-slate-400" style={rtlText}>
                 {t("settings.priceListDesc")}
               </Text>
             </View>
-            <View className="flex-row items-center">
-              <Text className="mr-1 text-sm text-slate-400">
+            <View className="flex-row items-center" style={rtlRowReverse}>
+              <Text className="me-1 text-sm text-slate-400" style={rtlText}>
                 {profile?.priceList?.length ?? 0}
               </Text>
               <ChevronRight size={16} color="#cbd5e1" />
@@ -674,19 +712,19 @@ export default function SettingsScreen() {
             <View className="h-9 w-9 items-center justify-center rounded-lg bg-orange-50">
               <Clock size={18} color="#f97316" />
             </View>
-            <View className="ml-3 flex-1">
-              <Text className="text-sm font-medium text-slate-900">
+            <View className="ms-3 flex-1" style={rtlAlignEnd}>
+              <Text className="text-sm font-medium text-slate-900" style={rtlText}>
                 {t("settings.laborRate")}
               </Text>
-              <Text className="mt-0.5 text-xs text-slate-400">
+              <Text className="mt-0.5 text-xs text-slate-400" style={rtlText}>
                 {t("settings.laborRateDesc")}
               </Text>
             </View>
-            <View className="flex-row items-center">
+            <View className="flex-row items-center" style={rtlRowReverse}>
               {updateLaborRate.isPending ? (
                 <ActivityIndicator size="small" color="#94a3b8" />
               ) : (
-                <Text className="mr-1 text-sm text-slate-400">
+                <Text className="me-1 text-sm text-slate-400" style={rtlText}>
                   {profile?.laborRate
                     ? `${currencySymbol}${profile.laborRate}${t("settings.perHour")}`
                     : t("settings.laborRateNotSet")}
@@ -700,7 +738,7 @@ export default function SettingsScreen() {
 
         {/* Business Section */}
         <View className="mx-6 mb-4">
-          <Text className="mb-2 text-xs font-semibold uppercase text-slate-400 px-1">
+          <Text className="mb-2 text-xs font-semibold uppercase text-slate-400 px-1" style={rtlText}>
             {t("settings.business")}
           </Text>
           <View className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden">
@@ -713,28 +751,28 @@ export default function SettingsScreen() {
             <View className="h-9 w-9 items-center justify-center rounded-lg bg-blue-50">
               <Building2 size={18} color="#3b82f6" />
             </View>
-            <View className="ml-3 flex-1">
-              <Text className="text-sm font-medium text-slate-900">
+            <View className="ms-3 flex-1" style={rtlAlignEnd}>
+              <Text className="text-sm font-medium text-slate-900" style={rtlText}>
                 {t("settings.businessInfo")}
               </Text>
-              <Text className="mt-0.5 text-xs text-slate-400">
+              <Text className="mt-0.5 text-xs text-slate-400" style={rtlText}>
                 {t("settings.businessInfoDesc")}
               </Text>
             </View>
-            <View className="flex-row items-center">
+            <View className="flex-row items-center" style={rtlRowReverse}>
               {profile?.companyName ? (
-                <View className="flex-row items-center">
-                  <View className="h-5 w-5 items-center justify-center rounded-full bg-green-100 mr-1">
+                <View className="flex-row items-center" style={rtlRowReverse}>
+                  <View className="h-5 w-5 items-center justify-center rounded-full bg-green-100 me-1">
                     <Check size={12} color="#16a34a" />
                   </View>
-                  <Text className="text-sm text-slate-400 max-w-[100]" numberOfLines={1}>
+                  <Text className="text-sm text-slate-400 max-w-[100]" numberOfLines={1} style={rtlText}>
                     {profile.companyName}
                   </Text>
                 </View>
               ) : (
-                <Text className="text-sm text-slate-400">{t("settings.notConfigured")}</Text>
+                <Text className="text-sm text-slate-400" style={rtlText}>{t("settings.notConfigured")}</Text>
               )}
-              <ChevronRight size={16} color="#cbd5e1" style={{ marginLeft: 4 }} />
+              <ChevronRight size={16} color="#cbd5e1" style={{ marginStart: 4 }} />
             </View>
           </Pressable>
 
@@ -748,28 +786,28 @@ export default function SettingsScreen() {
             <View className="h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 overflow-hidden">
               <Camera size={18} color="#6366f1" />
             </View>
-            <View className="ml-3 flex-1">
-              <Text className="text-sm font-medium text-slate-900">
+            <View className="ms-3 flex-1" style={rtlAlignEnd}>
+              <Text className="text-sm font-medium text-slate-900" style={rtlText}>
                 {t("settings.businessLogo")}
               </Text>
-              <Text className="mt-0.5 text-xs text-slate-400">
+              <Text className="mt-0.5 text-xs text-slate-400" style={rtlText}>
                 {t("settings.businessLogoDesc")}
               </Text>
             </View>
-            <View className="flex-row items-center">
+            <View className="flex-row items-center" style={rtlRowReverse}>
               {logoUploading ? (
                 <ActivityIndicator size="small" color="#94a3b8" />
               ) : profile?.logoKey ? (
-                <View className="flex-row items-center">
-                  <View className="h-5 w-5 items-center justify-center rounded-full bg-green-100 mr-1">
+                <View className="flex-row items-center" style={rtlRowReverse}>
+                  <View className="h-5 w-5 items-center justify-center rounded-full bg-green-100 me-1">
                     <Check size={12} color="#16a34a" />
                   </View>
-                  <Text className="text-sm text-slate-400">{t("settings.uploaded")}</Text>
+                  <Text className="text-sm text-slate-400" style={rtlText}>{t("settings.uploaded")}</Text>
                 </View>
               ) : (
-                <Text className="text-sm text-slate-400">{t("settings.uploadLogo")}</Text>
+                <Text className="text-sm text-slate-400" style={rtlText}>{t("settings.uploadLogo")}</Text>
               )}
-              <ChevronRight size={16} color="#cbd5e1" style={{ marginLeft: 4 }} />
+              <ChevronRight size={16} color="#cbd5e1" style={{ marginStart: 4 }} />
             </View>
           </Pressable>
 
@@ -782,28 +820,28 @@ export default function SettingsScreen() {
             <View className="h-9 w-9 items-center justify-center rounded-lg bg-amber-50">
               <FileText size={18} color="#f59e0b" />
             </View>
-            <View className="ml-3 flex-1">
-              <Text className="text-sm font-medium text-slate-900">
+            <View className="ms-3 flex-1" style={rtlAlignEnd}>
+              <Text className="text-sm font-medium text-slate-900" style={rtlText}>
                 {t("settings.quoteTerms")}
               </Text>
-              <Text className="mt-0.5 text-xs text-slate-400">
+              <Text className="mt-0.5 text-xs text-slate-400" style={rtlText}>
                 {t("settings.quoteTermsDesc")}
               </Text>
             </View>
-            <View className="flex-row items-center">
+            <View className="flex-row items-center" style={rtlRowReverse}>
               {profile?.termsAndConditions && profile.termsAndConditions.length > 0 ? (
-                <View className="flex-row items-center">
-                  <View className="h-5 w-5 items-center justify-center rounded-full bg-green-100 mr-1">
+                <View className="flex-row items-center" style={rtlRowReverse}>
+                  <View className="h-5 w-5 items-center justify-center rounded-full bg-green-100 me-1">
                     <Check size={12} color="#16a34a" />
                   </View>
-                  <Text className="text-sm text-slate-400">
+                  <Text className="text-sm text-slate-400" style={rtlText}>
                     {profile.termsAndConditions.length} {t("terms.items")}
                   </Text>
                 </View>
               ) : (
-                <Text className="text-sm text-slate-400">{t("terms.usingDefaults")}</Text>
+                <Text className="text-sm text-slate-400" style={rtlText}>{t("terms.usingDefaults")}</Text>
               )}
-              <ChevronRight size={16} color="#cbd5e1" style={{ marginLeft: 4 }} />
+              <ChevronRight size={16} color="#cbd5e1" style={{ marginStart: 4 }} />
             </View>
           </Pressable>
         </View>
@@ -811,7 +849,7 @@ export default function SettingsScreen() {
 
       {/* Legal Section */}
         <View className="mx-6 mb-4">
-          <Text className="mb-2 text-xs font-semibold uppercase text-slate-400 px-1">
+          <Text className="mb-2 text-xs font-semibold uppercase text-slate-400 px-1" style={rtlText}>
             {t("settings.legal")}
           </Text>
           <View className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden">
@@ -823,11 +861,11 @@ export default function SettingsScreen() {
               <View className="h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
                 <Shield size={18} color="#64748b" />
               </View>
-              <View className="ml-3 flex-1">
-                <Text className="text-sm font-medium text-slate-900">
+              <View className="ms-3 flex-1" style={rtlAlignEnd}>
+                <Text className="text-sm font-medium text-slate-900" style={rtlText}>
                   {t("settings.privacyPolicy")}
                 </Text>
-                <Text className="mt-0.5 text-xs text-slate-400">
+                <Text className="mt-0.5 text-xs text-slate-400" style={rtlText}>
                   {t("settings.privacyPolicyDesc")}
                 </Text>
               </View>
@@ -841,11 +879,11 @@ export default function SettingsScreen() {
               <View className="h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
                 <FileText size={18} color="#64748b" />
               </View>
-              <View className="ml-3 flex-1">
-                <Text className="text-sm font-medium text-slate-900">
+              <View className="ms-3 flex-1" style={rtlAlignEnd}>
+                <Text className="text-sm font-medium text-slate-900" style={rtlText}>
                   {t("settings.termsOfUse")}
                 </Text>
-                <Text className="mt-0.5 text-xs text-slate-400">
+                <Text className="mt-0.5 text-xs text-slate-400" style={rtlText}>
                   {t("settings.termsOfUseDesc")}
                 </Text>
               </View>
@@ -856,7 +894,7 @@ export default function SettingsScreen() {
 
         {/* Account Section */}
         <View className="mx-6">
-          <Text className="mb-2 text-xs font-semibold uppercase text-slate-400 px-1">
+          <Text className="mb-2 text-xs font-semibold uppercase text-slate-400 px-1" style={rtlText}>
             {t("settings.account")}
           </Text>
           <View className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden">
@@ -869,7 +907,7 @@ export default function SettingsScreen() {
               <View className="h-9 w-9 items-center justify-center rounded-lg bg-red-50">
                 <LogOut size={18} color="#ef4444" />
               </View>
-              <Text className="ml-3 flex-1 text-sm font-medium text-red-600">
+              <Text className="ms-3 flex-1 text-sm font-medium text-red-600" style={rtlText}>
                 {t("settings.signOut")}
               </Text>
               <ChevronRight size={16} color="#cbd5e1" />
@@ -886,11 +924,11 @@ export default function SettingsScreen() {
               <View className="h-9 w-9 items-center justify-center rounded-lg bg-red-50">
                 <Trash2 size={18} color="#ef4444" />
               </View>
-              <View className="ml-3 flex-1">
-                <Text className="text-sm font-medium text-red-600">
+              <View className="ms-3 flex-1" style={rtlAlignEnd}>
+                <Text className="text-sm font-medium text-red-600" style={rtlText}>
                   {t("settings.deleteAccount")}
                 </Text>
-                <Text className="mt-0.5 text-xs text-slate-400">
+                <Text className="mt-0.5 text-xs text-slate-400" style={rtlText}>
                   {t("settings.deleteAccountDesc")}
                 </Text>
               </View>
@@ -905,7 +943,7 @@ export default function SettingsScreen() {
 
         {/* App Version */}
         <View className="mt-6 items-center">
-          <Text className="text-xs text-slate-300">
+          <Text className="text-xs text-slate-300" style={rtlText}>
             {getAppVersionString()}
           </Text>
         </View>
