@@ -13,7 +13,7 @@
     "createQuoteFailed": "تعذر إنشاء العرض. يرجى المحاولة مرة أخرى."
   },
   "common": {
-    "appName": "VoiceQuote",
+    "appName": "Quotio",
     "cancel": "إلغاء",
     "error": "خطأ",
     "or": "أو",
@@ -228,7 +228,7 @@
     "termsOfUse": "شروط الاستخدام",
     "termsOfUseDesc": "شروط وأحكام التطبيق",
     "openLinkFailed": "تعذر فتح الرابط.",
-    "appVersion": "VoiceQuote v1.0.0",
+    "appVersion": "Quotio v1.0.0",
     "pro": "احترافي",
     "proActive": "اشتراكك نشط",
     "quoteUsage": "استخدام العروض",
@@ -345,11 +345,14 @@
   },
   "paywall": {
     "title": "ترقية إلى احترافي",
+    "subtitle": "احصل على وصول غير محدود وجميع الميزات.",
     "benefitsTitle": "ما الذي تحصل عليه",
     "benefit1": "عروض غير محدودة شهرياً",
     "benefit2": "بدون علامة مائية على ملفات PDF",
     "benefit3": "دعم ذو أولوية",
     "subscribeFor": "اشترك مقابل {{price}}/شهر",
+    "subscribe": "اشترك",
+    "priceHint": "سيظهر السعر عند التأكيد. يمكن الإلغاء في أي وقت.",
     "restorePurchases": "استعادة المشتريات",
     "loading": "جاري التحميل...",
     "noOffers": "لا توجد خيارات اشتراك.",

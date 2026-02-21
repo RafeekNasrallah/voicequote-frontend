@@ -95,6 +95,7 @@ export function useCreateQuote() {
       }
 
       // Step 3: Tell backend to process the uploaded audio (long timeout for transcription)
+      // Quote language is determined by the backend from the transcript (what the user spoke), not app/settings.
       let processData: ProcessQuoteResponse;
       const PROCESS_QUOTE_TIMEOUT_MS = 180000; // 3 min for long recordings / Hebrew etc.
       try {

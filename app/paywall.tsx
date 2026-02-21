@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Check, X } from "lucide-react-native";
+import { Check, Crown, X } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -22,10 +22,6 @@ import {
   isRevenueCatConfigured,
   REVENUECAT_ENTITLEMENT_ID,
 } from "@/src/lib/revenueCat";
-import {
-  isPurchaseOrRestore,
-  presentPaywall as presentRevenueCatPaywall,
-} from "@/src/lib/revenueCatUI";
 
 export default function PaywallScreen() {
   const router = useRouter();
@@ -35,7 +31,6 @@ export default function PaywallScreen() {
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const [rcPaywallShown, setRcPaywallShown] = useState(false);
   const [configError, setConfigError] = useState(false);
 
   const syncSubscriptionAndClose = useCallback(async () => {
@@ -47,22 +42,6 @@ export default function PaywallScreen() {
     queryClient.invalidateQueries({ queryKey: ["me"] });
     router.back();
   }, [queryClient, router]);
-
-  // Try to present RevenueCat Paywall (dashboard-configured) on mount. If user purchases/restores, we're done.
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const result = await presentRevenueCatPaywall();
-      if (cancelled) return;
-      setRcPaywallShown(true);
-      if (isPurchaseOrRestore(result)) {
-        await syncSubscriptionAndClose();
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [queryClient, router, syncSubscriptionAndClose]);
 
   const loadOfferings = useCallback(async () => {
     if (!isRevenueCatConfigured()) {
@@ -153,41 +132,30 @@ export default function PaywallScreen() {
     router.back();
   }, [router]);
 
-  // If RevenueCat Paywall was shown and we're still here, show custom fallback (e.g. Restore, or manual purchase).
-  const showCustomPaywall = !isRevenueCatConfigured() || rcPaywallShown;
-
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-200">
+      <View className="flex-row items-center justify-between bg-white px-4 py-3 border-b border-slate-100 shadow-sm">
         <View className="w-10" />
         <Text className="text-lg font-bold text-slate-900">
           {t("paywall.title")}
         </Text>
         <Pressable
           onPress={handleClose}
-          className="h-10 w-10 items-center justify-center"
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          className="h-10 w-10 items-center justify-center rounded-full active:bg-slate-100"
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
-          <X size={24} color="#0f172a" />
+          <X size={22} color="#64748b" strokeWidth={2} />
         </Pressable>
       </View>
 
-      {!showCustomPaywall ? (
-        <View className="flex-1 items-center justify-center py-12">
-          <ActivityIndicator size="large" color="#ea580c" />
-          <Text className="mt-3 text-sm text-slate-500">
-            {t("paywall.loading")}
-          </Text>
-        </View>
-      ) : (
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
         {loading ? (
-          <View className="items-center py-12">
+          <View className="items-center justify-center py-16">
             <ActivityIndicator size="large" color="#ea580c" />
             <Text className="mt-3 text-sm text-slate-500">
               {t("paywall.loading")}
@@ -195,9 +163,19 @@ export default function PaywallScreen() {
           </View>
         ) : (
           <>
-            {/* Benefits */}
-            <View className="mb-8">
-              <Text className="mb-4 text-base font-semibold text-slate-900">
+            {/* Hero section */}
+            <View className="mx-6 mt-8 mb-6 items-center">
+              <View className="mb-4 h-16 w-16 items-center justify-center rounded-2xl bg-amber-100">
+                <Crown size={32} color="#d97706" />
+              </View>
+              <Text className="text-center text-sm text-slate-500">
+                {t("paywall.subtitle")}
+              </Text>
+            </View>
+
+            {/* Benefits card */}
+            <View className="mx-6 mb-6 rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
+              <Text className="mb-4 text-sm font-semibold text-slate-700">
                 {t("paywall.benefitsTitle")}
               </Text>
               {[
@@ -205,49 +183,50 @@ export default function PaywallScreen() {
                 t("paywall.benefit2"),
                 t("paywall.benefit3"),
               ].map((label, i) => (
-                <View key={i} className="mb-3 flex-row items-center">
-                  <View className="mr-3 h-6 w-6 items-center justify-center rounded-full bg-emerald-100">
-                    <Check size={14} color="#16a34a" />
+                <View key={i} className="mb-4 flex-row items-center last:mb-0">
+                  <View className="mr-4 h-7 w-7 items-center justify-center rounded-full bg-emerald-100">
+                    <Check size={14} color="#16a34a" strokeWidth={3} />
                   </View>
                   <Text className="flex-1 text-sm text-slate-700">{label}</Text>
                 </View>
               ))}
             </View>
 
-            {/* Price & Subscribe */}
+            {/* Subscribe CTA */}
             {monthlyPackage ? (
-              <View className="mb-6">
+              <View className="mx-6 mb-4">
                 <Pressable
                   onPress={handlePurchase}
                   disabled={purchasing}
-                  className="h-12 items-center justify-center rounded-xl bg-orange-600"
+                  className="h-14 items-center justify-center rounded-2xl bg-orange-600 shadow-md active:shadow-sm"
                   style={({ pressed }) => ({
-                    opacity: pressed || purchasing ? 0.85 : 1,
+                    opacity: pressed || purchasing ? 0.9 : 1,
                   })}
                 >
                   {purchasing ? (
-                    <ActivityIndicator color="#ffffff" />
+                    <ActivityIndicator color="#ffffff" size="small" />
                   ) : (
-                    <Text className="text-base font-semibold text-white">
-                      {t("paywall.subscribeFor", {
-                        price: monthlyPackage.product.priceString,
-                      })}
+                    <Text className="text-base font-bold text-white">
+                      {t("paywall.subscribe")}
                     </Text>
                   )}
                 </Pressable>
+                <Text className="mt-3 text-center text-xs text-slate-400">
+                  {t("paywall.priceHint")}
+                </Text>
               </View>
             ) : configError ? (
-              <View className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <View className="mx-6 mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
                 <Text className="mb-1 text-sm font-semibold text-amber-800">
                   {t("paywall.configErrorTitle")}
                 </Text>
-                <Text className="text-sm text-amber-800">
+                <Text className="text-sm text-amber-700">
                   {t("paywall.configErrorMsg")}
                 </Text>
               </View>
             ) : (
               !loading && (
-                <Text className="mb-6 text-center text-sm text-slate-500">
+                <Text className="mx-6 mb-6 text-center text-sm text-slate-500">
                   {t("paywall.noOffers")}
                 </Text>
               )
@@ -257,7 +236,7 @@ export default function PaywallScreen() {
             <Pressable
               onPress={handleRestore}
               disabled={restoring}
-              className="h-12 items-center justify-center rounded-xl border border-slate-200"
+              className="mx-6 h-12 items-center justify-center rounded-xl"
               style={({ pressed }) => ({
                 opacity: pressed || restoring ? 0.7 : 1,
               })}
@@ -265,7 +244,7 @@ export default function PaywallScreen() {
               {restoring ? (
                 <ActivityIndicator size="small" color="#64748b" />
               ) : (
-                <Text className="text-base font-semibold text-slate-600">
+                <Text className="text-sm font-medium text-slate-500 underline">
                   {t("paywall.restorePurchases")}
                 </Text>
               )}
@@ -273,7 +252,6 @@ export default function PaywallScreen() {
           </>
         )}
       </ScrollView>
-      )}
     </SafeAreaView>
   );
 }

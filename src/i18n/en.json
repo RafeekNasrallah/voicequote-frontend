@@ -13,7 +13,7 @@
     "createQuoteFailed": "Could not create quote. Please try again."
   },
   "common": {
-    "appName": "VoiceQuote",
+    "appName": "Quotio",
     "cancel": "Cancel",
     "error": "Error",
     "or": "or",
@@ -228,7 +228,7 @@
     "termsOfUse": "Terms of Use",
     "termsOfUseDesc": "App terms and conditions",
     "openLinkFailed": "Could not open link.",
-    "appVersion": "VoiceQuote v1.0.0",
+    "appVersion": "Quotio v1.0.0",
     "pro": "Pro",
     "proActive": "Your subscription is active",
     "quoteUsage": "Quote usage",
@@ -345,11 +345,14 @@
   },
   "paywall": {
     "title": "Upgrade to Pro",
+    "subtitle": "Get unlimited access and unlock all features.",
     "benefitsTitle": "What you get",
     "benefit1": "Unlimited quotes per month",
     "benefit2": "No watermark on PDFs",
     "benefit3": "Priority support",
     "subscribeFor": "Subscribe for {{price}}/mo",
+    "subscribe": "Subscribe",
+    "priceHint": "Price shown when you confirm. Cancel anytime.",
     "restorePurchases": "Restore Purchases",
     "loading": "Loading...",
     "noOffers": "No subscription options available.",

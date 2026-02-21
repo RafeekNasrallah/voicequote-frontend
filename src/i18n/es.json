@@ -13,7 +13,7 @@
     "createQuoteFailed": "No se pudo crear el presupuesto. Inténtalo de nuevo."
   },
   "common": {
-    "appName": "VoiceQuote",
+    "appName": "Quotio",
     "cancel": "Cancelar",
     "error": "Error",
     "or": "o",
@@ -228,7 +228,7 @@
     "termsOfUse": "Términos de uso",
     "termsOfUseDesc": "Términos y condiciones de la app",
     "openLinkFailed": "No se pudo abrir el enlace.",
-    "appVersion": "VoiceQuote v1.0.0",
+    "appVersion": "Quotio v1.0.0",
     "pro": "Pro",
     "proActive": "Tu suscripción está activa",
     "quoteUsage": "Uso de presupuestos",
@@ -345,11 +345,14 @@
   },
   "paywall": {
     "title": "Pasar a Pro",
+    "subtitle": "Obtén acceso ilimitado y desbloquea todas las funciones.",
     "benefitsTitle": "Qué obtienes",
     "benefit1": "Presupuestos ilimitados al mes",
     "benefit2": "Sin marca de agua en los PDF",
     "benefit3": "Soporte prioritario",
     "subscribeFor": "Suscríbete por {{price}}/mes",
+    "subscribe": "Suscribirse",
+    "priceHint": "El precio se mostrará al confirmar. Cancela cuando quieras.",
     "restorePurchases": "Restaurar compras",
     "loading": "Cargando...",
     "noOffers": "No hay opciones de suscripción.",

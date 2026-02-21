@@ -107,7 +107,7 @@ export default function SignInScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex-1 items-center justify-center px-6 py-12">
-          <View className="w-full max-w-sm rounded-xl bg-white p-8">
+          <View className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8">
             {/* Logo */}
             <Text className="text-center text-3xl font-bold text-slate-900">
               {t("common.appName")}

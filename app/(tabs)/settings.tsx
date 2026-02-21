@@ -907,9 +907,11 @@ export default function SettingsScreen() {
               <View className="h-9 w-9 items-center justify-center rounded-lg bg-red-50">
                 <LogOut size={18} color="#ef4444" />
               </View>
-              <Text className="ms-3 flex-1 text-sm font-medium text-red-600" style={rtlText}>
-                {t("settings.signOut")}
-              </Text>
+              <View className="ms-3 flex-1" style={rtlAlignEnd}>
+                <Text className="text-sm font-medium text-red-600" style={rtlText}>
+                  {t("settings.signOut")}
+                </Text>
+              </View>
               <ChevronRight size={16} color="#cbd5e1" />
             </Pressable>
             {/* Delete Account */}

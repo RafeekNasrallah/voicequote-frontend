@@ -13,7 +13,7 @@
     "createQuoteFailed": "לא ניתן ליצור הצעה. נסה שוב."
   },
   "common": {
-    "appName": "VoiceQuote",
+    "appName": "Quotio",
     "cancel": "ביטול",
     "error": "שגיאה",
     "or": "או",
@@ -228,7 +228,7 @@
     "termsOfUse": "תנאי שימוש",
     "termsOfUseDesc": "תנאים והגבלות של האפליקציה",
     "openLinkFailed": "לא ניתן לפתוח את הקישור.",
-    "appVersion": "VoiceQuote v1.0.0",
+    "appVersion": "Quotio v1.0.0",
     "pro": "Pro",
     "proActive": "המנוי שלך פעיל",
     "quoteUsage": "שימוש בהצעות",
@@ -345,11 +345,14 @@
   },
   "paywall": {
     "title": "שדרג ל-Pro",
+    "subtitle": "קבל גישה ללא הגבלה וכל התכונות.",
     "benefitsTitle": "מה תקבל",
     "benefit1": "הצעות ללא הגבלה לחודש",
     "benefit2": "ללא סימן מים על קבצי PDF",
     "benefit3": "תמיכה בעדיפות",
     "subscribeFor": "הירשם תמורת {{price}}/חודש",
+    "subscribe": "הירשם",
+    "priceHint": "המחיר יוצג באישור. ניתן לבטל בכל עת.",
     "restorePurchases": "שחזר רכישות",
     "loading": "טוען...",
     "noOffers": "אין אפשרויות מנוי.",

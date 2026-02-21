@@ -13,7 +13,7 @@
     "createQuoteFailed": "Angebot konnte nicht erstellt werden. Bitte versuche es erneut."
   },
   "common": {
-    "appName": "VoiceQuote",
+    "appName": "Quotio",
     "cancel": "Abbrechen",
     "error": "Fehler",
     "or": "oder",
@@ -228,7 +228,7 @@
     "termsOfUse": "Nutzungsbedingungen",
     "termsOfUseDesc": "AGB der App",
     "openLinkFailed": "Link konnte nicht geöffnet werden.",
-    "appVersion": "VoiceQuote v1.0.0",
+    "appVersion": "Quotio v1.0.0",
     "pro": "Pro",
     "proActive": "Ihr Abo ist aktiv",
     "quoteUsage": "Angebotsnutzung",
@@ -345,11 +345,14 @@
   },
   "paywall": {
     "title": "Auf Pro upgraden",
+    "subtitle": "Erhalten Sie unbegrenzten Zugang und alle Funktionen.",
     "benefitsTitle": "Was Sie bekommen",
     "benefit1": "Unbegrenzte Angebote pro Monat",
     "benefit2": "Kein Wasserzeichen auf PDFs",
     "benefit3": "Prioritäts-Support",
     "subscribeFor": "Abonnieren für {{price}}/Monat",
+    "subscribe": "Abonnieren",
+    "priceHint": "Preis wird bei Bestätigung angezeigt. Jederzeit kündbar.",
     "restorePurchases": "Käufe wiederherstellen",
     "loading": "Laden...",
     "noOffers": "Keine Abo-Optionen verfügbar.",
