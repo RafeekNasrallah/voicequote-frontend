@@ -42,15 +42,19 @@ Configuration runs in `_layout.tsx` via `configureRevenueCat()`. When the user s
 
 ### Entitlement checking
 
-- **Backend:** Your API uses `User.isPro` (updated by the RevenueCat webhook).
+- **Backend:** Your API uses `User.isPro` (updated by the RevenueCat webhook and by `POST /api/me/sync-subscription`).
 - **Client:** Helpers in `src/lib/revenueCat.ts`:
   - `getCustomerInfo()` — fetch current subscriptions/entitlements.
   - `hasProEntitlement(customerInfo)` — true if **Quotio Pro** is active.
 
+### Subscription sync (account status after purchase)
+
+The backend gets updates from: (1) **RevenueCat webhook** — configure in RevenueCat → Integrations → Webhooks (can take 5–60 s). (2) **Sync endpoint** — after purchase/restore, the app calls `POST /api/me/sync-subscription`, which fetches entitlements from RevenueCat and updates `User.isPro` immediately. Set `REVENUECAT_API_SECRET` (Secret key `sk_...` from RevenueCat) on the backend.
+
 ### Customer info and best practices
 
 - Always use **customer info** from the SDK or your backend after purchase/restore; avoid assuming state from a single call.
-- After purchase or restore, the app invalidates the `["me"]` query so the UI reflects the backend’s `isPro` and quote usage.
+- After purchase or restore, the app calls the sync endpoint, invalidates the `["me"]` query, and navigates back so the UI reflects the backend’s `isPro`.
 
 ---
 

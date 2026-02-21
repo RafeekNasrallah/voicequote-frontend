@@ -17,6 +17,7 @@ import Purchases, {
   PurchasesPackage,
 } from "react-native-purchases";
 import { SafeAreaView } from "react-native-safe-area-context";
+import api from "@/src/lib/api";
 import {
   isRevenueCatConfigured,
   REVENUECAT_ENTITLEMENT_ID,
@@ -37,6 +38,16 @@ export default function PaywallScreen() {
   const [rcPaywallShown, setRcPaywallShown] = useState(false);
   const [configError, setConfigError] = useState(false);
 
+  const syncSubscriptionAndClose = useCallback(async () => {
+    try {
+      await api.post("/api/me/sync-subscription");
+    } catch {
+      // Sync may fail if REVENUECAT_API_SECRET not set; webhook will eventually update
+    }
+    queryClient.invalidateQueries({ queryKey: ["me"] });
+    router.back();
+  }, [queryClient, router]);
+
   // Try to present RevenueCat Paywall (dashboard-configured) on mount. If user purchases/restores, we're done.
   useEffect(() => {
     let cancelled = false;
@@ -45,14 +56,13 @@ export default function PaywallScreen() {
       if (cancelled) return;
       setRcPaywallShown(true);
       if (isPurchaseOrRestore(result)) {
-        queryClient.invalidateQueries({ queryKey: ["me"] });
-        router.back();
+        await syncSubscriptionAndClose();
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [queryClient, router]);
+  }, [queryClient, router, syncSubscriptionAndClose]);
 
   const loadOfferings = useCallback(async () => {
     if (!isRevenueCatConfigured()) {
@@ -102,8 +112,7 @@ export default function PaywallScreen() {
     try {
       const { customerInfo } = await Purchases.purchasePackage(monthlyPackage);
       if (customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]) {
-        queryClient.invalidateQueries({ queryKey: ["me"] });
-        router.back();
+        await syncSubscriptionAndClose();
       }
     } catch (e: any) {
       if (e.userCancelled !== true) {
@@ -115,19 +124,18 @@ export default function PaywallScreen() {
     } finally {
       setPurchasing(false);
     }
-  }, [monthlyPackage, queryClient, router, t]);
+  }, [monthlyPackage, syncSubscriptionAndClose, t]);
 
   const handleRestore = useCallback(async () => {
     setRestoring(true);
     try {
       const customerInfo: CustomerInfo = await Purchases.restorePurchases();
       if (customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]) {
-        queryClient.invalidateQueries({ queryKey: ["me"] });
+        await syncSubscriptionAndClose();
         Alert.alert(
           t("paywall.restoreSuccess"),
           t("paywall.restoreSuccessMsg"),
         );
-        router.back();
       } else {
         Alert.alert(
           t("paywall.restoreNoSubscription"),
@@ -139,7 +147,7 @@ export default function PaywallScreen() {
     } finally {
       setRestoring(false);
     }
-  }, [queryClient, router, t]);
+  }, [syncSubscriptionAndClose, t]);
 
   const handleClose = useCallback(() => {
     router.back();
