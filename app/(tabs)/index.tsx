@@ -195,8 +195,8 @@ export default function HomeScreen() {
   );
   const isPro = userProfile?.isPro === true;
   const quoteCount = userProfile?.quoteCount ?? 0;
-  const softLimitApproaching = isPro && quoteCount >= 90 && quoteCount < 100;
-  const softLimitReached = isPro && quoteCount >= 100;
+  const softLimitApproaching = isPro && quoteCount >= 180 && quoteCount < 200;
+  const softLimitReached = isPro && quoteCount >= 200;
 
   // Greeting based on time of day
   function getGreeting(): string {

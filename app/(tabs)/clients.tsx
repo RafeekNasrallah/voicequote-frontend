@@ -27,9 +27,7 @@ interface Client {
   address: string | null;
   email: string | null;
   phone: string | null;
-  _count?: {
-    quotes: number;
-  };
+  quoteCount?: number;
 }
 
 function getInitials(name: string) {
@@ -67,7 +65,7 @@ export default function ClientsScreen() {
 
   const renderClient = useCallback(
     ({ item }: { item: Client }) => {
-      const quoteCount = item._count?.quotes ?? 0;
+      const quoteCount = item.quoteCount ?? 0;
       return (
         <Link href={`/client/${item.id}` as Href} asChild className="mb-3">
           <Pressable

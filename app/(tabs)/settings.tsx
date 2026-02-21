@@ -521,14 +521,14 @@ export default function SettingsScreen() {
                     {t("settings.quoteUsage")}
                   </Text>
                   <Text className="text-sm text-slate-500" style={rtlText}>
-                    {(profile?.quoteCount ?? 0)} / 3
+                    {(profile?.quoteCount ?? 0)} / 5
                   </Text>
                 </View>
                 <View className="h-2 rounded-full bg-slate-100 overflow-hidden mb-2">
                   <View
                     className="h-full rounded-full bg-orange-500"
                     style={{
-                      width: `${Math.min(100, ((profile?.quoteCount ?? 0) / 3) * 100)}%`,
+                      width: `${Math.min(100, ((profile?.quoteCount ?? 0) / 5) * 100)}%`,
                     }}
                   />
                 </View>
