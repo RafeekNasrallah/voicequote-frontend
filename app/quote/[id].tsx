@@ -238,12 +238,13 @@ export default function QuoteScreen() {
   // ─── Mutations ──────────────────────────────────────────
 
   const patchClient = useMutation({
-    mutationFn: async (clientId: number) => {
+    mutationFn: async (clientId: number | null) => {
       await api.patch(`/api/quotes/${id}/client`, { clientId });
     },
     onSuccess: () => {
       setPdfUrl(null); // Clear PDF so share will regenerate
       queryClient.invalidateQueries({ queryKey: ["quote", id] });
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
     },
     onError: () => {
       Alert.alert(t("common.error"), t("quoteEditor.failedUpdateClient"));
@@ -996,18 +997,42 @@ export default function QuoteScreen() {
                 {t("quoteEditor.client")}
               </Text>
               {quote.clientName ? (
-                <Pressable
-                  onPress={() => setClientModalVisible(true)}
-                  className="rounded-lg border border-slate-200 p-3"
-                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-                >
-                  <Text className="text-sm font-semibold text-slate-900">
-                    {quote.clientName}
-                  </Text>
-                  <Text className="mt-0.5 text-xs text-slate-400">
-                    {t("quoteEditor.tapToChange")}
-                  </Text>
-                </Pressable>
+                <View className="gap-2">
+                  <Pressable
+                    onPress={() => setClientModalVisible(true)}
+                    className="rounded-lg border border-slate-200 p-3"
+                    style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                  >
+                    <Text className="text-sm font-semibold text-slate-900">
+                      {quote.clientName}
+                    </Text>
+                    <Text className="mt-0.5 text-xs text-slate-400">
+                      {t("quoteEditor.tapToChange")}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      Alert.alert(
+                        t("quoteEditor.removeClient"),
+                        t("quoteEditor.removeClientConfirm"),
+                        [
+                          { text: t("common.cancel"), style: "cancel" },
+                          {
+                            text: t("quoteEditor.removeClient"),
+                            style: "destructive",
+                            onPress: () => patchClient.mutate(null),
+                          },
+                        ],
+                      );
+                    }}
+                    className="self-start rounded px-2 py-1"
+                    style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                  >
+                    <Text className="text-xs text-red-600">
+                      {t("quoteEditor.removeClient")}
+                    </Text>
+                  </Pressable>
+                </View>
               ) : (
                 <Pressable
                   onPress={() => setClientModalVisible(true)}

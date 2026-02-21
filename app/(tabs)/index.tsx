@@ -22,6 +22,10 @@ import { useCreateQuote } from "@/src/hooks/useCreateQuote";
 import api from "@/src/lib/api";
 import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/src/lib/currency";
 import { isNetworkError } from "@/src/lib/networkError";
+import {
+  deriveQuoteWorkflowStatus,
+  getQuoteStatusBadge,
+} from "@/src/lib/quoteStatus";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -32,12 +36,16 @@ interface Quote {
   totalCost: number | null;
   clientId: number | null;
   clientName: string | null;
+  status?: string | null;
 }
 
 interface QuoteStats {
   total: number;
   withClient: number;
   ready: number;
+  needsClient?: number;
+  needsPricing?: number;
+  draft?: number;
 }
 
 // ─── Helpers ────────────────────────────────────────────────
@@ -69,14 +77,16 @@ function StatsCard({
   Icon,
   color,
   isLoading,
+  onPress,
 }: {
   label: string;
   value: number;
   Icon: React.ComponentType<{ size: number; color: string }>;
   color: string;
   isLoading?: boolean;
+  onPress?: () => void;
 }) {
-  return (
+  const content = (
     <View className="flex-1 rounded-xl bg-white p-4 shadow-sm border border-slate-100">
       <View className="flex-row items-center justify-between">
         {isLoading ? (
@@ -89,6 +99,19 @@ function StatsCard({
       <Text className="mt-1 text-xs text-slate-500">{label}</Text>
     </View>
   );
+
+  if (onPress) {
+    return (
+      <Pressable
+        onPress={onPress}
+        className="flex-1"
+        style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+  return content;
 }
 
 function QuoteCard({
@@ -104,7 +127,7 @@ function QuoteCard({
   t: (key: string) => string;
   currencySymbol: string;
 }) {
-  const status = getQuoteStatus(quote, t);
+  const status = getQuoteStatusBadge(deriveQuoteWorkflowStatus(quote), t);
 
   return (
     <Pressable
@@ -139,31 +162,6 @@ function QuoteCard({
       </View>
     </Pressable>
   );
-}
-
-function getQuoteStatus(
-  quote: Quote,
-  t: (key: string) => string,
-): { label: string; bg: string; text: string } {
-  if (quote.clientId && quote.totalCost) {
-    return {
-      label: t("quotes.statusReady"),
-      bg: "bg-emerald-50",
-      text: "text-emerald-700",
-    };
-  }
-  if (quote.totalCost) {
-    return {
-      label: t("quotes.statusNoClient"),
-      bg: "bg-amber-50",
-      text: "text-amber-700",
-    };
-  }
-  return {
-    label: t("quotes.statusDraft"),
-    bg: "bg-slate-100",
-    text: "text-slate-600",
-  };
 }
 
 // ─── Main Screen ────────────────────────────────────────────
@@ -264,7 +262,7 @@ export default function HomeScreen() {
 
   // Stats from backend (or fallback to 0)
   const totalQuotes = stats?.total ?? 0;
-  const withClient = stats?.withClient ?? 0;
+  const needsClient = stats?.needsClient ?? 0;
   const ready = stats?.ready ?? 0;
 
   const handleRecordingComplete = useCallback(
@@ -353,13 +351,15 @@ export default function HomeScreen() {
             Icon={FileText}
             color="#ea580c"
             isLoading={statsLoading}
+            onPress={() => router.push("/(tabs)/quotes" as any)}
           />
           <StatsCard
-            label={t("home.withClient")}
-            value={withClient}
+            label={t("quotes.statusNoClient")}
+            value={needsClient}
             Icon={Clock}
             color="#ea580c"
             isLoading={statsLoading}
+            onPress={() => router.push("/(tabs)/quotes?status=needs_client" as any)}
           />
           <StatsCard
             label={t("home.ready")}
@@ -367,6 +367,7 @@ export default function HomeScreen() {
             Icon={CheckCircle2}
             color="#ea580c"
             isLoading={statsLoading}
+            onPress={() => router.push("/(tabs)/quotes?status=ready" as any)}
           />
         </View>
 

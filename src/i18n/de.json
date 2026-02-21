@@ -95,6 +95,8 @@
     "client": "Kunde",
     "selectClient": "Kunde auswählen",
     "tapToChange": "Tippen zum Ändern",
+    "removeClient": "Kunde entfernen",
+    "removeClientConfirm": "Diesen Kunden vom Angebot entfernen?",
     "item": "Artikel",
     "unit": "Einheit",
     "qty": "Menge",

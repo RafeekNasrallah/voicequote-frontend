@@ -95,6 +95,8 @@
     "client": "العميل",
     "selectClient": "اختر عميل",
     "tapToChange": "اضغط للتغيير",
+    "removeClient": "إزالة العميل",
+    "removeClientConfirm": "إزالة هذا العميل من العرض؟",
     "item": "الصنف",
     "unit": "الوحدة",
     "qty": "الكمية",

@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
-import { FileText, Plus, Search } from "lucide-react-native";
-import { useCallback, useMemo, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { ArrowDownUp, Check, FileText, Filter, Plus, Search } from "lucide-react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     Alert,
     FlatList,
+    Modal,
     Pressable,
     RefreshControl,
     Text,
@@ -21,6 +22,11 @@ import { useCreateManualQuote } from "@/src/hooks/useCreateManualQuote";
 import api from "@/src/lib/api";
 import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/src/lib/currency";
 import { isNetworkError } from "@/src/lib/networkError";
+import {
+  deriveQuoteWorkflowStatus,
+  getQuoteStatusBadge,
+  type QuoteWorkflowFilter,
+} from "@/src/lib/quoteStatus";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -31,6 +37,7 @@ interface Quote {
   totalCost: number | null;
   clientId: number | null;
   clientName: string | null;
+  status?: string | null;
 }
 
 // ─── Helpers ────────────────────────────────────────────────
@@ -42,31 +49,6 @@ function formatDate(dateStr: string): string {
     day: "numeric",
     year: "numeric",
   });
-}
-
-function getQuoteStatus(
-  quote: Quote,
-  t: (key: string) => string,
-): { label: string; bg: string; text: string } {
-  if (quote.clientId && quote.totalCost) {
-    return {
-      label: t("quotes.statusReady"),
-      bg: "bg-emerald-50",
-      text: "text-emerald-700",
-    };
-  }
-  if (quote.totalCost) {
-    return {
-      label: t("quotes.statusNoClient"),
-      bg: "bg-amber-50",
-      text: "text-amber-700",
-    };
-  }
-  return {
-    label: t("quotes.statusDraft"),
-    bg: "bg-slate-100",
-    text: "text-slate-600",
-  };
 }
 
 function getQuoteTitle(quote: Quote): string {
@@ -89,7 +71,7 @@ function QuoteCard({
   t: (key: string) => string;
   currencySymbol: string;
 }) {
-  const status = getQuoteStatus(quote, t);
+  const status = getQuoteStatusBadge(deriveQuoteWorkflowStatus(quote), t);
 
   return (
     <Pressable
@@ -132,11 +114,58 @@ interface UserProfile {
 
 // ─── Main Screen ────────────────────────────────────────────
 
+export type QuoteStatusFilter = QuoteWorkflowFilter;
+export type QuoteSortOrder = "createdAt_desc" | "createdAt_asc";
+
 export default function AllQuotesScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{
+    status?: string;
+    sort?: string;
+  }>();
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<QuoteStatusFilter>("all");
+  const [sortOrder, setSortOrder] = useState<QuoteSortOrder>("createdAt_desc");
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [sortModalVisible, setSortModalVisible] = useState(false);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+
+  // Sync URL params from homepage (e.g. "View Ready" -> status=ready)
+  useEffect(() => {
+    const s = params.status as string | undefined;
+    const o = params.sort as QuoteSortOrder | undefined;
+    if (s === "with_client") {
+      // Legacy deep-link -> actionable modern status.
+      setStatusFilter("needs_pricing");
+    } else if (s === "no_client") {
+      // Legacy deep-link -> actionable modern status.
+      setStatusFilter("needs_client");
+    } else if (
+      s &&
+      ["all", "ready", "needs_client", "needs_pricing", "draft"].includes(s)
+    ) {
+      setStatusFilter(s as QuoteStatusFilter);
+    }
+    if (o && (o === "createdAt_desc" || o === "createdAt_asc")) {
+      setSortOrder(o);
+    }
+  }, [params.status, params.sort]);
+
+  const applyFilterAndSort = useCallback(
+    (status: QuoteStatusFilter, sort: QuoteSortOrder) => {
+      setStatusFilter(status);
+      setSortOrder(sort);
+      const q = new URLSearchParams();
+      if (status !== "all") q.set("status", status);
+      if (sort !== "createdAt_desc") q.set("sort", sort);
+      const query = q.toString();
+      router.replace(
+        query ? `/(tabs)/quotes?${query}` as any : "/(tabs)/quotes" as any,
+      );
+    },
+    [router],
+  );
 
   const {
     data: quotes = [],
@@ -146,9 +175,15 @@ export default function AllQuotesScreen() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ["quotes"],
+    queryKey: ["quotes", statusFilter, sortOrder],
     queryFn: async () => {
-      const { data } = await api.get<{ quotes: Quote[] }>("/api/quotes");
+      const q = new URLSearchParams();
+      if (statusFilter !== "all") q.set("status", statusFilter);
+      if (sortOrder !== "createdAt_desc") q.set("sort", sortOrder);
+      const query = q.toString();
+      const { data } = await api.get<{ quotes: Quote[] }>(
+        `/api/quotes${query ? `?${query}` : ""}`,
+      );
       return data.quotes;
     },
   });
@@ -175,7 +210,10 @@ export default function AllQuotesScreen() {
       const title = getQuoteTitle(q).toLowerCase();
       const date = formatDate(q.createdAt).toLowerCase();
       const cost = q.totalCost != null ? `$${q.totalCost.toFixed(2)}` : "";
-      const status = getQuoteStatus(q, t).label.toLowerCase();
+      const status = getQuoteStatusBadge(
+        deriveQuoteWorkflowStatus(q),
+        t,
+      ).label.toLowerCase();
       const idStr = q.id.toString();
       const name = (q.name || "").toLowerCase();
 
@@ -238,14 +276,30 @@ export default function AllQuotesScreen() {
         <Text className="text-2xl font-bold text-slate-900">
           {t("quotes.title")}
         </Text>
-        <Pressable
-          onPress={() => createManualQuote.mutate()}
-          disabled={createManualQuote.isPending}
-          className="h-10 w-10 items-center justify-center rounded-full bg-orange-600"
-          style={({ pressed }) => ({ opacity: pressed || createManualQuote.isPending ? 0.7 : 1 })}
-        >
-          <Plus size={20} color="#ffffff" />
-        </Pressable>
+        <View className="flex-row items-center gap-2">
+          <Pressable
+            onPress={() => setFilterModalVisible(true)}
+            className="h-10 w-10 items-center justify-center rounded-full bg-slate-100"
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          >
+            <Filter size={20} color="#475569" />
+          </Pressable>
+          <Pressable
+            onPress={() => setSortModalVisible(true)}
+            className="h-10 w-10 items-center justify-center rounded-full bg-slate-100"
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          >
+            <ArrowDownUp size={20} color="#475569" />
+          </Pressable>
+          <Pressable
+            onPress={() => createManualQuote.mutate(undefined)}
+            disabled={createManualQuote.isPending}
+            className="h-10 w-10 items-center justify-center rounded-full bg-orange-600"
+            style={({ pressed }) => ({ opacity: pressed || createManualQuote.isPending ? 0.7 : 1 })}
+          >
+            <Plus size={20} color="#ffffff" />
+          </Pressable>
+        </View>
       </View>
 
       {/* Search */}
@@ -312,6 +366,180 @@ export default function AllQuotesScreen() {
           />
         </>
       )}
+
+      {/* Filter modal */}
+      <Modal
+        visible={filterModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setFilterModalVisible(false)}
+      >
+        <Pressable
+          className="flex-1 justify-end bg-black/50 px-6 pb-12"
+          onPress={() => setFilterModalVisible(false)}
+        >
+          <Pressable
+            className="rounded-3xl bg-white overflow-hidden"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.15,
+              shadowRadius: 24,
+              elevation: 12,
+            }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View className="px-5 pt-5 pb-2">
+              <Text className="text-lg font-semibold text-slate-900">
+                {t("quotes.filterLabel")}
+              </Text>
+              <Text className="mt-0.5 text-sm text-slate-500">
+                {t("quotes.filterSubtitle")}
+              </Text>
+            </View>
+            <View className="py-2">
+              {(
+                [
+                  ["all", t("quotes.filterAll"), t("quotes.filterAllDesc")],
+                  ["ready", t("quotes.filterReady"), t("quotes.filterReadyDesc")],
+                  [
+                    "needs_client",
+                    t("quotes.filterNeedsClient"),
+                    t("quotes.filterNeedsClientDesc"),
+                  ],
+                  [
+                    "needs_pricing",
+                    t("quotes.filterNeedsPricing"),
+                    t("quotes.filterNeedsPricingDesc"),
+                  ],
+                  ["draft", t("quotes.filterDraft"), t("quotes.filterDraftDesc")],
+                ] as const
+              ).map(([value, label, desc]) => (
+                <Pressable
+                  key={value}
+                  onPress={() => {
+                    applyFilterAndSort(value as QuoteStatusFilter, sortOrder);
+                    setFilterModalVisible(false);
+                  }}
+                  className="flex-row items-center justify-between px-5 py-3.5 active:bg-slate-50"
+                  style={({ pressed }) => ({
+                    backgroundColor: pressed ? "rgb(248 250 252)" : undefined,
+                  })}
+                >
+                  <View className="flex-1 mr-3">
+                    <Text
+                      className={`text-base ${
+                        statusFilter === value
+                          ? "font-semibold text-slate-900"
+                          : "text-slate-600"
+                      }`}
+                    >
+                      {label}
+                    </Text>
+                    <Text
+                      className="mt-0.5 text-xs text-slate-400"
+                      numberOfLines={2}
+                    >
+                      {desc}
+                    </Text>
+                  </View>
+                  {statusFilter === value && (
+                    <View className="h-7 w-7 items-center justify-center rounded-full bg-orange-100">
+                      <Check size={16} color="#ea580c" strokeWidth={2.5} />
+                    </View>
+                  )}
+                </Pressable>
+              ))}
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Sort modal */}
+      <Modal
+        visible={sortModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSortModalVisible(false)}
+      >
+        <Pressable
+          className="flex-1 justify-end bg-black/50 px-6 pb-12"
+          onPress={() => setSortModalVisible(false)}
+        >
+          <Pressable
+            className="rounded-3xl bg-white overflow-hidden"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.15,
+              shadowRadius: 24,
+              elevation: 12,
+            }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View className="px-5 pt-5 pb-2">
+              <Text className="text-lg font-semibold text-slate-900">
+                {t("quotes.sortLabel")} by date
+              </Text>
+              <Text className="mt-0.5 text-sm text-slate-500">
+                {t("quotes.sortSubtitle")}
+              </Text>
+            </View>
+            <View className="py-2">
+              <Pressable
+                onPress={() => {
+                  applyFilterAndSort(statusFilter, "createdAt_desc");
+                  setSortModalVisible(false);
+                }}
+                className="flex-row items-center justify-between px-5 py-3.5 active:bg-slate-50"
+                style={({ pressed }) => ({
+                  backgroundColor: pressed ? "rgb(248 250 252)" : undefined,
+                })}
+              >
+                <Text
+                  className={`text-base ${
+                    sortOrder === "createdAt_desc"
+                      ? "font-semibold text-slate-900"
+                      : "text-slate-600"
+                  }`}
+                >
+                  {t("quotes.sortNewest")}
+                </Text>
+                {sortOrder === "createdAt_desc" && (
+                  <View className="h-7 w-7 items-center justify-center rounded-full bg-orange-100">
+                    <Check size={16} color="#ea580c" strokeWidth={2.5} />
+                  </View>
+                )}
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  applyFilterAndSort(statusFilter, "createdAt_asc");
+                  setSortModalVisible(false);
+                }}
+                className="flex-row items-center justify-between px-5 py-3.5 active:bg-slate-50"
+                style={({ pressed }) => ({
+                  backgroundColor: pressed ? "rgb(248 250 252)" : undefined,
+                })}
+              >
+                <Text
+                  className={`text-base ${
+                    sortOrder === "createdAt_asc"
+                      ? "font-semibold text-slate-900"
+                      : "text-slate-600"
+                  }`}
+                >
+                  {t("quotes.sortOldest")}
+                </Text>
+                {sortOrder === "createdAt_asc" && (
+                  <View className="h-7 w-7 items-center justify-center rounded-full bg-orange-100">
+                    <Check size={16} color="#ea580c" strokeWidth={2.5} />
+                  </View>
+                )}
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Mic FAB */}
       <MicFAB />
