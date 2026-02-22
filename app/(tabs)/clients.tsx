@@ -82,25 +82,25 @@ export default function ClientsScreen() {
               <Text className="text-base font-semibold text-slate-900">
                 {item.name}
               </Text>
-              <View className="flex-row items-center mt-1">
-                {item.address ? (
-                  <Text
-                    className="text-sm text-slate-400 flex-1"
-                    numberOfLines={1}
-                  >
-                    {item.address}
-                  </Text>
-                ) : null}
-                {quoteCount > 0 && (
-                  <View className="bg-slate-100 px-2 py-0.5 rounded-full ml-2">
-                    <Text className="text-xs font-medium text-slate-500">
-                      {quoteCount}{" "}
-                      {quoteCount === 1
-                        ? t("clients.quote")
-                        : t("clients.quotesPlural")}
-                    </Text>
-                  </View>
-                )}
+              {item.address ? (
+                <Text
+                  className="mt-1 text-sm text-slate-400"
+                  numberOfLines={1}
+                >
+                  {item.address}
+                </Text>
+              ) : null}
+              <View className="mt-2 flex-row items-center">
+                <Text className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  {t("clients.totalQuotes")}
+                </Text>
+                <Text
+                  className={`ml-2 text-sm font-bold ${
+                    quoteCount > 0 ? "text-orange-600" : "text-slate-500"
+                  }`}
+                >
+                  {quoteCount}
+                </Text>
               </View>
             </View>
             {/* Arrow */}

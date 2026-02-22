@@ -52,7 +52,10 @@ interface UserProfile {
 
 export default function ClientDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
-  const id = params?.id;
+  const rawId = params?.id;
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
+  const numericId = id ? Number(id) : NaN;
+  const hasValidId = Number.isInteger(numericId) && numericId > 0;
   const router = useRouter();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
@@ -82,25 +85,26 @@ export default function ClientDetailScreen() {
     data: client,
     isLoading,
     isError,
+    refetch: refetchClient,
   } = useQuery({
-    queryKey: ["client", id],
+    queryKey: ["client", numericId],
     queryFn: async () => {
-      const { data } = await api.get<Client>(`/api/clients/${id}`);
+      const { data } = await api.get<Client>(`/api/clients/${numericId}`);
       return data;
     },
-    enabled: !!id,
+    enabled: hasValidId,
   });
 
   // Fetch client's quotes
   const { data: quotesData, isLoading: quotesLoading } = useQuery({
-    queryKey: ["clientQuotes", id],
+    queryKey: ["clientQuotes", numericId],
     queryFn: async () => {
       const { data } = await api.get<ClientQuotesResponse>(
-        `/api/clients/${id}/quotes`,
+        `/api/clients/${numericId}/quotes`,
       );
       return data;
     },
-    enabled: !!id,
+    enabled: hasValidId,
   });
 
   // Sync server data to form
@@ -116,7 +120,8 @@ export default function ClientDetailScreen() {
   // Save changes
   const saveClient = useMutation({
     mutationFn: async () => {
-      const { data } = await api.patch<Client>(`/api/clients/${id}`, {
+      if (!hasValidId) throw new Error("Invalid client ID");
+      const { data } = await api.patch<Client>(`/api/clients/${numericId}`, {
         name: name.trim(),
         address: address.trim() || null,
         email: email.trim() || null,
@@ -126,7 +131,7 @@ export default function ClientDetailScreen() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
-      queryClient.invalidateQueries({ queryKey: ["client", id] });
+      queryClient.invalidateQueries({ queryKey: ["client", numericId] });
       Alert.alert(t("clients.changesSaved"), t("clients.changesSavedMsg"));
     },
     onError: () => {
@@ -137,7 +142,8 @@ export default function ClientDetailScreen() {
   // Delete client
   const deleteClient = useMutation({
     mutationFn: async () => {
-      await api.delete(`/api/clients/${id}`);
+      if (!hasValidId) throw new Error("Invalid client ID");
+      await api.delete(`/api/clients/${numericId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
@@ -167,8 +173,8 @@ export default function ClientDetailScreen() {
     ]);
   }, [deleteClient, t]);
 
-  // Loading
-  if (isLoading) {
+  // Wait for route params before querying/showing errors.
+  if (!hasValidId || isLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-slate-50">
         <ActivityIndicator size="large" color="#0f172a" />
@@ -183,6 +189,15 @@ export default function ClientDetailScreen() {
         <Text className="text-base text-slate-500">
           {t("clients.noClientsFound")}
         </Text>
+        <Pressable
+          onPress={() => refetchClient()}
+          className="mt-4 h-10 items-center justify-center rounded-lg border border-slate-200 px-6"
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        >
+          <Text className="text-sm font-semibold text-slate-700">
+            {t("errors.retry")}
+          </Text>
+        </Pressable>
         <Pressable
           onPress={() => router.replace("/(tabs)/clients")}
           className="mt-4 h-10 items-center justify-center rounded-lg bg-slate-900 px-6"
