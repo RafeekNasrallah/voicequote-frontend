@@ -17,11 +17,12 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
+import { type AudioInput } from "@/src/lib/audioInput";
 
 interface RecordingModalProps {
   visible: boolean;
   onClose: () => void;
-  onRecordingComplete: (uri: string) => void;
+  onRecordingComplete: (audio: AudioInput) => void;
 }
 
 export default function RecordingModal({
@@ -156,7 +157,7 @@ export default function RecordingModal({
 
       const uri = audioRecorder.uri;
       if (uri) {
-        onRecordingComplete(uri);
+        onRecordingComplete({ uri });
       }
       onClose();
     } catch (err) {

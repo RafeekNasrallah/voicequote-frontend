@@ -18,9 +18,10 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
+import { MAX_AUDIO_DURATION_SEC, type AudioInput } from "@/src/lib/audioInput";
 
 interface RecordButtonProps {
-  onRecordingComplete: (uri: string) => void;
+  onRecordingComplete: (audio: AudioInput) => void;
 }
 
 export default function RecordButton({
@@ -30,7 +31,7 @@ export default function RecordButton({
   const { t } = useTranslation();
 
   // 10 min max; red warning at 9 min
-  const MAX_DURATION_SEC = 600;
+  const MAX_DURATION_SEC = MAX_AUDIO_DURATION_SEC;
   const WARNING_AT_SEC = 540;
 
   // expo-audio recorder hook
@@ -104,7 +105,7 @@ export default function RecordButton({
                 );
                 Alert.alert(t("errors.maxDurationReached"));
                 const uri = audioRecorder.uri;
-                if (uri) onRecordingComplete(uri);
+                if (uri) onRecordingComplete({ uri });
               } catch (err) {
                 console.error("Max duration stop failed:", err);
               }
@@ -182,7 +183,7 @@ export default function RecordButton({
 
       const uri = audioRecorder.uri;
       if (uri) {
-        onRecordingComplete(uri);
+        onRecordingComplete({ uri });
       }
     } catch (err) {
       console.error("Failed to stop recording:", err);

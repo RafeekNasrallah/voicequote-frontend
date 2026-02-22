@@ -21,6 +21,7 @@ import RecordingModal from "@/components/RecordingModal";
 import { QuotesListSkeleton } from "@/components/Skeleton";
 import { useCreateManualQuote } from "@/src/hooks/useCreateManualQuote";
 import { useCreateQuote } from "@/src/hooks/useCreateQuote";
+import { pickAudioFromDevice, type AudioInput } from "@/src/lib/audioInput";
 import api from "@/src/lib/api";
 import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/src/lib/currency";
 import { isNetworkError } from "@/src/lib/networkError";
@@ -303,9 +304,13 @@ export default function AllQuotesScreen() {
   const createQuote = useCreateQuote();
 
   const handleRecordingComplete = useCallback(
-    (uri: string) => {
+    (audio: AudioInput) => {
       createQuote.mutate(
-        { localUri: uri },
+        {
+          localUri: audio.uri,
+          fileName: audio.fileName ?? null,
+          mimeType: audio.mimeType ?? null,
+        },
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
@@ -313,7 +318,7 @@ export default function AllQuotesScreen() {
             queryClient.invalidateQueries({ queryKey: ["quoteStats"] });
           },
           onError: (error: any) => {
-            if (error?.fileTooLarge) {
+            if (error?.fileTooLarge || error?.fileTooLong) {
               return; // useCreateQuote already showed the alert
             }
             if (error?.response?.status === 403) {
@@ -350,12 +355,25 @@ export default function AllQuotesScreen() {
         onPress: () => setRecordingModalVisible(true),
       },
       {
+        text: t("recording.chooseFromDevice"),
+        onPress: async () => {
+          try {
+            const selected = await pickAudioFromDevice();
+            if (!selected) return;
+            handleRecordingComplete(selected);
+          } catch (error) {
+            console.error("Pick audio failed:", error);
+            Alert.alert(t("common.error"), t("recording.failedToPick"));
+          }
+        },
+      },
+      {
         text: t("home.newQuoteManual"),
         onPress: () => createManualQuote.mutate(undefined),
       },
       { text: t("common.cancel"), style: "cancel" },
     ]);
-  }, [createManualQuote, t]);
+  }, [createManualQuote, handleRecordingComplete, t]);
 
   const renderQuote = useCallback(
     ({ item }: { item: Quote }) => (

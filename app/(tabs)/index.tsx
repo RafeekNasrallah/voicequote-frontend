@@ -19,6 +19,7 @@ import ProcessingModal from "@/components/ProcessingModal";
 import RecordButton from "@/components/RecordButton";
 import { QuoteCardSkeleton, Skeleton } from "@/components/Skeleton";
 import { useCreateQuote } from "@/src/hooks/useCreateQuote";
+import { type AudioInput } from "@/src/lib/audioInput";
 import api from "@/src/lib/api";
 import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/src/lib/currency";
 import { isNetworkError } from "@/src/lib/networkError";
@@ -294,9 +295,13 @@ export default function HomeScreen() {
   const ready = stats?.ready ?? 0;
 
   const handleRecordingComplete = useCallback(
-    (uri: string) => {
+    (audio: AudioInput) => {
       createQuote.mutate(
-        { localUri: uri },
+        {
+          localUri: audio.uri,
+          fileName: audio.fileName ?? null,
+          mimeType: audio.mimeType ?? null,
+        },
         {
           onSuccess: () => {
             // Refresh the quotes list, stats, and profile (for Pro quoteCount)
@@ -306,7 +311,7 @@ export default function HomeScreen() {
             queryClient.invalidateQueries({ queryKey: ["me"] });
           },
           onError: (error: any) => {
-            if (error?.fileTooLarge) {
+            if (error?.fileTooLarge || error?.fileTooLong) {
               return; // useCreateQuote already showed the alert
             }
             if (error?.response?.status === 403) {

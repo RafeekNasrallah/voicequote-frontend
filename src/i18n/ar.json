@@ -293,7 +293,9 @@
     "microphoneAccess": "مطلوب الوصول إلى الميكروفون لتسجيل الصوت.",
     "recordingError": "خطأ في التسجيل",
     "failedToStart": "تعذر بدء التسجيل.",
-    "failedToStop": "تعذر إيقاف التسجيل."
+    "failedToStop": "تعذر إيقاف التسجيل.",
+    "chooseFromDevice": "اختر ملف صوتي من الجهاز",
+    "failedToPick": "تعذر اختيار الملف الصوتي. يرجى المحاولة مرة اخرى."
   },
   "processing": {
     "processingRecording": "جارٍ معالجة التسجيل...",

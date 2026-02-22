@@ -293,7 +293,9 @@
     "microphoneAccess": "Mikrofonzugriff wird benötigt, um Audio aufzunehmen.",
     "recordingError": "Aufnahmefehler",
     "failedToStart": "Aufnahme konnte nicht gestartet werden.",
-    "failedToStop": "Aufnahme konnte nicht gestoppt werden."
+    "failedToStop": "Aufnahme konnte nicht gestoppt werden.",
+    "chooseFromDevice": "Audio vom Gerät auswählen",
+    "failedToPick": "Audiodatei konnte nicht ausgewählt werden. Bitte versuche es erneut."
   },
   "processing": {
     "processingRecording": "Aufnahme wird verarbeitet...",

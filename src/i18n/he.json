@@ -293,7 +293,9 @@
     "microphoneAccess": "נדרשת גישה למיקרופון להקלטת אודיו.",
     "recordingError": "שגיאת הקלטה",
     "failedToStart": "לא ניתן להתחיל הקלטה.",
-    "failedToStop": "לא ניתן לעצור הקלטה."
+    "failedToStop": "לא ניתן לעצור הקלטה.",
+    "chooseFromDevice": "בחר אודיו מהמכשיר",
+    "failedToPick": "לא ניתן לבחור קובץ שמע. נסה שוב."
   },
   "processing": {
     "processingRecording": "מעבד את ההקלטה...",

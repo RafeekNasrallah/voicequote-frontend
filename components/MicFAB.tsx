@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import RecordingModal from "./RecordingModal";
 import ProcessingModal from "./ProcessingModal";
 import { useCreateQuote } from "@/src/hooks/useCreateQuote";
+import { type AudioInput } from "@/src/lib/audioInput";
 import { isNetworkError } from "@/src/lib/networkError";
 
 interface MicFABProps {
@@ -22,9 +23,13 @@ export default function MicFAB({ style }: MicFABProps) {
   const createQuote = useCreateQuote();
 
   const handleRecordingComplete = useCallback(
-    (uri: string) => {
+    (audio: AudioInput) => {
       createQuote.mutate(
-        { localUri: uri },
+        {
+          localUri: audio.uri,
+          fileName: audio.fileName ?? null,
+          mimeType: audio.mimeType ?? null,
+        },
         {
           onSuccess: () => {
             // Refresh the quotes list and stats after a new quote is created
@@ -33,7 +38,7 @@ export default function MicFAB({ style }: MicFABProps) {
             queryClient.invalidateQueries({ queryKey: ["quoteStats"] });
           },
           onError: (error: any) => {
-            if (error?.fileTooLarge) {
+            if (error?.fileTooLarge || error?.fileTooLong) {
               return; // useCreateQuote already showed the alert
             }
             if (error?.response?.status === 403) {

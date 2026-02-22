@@ -310,7 +310,9 @@
     "microphoneAccess": "Se necesita acceso al micrófono para grabar audio.",
     "recordingError": "Error de grabación",
     "failedToStart": "No se pudo iniciar la grabación.",
-    "failedToStop": "No se pudo detener la grabación."
+    "failedToStop": "No se pudo detener la grabación.",
+    "chooseFromDevice": "Elegir audio del dispositivo",
+    "failedToPick": "No se pudo seleccionar el archivo de audio. Inténtalo de nuevo."
   },
   "processing": {
     "processingRecording": "Procesando tu grabación...",

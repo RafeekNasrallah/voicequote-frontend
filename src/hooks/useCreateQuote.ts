@@ -5,6 +5,11 @@ import { useTranslation } from "react-i18next";
 import { Alert } from "react-native";
 
 import api from "@/src/lib/api";
+import {
+  getAudioDurationSeconds,
+  inferAudioUploadMetadata,
+  MAX_AUDIO_DURATION_SEC,
+} from "@/src/lib/audioInput";
 
 const MAX_FILE_BYTES = 20 * 1024 * 1024; // 20 MB
 
@@ -20,6 +25,8 @@ interface ProcessQuoteResponse {
 
 interface CreateQuoteParams {
   localUri: string;
+  fileName?: string | null;
+  mimeType?: string | null;
 }
 
 /**
@@ -36,7 +43,7 @@ export function useCreateQuote() {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: async ({ localUri }: CreateQuoteParams) => {
+    mutationFn: async ({ localUri, fileName, mimeType }: CreateQuoteParams) => {
       // File size pre-check (before upload)
       const fileInfo = await FileSystem.getInfoAsync(localUri);
       if (
@@ -51,12 +58,32 @@ export function useCreateQuote() {
         throw err;
       }
 
+      // Duration pre-check (same 10-minute rule as in-app recording)
+      const durationSeconds = await getAudioDurationSeconds(localUri);
+      if (
+        typeof durationSeconds === "number" &&
+        Number.isFinite(durationSeconds) &&
+        durationSeconds > MAX_AUDIO_DURATION_SEC
+      ) {
+        const err = new Error("FILE_TOO_LONG") as Error & {
+          fileTooLong?: boolean;
+        };
+        err.fileTooLong = true;
+        throw err;
+      }
+
+      const audioMeta = inferAudioUploadMetadata({
+        uri: localUri,
+        fileName,
+        mimeType,
+      });
+
       // Step 1: Get a signed upload URL from the backend
       let uploadData: UploadUrlResponse;
       try {
         const res = await api.post<UploadUrlResponse>("/api/upload-url", {
-          ext: "m4a",
-          contentType: "audio/mp4",
+          ext: audioMeta.ext,
+          contentType: audioMeta.contentType,
         });
         uploadData = res.data;
       } catch (e: any) {
@@ -80,7 +107,7 @@ export function useCreateQuote() {
       const uploadResult = await fetch(uploadUrl, {
         method: "PUT",
         headers: {
-          "Content-Type": "audio/mp4",
+          "Content-Type": audioMeta.contentType,
         },
         body: blob,
       });
@@ -125,6 +152,10 @@ export function useCreateQuote() {
     onError: (error: any) => {
       if (error?.fileTooLarge) {
         Alert.alert(t("common.error"), t("errors.fileTooLarge"));
+        return;
+      }
+      if (error?.fileTooLong) {
+        Alert.alert(t("common.error"), t("errors.maxDurationReached"));
         return;
       }
       console.error("Create quote failed:", error?.message);

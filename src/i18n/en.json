@@ -310,11 +310,13 @@
   "recording": {
     "tapToRecord": "Tap to record",
     "tapToStop": "Tap to stop",
+    "chooseFromDevice": "Choose audio from device",
     "permissionRequired": "Permission Required",
     "microphoneAccess": "Microphone access is needed to record audio.",
     "recordingError": "Recording Error",
     "failedToStart": "Failed to start recording.",
-    "failedToStop": "Failed to stop recording."
+    "failedToStop": "Failed to stop recording.",
+    "failedToPick": "Could not pick the audio file. Please try again."
   },
   "processing": {
     "processingRecording": "Processing your recording...",
