@@ -8,7 +8,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import {
     ArrowLeft,
-    Clock,
     Pause,
     Play,
     Plus,
@@ -21,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
     Alert,
+    I18nManager,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -45,6 +45,7 @@ import {
 
 const QUOTE_NAME_MAX = 255;
 const ITEM_NAME_MAX = 200;
+const RTL_LANGUAGES = ["ar", "he"];
 
 /** Get a user-friendly validation message from an API error response (e.g. 400 from Zod). */
 function getValidationMessage(
@@ -114,6 +115,47 @@ export default function QuoteScreen() {
   const queryClient = useQueryClient();
   const { t, i18n } = useTranslation();
   const activeLocale = i18n.resolvedLanguage ?? i18n.language ?? undefined;
+  const languageIsRTL = RTL_LANGUAGES.includes(
+    (i18n.language || "").split("-")[0]
+  );
+  const isRTL = I18nManager.isRTL || languageIsRTL;
+  const rtlText = isRTL
+    ? { textAlign: "right" as const, writingDirection: "rtl" as const }
+    : undefined;
+  const titleContainerAlign = isRTL
+    ? { alignItems: "flex-end" as const }
+    : undefined;
+  const fullWidthText = isRTL ? { width: "100%" as const } : undefined;
+  const backButtonSpacing = isRTL
+    ? { marginLeft: 12 as const }
+    : { marginRight: 12 as const };
+  const deleteButtonSpacing = isRTL
+    ? { marginRight: 8 as const }
+    : { marginLeft: 8 as const };
+  const tableActionColumnWidth = 58;
+  const tableDirection = { direction: "ltr" as const };
+  const tableItemCellSpacing = isRTL
+    ? { marginLeft: 4 as const }
+    : { marginRight: 4 as const };
+  const tableActionCellStyle = isRTL
+    ? {
+        width: tableActionColumnWidth,
+        paddingRight: 8 as const,
+        borderRightWidth: 1 as const,
+        borderColor: "#e2e8f0",
+        alignItems: "center" as const,
+      }
+    : {
+        width: tableActionColumnWidth,
+        paddingLeft: 8 as const,
+        borderLeftWidth: 1 as const,
+        borderColor: "#e2e8f0",
+        alignItems: "center" as const,
+      };
+  /** RTL: put section titles on the right (LTR row + flex-end so block stays right). */
+  const rtlSectionTitleWrapStyle = isRTL
+    ? { flexDirection: "row" as const, justifyContent: "flex-end" as const, width: "100%" as const, direction: "ltr" as const }
+    : undefined;
 
   const [clientModalVisible, setClientModalVisible] = useState(false);
   const [localItems, setLocalItems] = useState<QuoteItem[]>([]);
@@ -773,24 +815,52 @@ export default function QuoteScreen() {
       </Modal>
 
       {/* Header Bar */}
-      <View className="flex-row items-center px-4 py-3 border-b border-slate-200 border-b-orange-200">
+      <View
+        className="flex-row items-center px-4 py-3 border-b border-slate-200"
+        style={{ direction: "ltr" }}
+      >
+        {isRTL ? (
+          <Pressable
+            onPress={handleDeleteQuote}
+            className="h-11 w-11 items-center justify-center rounded-lg"
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.5 : 1,
+              ...deleteButtonSpacing,
+            })}
+            accessibilityLabel={t("quotes.deleteQuote")}
+            accessibilityHint={t("quotes.deleteQuoteConfirm")}
+            accessibilityRole="button"
+          >
+            <Trash2 size={20} color="#ef4444" />
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={() => {
+              queryClient.invalidateQueries({ queryKey: ["quotes"] });
+              queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
+              router.replace("/(tabs)/quotes");
+            }}
+            className="h-11 w-11 items-center justify-center rounded-lg"
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.6 : 1,
+              ...backButtonSpacing,
+            })}
+            accessibilityLabel={t("quoteEditor.goBack")}
+            accessibilityRole="button"
+          >
+            <ArrowLeft size={22} color="#ea580c" />
+          </Pressable>
+        )}
+
         <Pressable
-          onPress={() => {
-            queryClient.invalidateQueries({ queryKey: ["quotes"] });
-            queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
-            router.replace("/(tabs)/quotes");
-          }}
-          className="mr-3 h-11 w-11 items-center justify-center rounded-lg"
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-          accessibilityLabel={t("quoteEditor.goBack")}
-          accessibilityRole="button"
+          className="flex-1 min-w-0"
+          style={titleContainerAlign}
+          onPress={() => setIsEditingName(true)}
         >
-          <ArrowLeft size={22} color="#ea580c" />
-        </Pressable>
-        <Pressable className="flex-1" onPress={() => setIsEditingName(true)}>
           {isEditingName ? (
             <TextInput
               className="text-lg font-bold text-slate-900 py-0"
+              style={[rtlText, fullWidthText]}
               value={localName}
               onChangeText={setLocalName}
               onBlur={handleNameBlur}
@@ -805,30 +875,56 @@ export default function QuoteScreen() {
             <Text
               className="text-lg font-bold text-slate-900"
               numberOfLines={1}
+              style={[rtlText, fullWidthText]}
             >
               {quote.clientName
-                ? `${localName || `Quote #${quote.id}`} - ${quote.clientName}`
-                : localName || `Quote #${quote.id}`}
+                ? (localName || "Quote #" + quote.id) + " - " + quote.clientName
+                : localName || "Quote #" + quote.id}
             </Text>
           )}
-          <Text className="text-sm text-slate-500">
+          <Text className="text-sm text-slate-500" style={[rtlText, fullWidthText]}>
             {isEditingName
               ? ""
               : localName
-                ? `#${quote.id} · ${formattedDate}`
+                ? "#" + quote.id + " - " + formattedDate
                 : formattedDate}
           </Text>
         </Pressable>
-        <Pressable
-          onPress={handleDeleteQuote}
-          className="ml-2 h-11 w-11 items-center justify-center rounded-lg"
-          style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
-          accessibilityLabel={t("quotes.deleteQuote")}
-          accessibilityHint={t("quotes.deleteQuoteConfirm")}
-          accessibilityRole="button"
-        >
-          <Trash2 size={20} color="#ef4444" />
-        </Pressable>
+
+        {isRTL ? (
+          <Pressable
+            onPress={() => {
+              queryClient.invalidateQueries({ queryKey: ["quotes"] });
+              queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
+              router.replace("/(tabs)/quotes");
+            }}
+            className="h-11 w-11 items-center justify-center rounded-lg"
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.6 : 1,
+              ...backButtonSpacing,
+            })}
+            accessibilityLabel={t("quoteEditor.goBack")}
+            accessibilityRole="button"
+          >
+            <View style={{ transform: [{ scaleX: -1 }] }}>
+              <ArrowLeft size={22} color="#ea580c" />
+            </View>
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={handleDeleteQuote}
+            className="h-11 w-11 items-center justify-center rounded-lg"
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.5 : 1,
+              ...deleteButtonSpacing,
+            })}
+            accessibilityLabel={t("quotes.deleteQuote")}
+            accessibilityHint={t("quotes.deleteQuoteConfirm")}
+            accessibilityRole="button"
+          >
+            <Trash2 size={20} color="#ef4444" />
+          </Pressable>
+        )}
       </View>
 
       <KeyboardAvoidingView
@@ -846,9 +942,11 @@ export default function QuoteScreen() {
             {/* ─── Play recording (when quote has audio) ─────── */}
             {audioUrl && (
               <View className="border-b border-slate-100 p-4">
-                <Text className="mb-2 text-xs font-semibold uppercase text-slate-500">
-                  {t("quoteEditor.recording")}
-                </Text>
+                <View className="mb-2" style={rtlSectionTitleWrapStyle}>
+                  <Text className="text-xs font-semibold uppercase text-slate-500" style={rtlText}>
+                    {t("quoteEditor.recording")}
+                  </Text>
+                </View>
                 <Pressable
                   onPress={async () => {
                     if (audioStatus.playing) {
@@ -904,20 +1002,52 @@ export default function QuoteScreen() {
             {/* ─── Line Items ──────────────────────── */}
             <View className="p-4">
               {/* Table Header */}
-              <View className="mb-2 flex-row items-center">
-                <Text className="flex-1 text-xs font-semibold uppercase text-slate-500">
-                  {t("quoteEditor.item")}
-                </Text>
-                <Text className="w-16 text-center text-xs font-semibold uppercase text-slate-500">
-                  {t("quoteEditor.unit")}
-                </Text>
-                <Text className="w-14 text-center text-xs font-semibold uppercase text-slate-500">
-                  {t("quoteEditor.qty")}
-                </Text>
-                <Text className="w-20 text-right text-xs font-semibold uppercase text-slate-500">
-                  {t("quoteEditor.price")}
-                </Text>
-                <View className="w-14" />
+              <View className="mb-2 flex-row items-center" style={tableDirection}>
+                {isRTL ? (
+                  <>
+                    <View style={{ width: tableActionColumnWidth }} />
+                    <Text
+                      className="w-20 text-right text-xs font-semibold uppercase text-slate-500"
+                      style={rtlText}
+                    >
+                      {t("quoteEditor.price")}
+                    </Text>
+                    <Text
+                      className="w-14 text-center text-xs font-semibold uppercase text-slate-500"
+                      style={rtlText}
+                    >
+                      {t("quoteEditor.qty")}
+                    </Text>
+                    <Text
+                      className="w-16 text-center text-xs font-semibold uppercase text-slate-500"
+                      style={rtlText}
+                    >
+                      {t("quoteEditor.unit")}
+                    </Text>
+                    <Text
+                      className="flex-1 text-xs font-semibold uppercase text-slate-500"
+                      style={[rtlText, fullWidthText]}
+                    >
+                      {t("quoteEditor.item")}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text className="flex-1 text-xs font-semibold uppercase text-slate-500">
+                      {t("quoteEditor.item")}
+                    </Text>
+                    <Text className="w-16 text-center text-xs font-semibold uppercase text-slate-500">
+                      {t("quoteEditor.unit")}
+                    </Text>
+                    <Text className="w-14 text-center text-xs font-semibold uppercase text-slate-500">
+                      {t("quoteEditor.qty")}
+                    </Text>
+                    <Text className="w-20 text-right text-xs font-semibold uppercase text-slate-500">
+                      {t("quoteEditor.price")}
+                    </Text>
+                    <View style={{ width: tableActionColumnWidth }} />
+                  </>
+                )}
               </View>
 
               {/* Rows */}
@@ -925,86 +1055,156 @@ export default function QuoteScreen() {
                 const candidates = itemMatchCandidates[index] ?? [];
                 const hasPossibleMatch = candidates.length > 0;
                 return (
-                <View
-                  key={index}
-                  style={{ minHeight: 56 }}
-                  className={`flex-row items-start border-b py-4 ${
-                    hasPossibleMatch
-                      ? "border-amber-200 bg-amber-50/30"
-                      : "border-slate-100"
-                  }`}
-                >
-                  {/* Name — more height so long names can wrap */}
-                  <View style={{ flex: 1, maxWidth: 220 }} className="mr-1">
-                    <TextInput
-                      className="text-sm text-slate-900 flex-1 min-w-0"
-                      style={{ minHeight: 44 }}
-                      value={item.name}
-                      onChangeText={(v) => updateItem(index, "name", v)}
-                      onBlur={saveItems}
-                      placeholder={t("quoteEditor.itemNamePlaceholder")}
-                      placeholderTextColor="#cbd5e1"
-                      maxLength={ITEM_NAME_MAX}
-                      multiline
-                    />
-                    {hasPossibleMatch && (
-                      <Pressable
-                        onPress={() => openMatchPickerForItem(index)}
-                        className="mt-1 self-start rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1"
-                        style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
-                        accessibilityRole="button"
-                        accessibilityLabel={t("quoteEditor.possibleMatch")}
-                      >
-                        <Text className="text-[11px] font-semibold text-amber-800">
-                          {t("quoteEditor.possibleMatch")}
-                        </Text>
-                      </Pressable>
+                  <View
+                    key={index}
+                    style={[{ minHeight: 56 }, tableDirection]}
+                    className={`flex-row items-start border-b py-4 ${
+                      hasPossibleMatch
+                        ? "border-amber-200 bg-amber-50/30"
+                        : "border-slate-100"
+                    }`}
+                  >
+                    {isRTL ? (
+                      <>
+                        <View style={tableActionCellStyle}>
+                          <Pressable
+                            onPress={() => removeItem(index)}
+                            className="h-11 w-11 items-center justify-center rounded-full border border-red-100 bg-red-50"
+                            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                            hitSlop={4}
+                            accessibilityLabel={t("common.delete") + " " + t("quoteEditor.item")}
+                            accessibilityRole="button"
+                          >
+                            <Trash2 size={16} color="#dc2626" />
+                          </Pressable>
+                        </View>
+                        <TextInput
+                          className="w-20 text-right text-sm text-slate-900 mt-1"
+                          style={rtlText}
+                          value={item.price?.toString() || ""}
+                          onChangeText={(v) => updateItem(index, "price", v)}
+                          onBlur={saveItems}
+                          keyboardType="decimal-pad"
+                          placeholder="0.00"
+                          placeholderTextColor="#cbd5e1"
+                        />
+                        <TextInput
+                          className="w-14 text-center text-sm text-slate-900 mt-1"
+                          value={item.qty?.toString() || ""}
+                          onChangeText={(v) => updateItem(index, "qty", v)}
+                          onBlur={saveItems}
+                          keyboardType="numeric"
+                          placeholder="0"
+                          placeholderTextColor="#cbd5e1"
+                        />
+                        <TextInput
+                          className="w-16 text-center text-sm text-slate-900 mt-1"
+                          value={item.unit || ""}
+                          onChangeText={(v) => updateItem(index, "unit", v)}
+                          onBlur={saveItems}
+                          placeholder={t("quoteEditor.unitPlaceholder")}
+                          placeholderTextColor="#cbd5e1"
+                        />
+                        {/* Name - more height so long names can wrap */}
+                        <View style={[{ flex: 1, maxWidth: 220 }, tableItemCellSpacing]}>
+                          <TextInput
+                            className="text-sm text-slate-900 flex-1 min-w-0"
+                            style={[{ minHeight: 44 }, rtlText]}
+                            value={item.name}
+                            onChangeText={(v) => updateItem(index, "name", v)}
+                            onBlur={saveItems}
+                            placeholder={t("quoteEditor.itemNamePlaceholder")}
+                            placeholderTextColor="#cbd5e1"
+                            maxLength={ITEM_NAME_MAX}
+                            multiline
+                          />
+                          {hasPossibleMatch && (
+                            <Pressable
+                              onPress={() => openMatchPickerForItem(index)}
+                              className="mt-1 self-end rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1"
+                              style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
+                              accessibilityRole="button"
+                              accessibilityLabel={t("quoteEditor.possibleMatch")}
+                            >
+                              <Text className="text-[11px] font-semibold text-amber-800">
+                                {t("quoteEditor.possibleMatch")}
+                              </Text>
+                            </Pressable>
+                          )}
+                        </View>
+                      </>
+                    ) : (
+                      <>
+                        {/* Name - more height so long names can wrap */}
+                        <View style={[{ flex: 1, maxWidth: 220 }, tableItemCellSpacing]}>
+                          <TextInput
+                            className="text-sm text-slate-900 flex-1 min-w-0"
+                            style={{ minHeight: 44 }}
+                            value={item.name}
+                            onChangeText={(v) => updateItem(index, "name", v)}
+                            onBlur={saveItems}
+                            placeholder={t("quoteEditor.itemNamePlaceholder")}
+                            placeholderTextColor="#cbd5e1"
+                            maxLength={ITEM_NAME_MAX}
+                            multiline
+                          />
+                          {hasPossibleMatch && (
+                            <Pressable
+                              onPress={() => openMatchPickerForItem(index)}
+                              className="mt-1 self-start rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1"
+                              style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
+                              accessibilityRole="button"
+                              accessibilityLabel={t("quoteEditor.possibleMatch")}
+                            >
+                              <Text className="text-[11px] font-semibold text-amber-800">
+                                {t("quoteEditor.possibleMatch")}
+                              </Text>
+                            </Pressable>
+                          )}
+                        </View>
+                        <TextInput
+                          className="w-16 text-center text-sm text-slate-900 mt-1"
+                          value={item.unit || ""}
+                          onChangeText={(v) => updateItem(index, "unit", v)}
+                          onBlur={saveItems}
+                          placeholder={t("quoteEditor.unitPlaceholder")}
+                          placeholderTextColor="#cbd5e1"
+                        />
+                        <TextInput
+                          className="w-14 text-center text-sm text-slate-900 mt-1"
+                          value={item.qty?.toString() || ""}
+                          onChangeText={(v) => updateItem(index, "qty", v)}
+                          onBlur={saveItems}
+                          keyboardType="numeric"
+                          placeholder="0"
+                          placeholderTextColor="#cbd5e1"
+                        />
+                        <TextInput
+                          className="w-20 text-right text-sm text-slate-900 mt-1"
+                          value={item.price?.toString() || ""}
+                          onChangeText={(v) => updateItem(index, "price", v)}
+                          onBlur={saveItems}
+                          keyboardType="decimal-pad"
+                          placeholder="0.00"
+                          placeholderTextColor="#cbd5e1"
+                        />
+                        <View style={tableActionCellStyle}>
+                          <Pressable
+                            onPress={() => removeItem(index)}
+                            className="h-11 w-11 items-center justify-center rounded-full border border-red-100 bg-red-50"
+                            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                            hitSlop={4}
+                            accessibilityLabel={t("common.delete") + " " + t("quoteEditor.item")}
+                            accessibilityRole="button"
+                          >
+                            <Trash2 size={16} color="#dc2626" />
+                          </Pressable>
+                        </View>
+                      </>
                     )}
                   </View>
-                  {/* Unit */}
-                  <TextInput
-                    className="w-16 text-center text-sm text-slate-900 mt-1"
-                    value={item.unit || ""}
-                    onChangeText={(v) => updateItem(index, "unit", v)}
-                    onBlur={saveItems}
-                    placeholder={t("quoteEditor.unitPlaceholder")}
-                    placeholderTextColor="#cbd5e1"
-                  />
-                  {/* Qty */}
-                  <TextInput
-                    className="w-14 text-center text-sm text-slate-900 mt-1"
-                    value={item.qty?.toString() || ""}
-                    onChangeText={(v) => updateItem(index, "qty", v)}
-                    onBlur={saveItems}
-                    keyboardType="numeric"
-                    placeholder="0"
-                    placeholderTextColor="#cbd5e1"
-                  />
-                  {/* Price */}
-                  <TextInput
-                    className="w-20 text-right text-sm text-slate-900 mt-1"
-                    value={item.price?.toString() || ""}
-                    onChangeText={(v) => updateItem(index, "price", v)}
-                    onBlur={saveItems}
-                    keyboardType="decimal-pad"
-                    placeholder="0.00"
-                    placeholderTextColor="#cbd5e1"
-                  />
-                  {/* Delete action is visually/physically separated from price input to reduce fat-finger deletes */}
-                  <View className="ml-3 border-l border-slate-200 pl-2">
-                    <Pressable
-                      onPress={() => removeItem(index)}
-                      className="h-11 w-11 items-center justify-center rounded-full border border-red-100 bg-red-50"
-                      style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-                      hitSlop={4}
-                      accessibilityLabel={`${t("common.delete")} ${t("quoteEditor.item")}`}
-                      accessibilityRole="button"
-                    >
-                      <Trash2 size={16} color="#dc2626" />
-                    </Pressable>
-                  </View>
-                </View>
-              )})}
+                );
+              })}
 
               {/* Add Item Button */}
               <Pressable
@@ -1021,14 +1221,14 @@ export default function QuoteScreen() {
 
             {/* ─── Labor Section ──────────────────────── */}
             <View className="border-t border-slate-100 p-4">
-              {/* Header with Toggle */}
-              <View className="flex-row items-center justify-between mb-3">
-                <View className="flex-row items-center">
-                  <Clock size={14} color="#64748b" />
-                  <Text className="ml-2 text-xs font-semibold uppercase text-slate-500">
-                    {t("quoteEditor.labor")}
-                  </Text>
-                </View>
+              {/* Header with Toggle — RTL: row direction so title on right, switch on left. */}
+              <View
+                className="flex-row items-center justify-between mb-3"
+                style={isRTL ? { direction: "rtl" as const } : undefined}
+              >
+                <Text className="text-xs font-semibold uppercase text-slate-500" style={rtlText}>
+                  {t("quoteEditor.labor")}
+                </Text>
                 <Switch
                   value={localLaborEnabled}
                   onValueChange={handleLaborEnabledToggle}
@@ -1164,9 +1364,11 @@ export default function QuoteScreen() {
 
             {/* ─── Client Section ──────────────────── */}
             <View className="border-t border-slate-100 p-4">
-              <Text className="mb-2 text-xs font-semibold uppercase text-slate-500">
-                {t("quoteEditor.client")}
-              </Text>
+              <View className="mb-2" style={rtlSectionTitleWrapStyle}>
+                <Text className="text-xs font-semibold uppercase text-slate-500" style={rtlText}>
+                  {t("quoteEditor.client")}
+                </Text>
+              </View>
               {quote.clientName ? (
                 <View className="gap-2">
                   <Pressable
@@ -1220,12 +1422,16 @@ export default function QuoteScreen() {
 
             {/* ─── Terms for this quote (from recording / manual) ──────────────────── */}
             <View className="border-t border-slate-100 p-4">
-              <Text className="mb-2 text-xs font-semibold uppercase text-slate-500">
-                {t("quoteEditor.termsForThisQuote")}
-              </Text>
-              <Text className="mb-3 text-sm text-slate-600">
-                {t("quoteEditor.additionalTermsFromRecording")}
-              </Text>
+              <View className="mb-2" style={rtlSectionTitleWrapStyle}>
+                <View>
+                  <Text className="text-xs font-semibold uppercase text-slate-500" style={rtlText}>
+                    {t("quoteEditor.termsForThisQuote")}
+                  </Text>
+                  <Text className="mt-0.5 mb-3 text-sm text-slate-600" style={rtlText}>
+                    {t("quoteEditor.additionalTermsFromRecording")}
+                  </Text>
+                </View>
+              </View>
               {localExtraTerms.length === 0 ? (
                 <View className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 py-4">
                   <Text className="text-center text-sm text-slate-500">

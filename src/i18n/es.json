@@ -109,7 +109,8 @@
     "deleteQuote": "Eliminar presupuesto",
     "deleteQuoteConfirm": "¿Estás seguro de que quieres eliminar este presupuesto? Esta acción no se puede deshacer.",
     "deleteQuoteFailed": "No se pudo eliminar el presupuesto.",
-    "newQuote": "Nuevo presupuesto"
+    "newQuote": "Nuevo presupuesto",
+    "sortByDate": "Ordenar por fecha"
   },
   "quoteEditor": {
     "client": "Cliente",
@@ -231,6 +232,22 @@
     "currencyDesc": "Moneda de visualización para presupuestos",
     "selectCurrency": "Seleccionar moneda",
     "currencyUpdateFailed": "No se pudo actualizar la moneda.",
+    "currencies": {
+      "USD": "Dólar estadounidense",
+      "EUR": "Euro",
+      "GBP": "Libra esterlina",
+      "ILS": "Shéquel israelí",
+      "AED": "Dirham emiratí",
+      "SAR": "Riyal saudí",
+      "CAD": "Dólar canadiense",
+      "AUD": "Dólar australiano",
+      "CHF": "Franco suizo",
+      "JPY": "Yen japonés",
+      "CNY": "Yuan chino",
+      "INR": "Rupia india",
+      "MXN": "Peso mexicano",
+      "BRL": "Real brasileño"
+    },
     "businessLogo": "Logo de empresa",
     "businessLogoDesc": "Aparece en tus presupuestos PDF",
     "uploadLogo": "Subir",

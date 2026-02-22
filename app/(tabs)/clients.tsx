@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     FlatList,
+    I18nManager,
     Pressable,
     RefreshControl,
     Text,
@@ -28,6 +29,8 @@ interface Client {
   quoteCount?: number;
 }
 
+const RTL_LANGUAGES = ["ar", "he"];
+
 function getInitials(name: string) {
   return name
     .split(" ")
@@ -40,7 +43,18 @@ function getInitials(name: string) {
 export default function ClientsScreen() {
   const [search, setSearch] = useState("");
   const [addModalVisible, setAddModalVisible] = useState(false);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const languageIsRTL = RTL_LANGUAGES.includes(
+    (i18n.language || "").split("-")[0]
+  );
+  const isRTL = I18nManager.isRTL || languageIsRTL;
+  const rtlText = isRTL
+    ? { textAlign: "right" as const, writingDirection: "rtl" as const }
+    : undefined;
+  const fullWidthText = isRTL ? { width: "100%" as const } : undefined;
+  const infoAlign = isRTL ? { alignItems: "flex-end" as const } : undefined;
+  /** RTL row: direction 'rtl' so title (first child) is on the right, icon on the left. */
+  const rtlHeaderDirection = isRTL ? { direction: "rtl" as const } : undefined;
   const router = useRouter();
 
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
@@ -72,50 +86,114 @@ export default function ClientsScreen() {
   const renderClient = useCallback(
     ({ item }: { item: Client }) => {
       const quoteCount = item.quoteCount ?? 0;
+      const infoSpacing = isRTL
+        ? { marginRight: 16 as const }
+        : { marginLeft: 16 as const };
+      const countSpacing = isRTL
+        ? { marginRight: 8 as const }
+        : { marginLeft: 8 as const };
       return (
         <Pressable
           onPress={() => handleOpenClient(item.id)}
-          className="mb-3 flex-row items-center rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
+          className="mb-3 rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
-          {/* Avatar */}
-          <View className="h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-            <Text className="text-base font-bold text-slate-600">
-              {getInitials(item.name)}
-            </Text>
+          <View className="flex-row items-center" style={{ direction: "ltr" }}>
+            {isRTL ? (
+              <>
+                <View className="w-5 items-start">
+                  <View style={{ transform: [{ scaleX: -1 }] }}>
+                    <ChevronRight size={20} color="#cbd5e1" />
+                  </View>
+                </View>
+
+                <View className="flex-1 min-w-0" style={[infoSpacing, infoAlign]}>
+                  <Text
+                    className="text-base font-semibold text-slate-900"
+                    style={[rtlText, fullWidthText]}
+                    numberOfLines={1}
+                  >
+                    {item.name}
+                  </Text>
+                  {item.address ? (
+                    <Text
+                      className="mt-1 text-sm text-slate-500"
+                      numberOfLines={1}
+                      style={[rtlText, fullWidthText]}
+                    >
+                      {item.address}
+                    </Text>
+                  ) : null}
+                  <View
+                    className="mt-2 flex-row items-center"
+                    style={{ direction: "ltr", justifyContent: "flex-end" }}
+                  >
+                    <Text
+                      className={`text-sm font-bold ${
+                        quoteCount > 0 ? "text-orange-600" : "text-slate-500"
+                      }`}
+                      style={[rtlText, countSpacing]}
+                    >
+                      {quoteCount}
+                    </Text>
+                    <Text
+                      className="text-xs font-semibold uppercase tracking-wide text-slate-500"
+                      style={rtlText}
+                    >
+                      {t("clients.totalQuotes")}
+                    </Text>
+                  </View>
+                </View>
+
+                <View className="h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                  <Text className="text-base font-bold text-slate-600">
+                    {getInitials(item.name)}
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View className="h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                  <Text className="text-base font-bold text-slate-600">
+                    {getInitials(item.name)}
+                  </Text>
+                </View>
+                <View className="flex-1 min-w-0" style={infoSpacing}>
+                  <Text className="text-base font-semibold text-slate-900" numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  {item.address ? (
+                    <Text
+                      className="mt-1 text-sm text-slate-500"
+                      numberOfLines={1}
+                    >
+                      {item.address}
+                    </Text>
+                  ) : null}
+                  <View className="mt-2 flex-row items-center">
+                    <Text className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      {t("clients.totalQuotes")}
+                    </Text>
+                    <Text
+                      className={`text-sm font-bold ${
+                        quoteCount > 0 ? "text-orange-600" : "text-slate-500"
+                      }`}
+                      style={countSpacing}
+                    >
+                      {quoteCount}
+                    </Text>
+                  </View>
+                </View>
+                <View className="w-5 items-end">
+                  <ChevronRight size={20} color="#cbd5e1" />
+                </View>
+              </>
+            )}
           </View>
-          {/* Info */}
-          <View className="ml-4 flex-1">
-            <Text className="text-base font-semibold text-slate-900">
-              {item.name}
-            </Text>
-            {item.address ? (
-              <Text
-                className="mt-1 text-sm text-slate-500"
-                numberOfLines={1}
-              >
-                {item.address}
-              </Text>
-            ) : null}
-            <View className="mt-2 flex-row items-center">
-              <Text className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                {t("clients.totalQuotes")}
-              </Text>
-              <Text
-                className={`ml-2 text-sm font-bold ${
-                  quoteCount > 0 ? "text-orange-600" : "text-slate-500"
-                }`}
-              >
-                {quoteCount}
-              </Text>
-            </View>
-          </View>
-          {/* Arrow */}
-          <ChevronRight size={20} color="#cbd5e1" />
         </Pressable>
       );
     },
-    [handleOpenClient, t],
+    [fullWidthText, handleOpenClient, infoAlign, isRTL, rtlText, t],
   );
 
   return (
@@ -126,9 +204,15 @@ export default function ClientsScreen() {
         onClose={() => setAddModalVisible(false)}
       />
 
-      {/* Header */}
-      <View className="px-6 pt-4 pb-2 flex-row items-center justify-between">
-        <Text className="text-2xl font-bold text-slate-900">
+      {/* Header — title first, icon second; direction rtl puts title right, icon left; thin orange line under title */}
+      <View
+        className="px-6 pt-4 pb-2 flex-row items-center justify-between"
+        style={rtlHeaderDirection}
+      >
+        <Text
+          className="text-2xl font-bold text-slate-900"
+          style={rtlText}
+        >
           {t("clients.title")}
         </Text>
         <Pressable
@@ -144,10 +228,14 @@ export default function ClientsScreen() {
 
       {/* Search */}
       <View className="px-6 py-3">
-        <View className="flex-row items-center rounded-full bg-slate-100 px-4 h-11">
+        <View
+          className="flex-row items-center rounded-full bg-slate-100 px-4 h-11"
+          style={isRTL ? { flexDirection: "row-reverse" } : undefined}
+        >
           <Search size={18} color="#94a3b8" />
           <TextInput
-            className="ml-3 flex-1 text-base text-slate-900"
+            className="flex-1 text-base text-slate-900"
+            style={[rtlText, { marginStart: 12 }]}
             placeholder={t("clients.searchPlaceholder")}
             placeholderTextColor="#94a3b8"
             value={search}

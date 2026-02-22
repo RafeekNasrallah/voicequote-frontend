@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  I18nManager,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -17,6 +18,8 @@ import { useTranslation } from "react-i18next";
 
 import api from "@/src/lib/api";
 
+const RTL_LANGUAGES = ["ar", "he"];
+
 interface AddClientModalProps {
   visible: boolean;
   onClose: () => void;
@@ -27,7 +30,16 @@ export default function AddClientModal({
   onClose,
 }: AddClientModalProps) {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const languageIsRTL = RTL_LANGUAGES.includes(
+    (i18n.language || "").split("-")[0]
+  );
+  const isRTL = I18nManager.isRTL || languageIsRTL;
+  const rtlText = isRTL
+    ? { textAlign: "right" as const, writingDirection: "rtl" as const }
+    : undefined;
+  const rtlFieldDirection = isRTL ? { direction: "rtl" as const } : undefined;
+  const rtlLabelContainer = { alignSelf: "flex-start" as const };
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
@@ -76,8 +88,11 @@ export default function AddClientModal({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between border-b border-slate-200 bg-white px-4 pb-3 pt-4">
-          <Text className="text-lg font-bold text-slate-900">
+        <View
+          className="flex-row items-center justify-between border-b border-slate-200 bg-white px-4 pb-3 pt-4"
+          style={isRTL ? { flexDirection: "row-reverse" } : undefined}
+        >
+          <Text className="text-lg font-bold text-slate-900" style={rtlText}>
             {t("clients.newClient")}
           </Text>
           <Pressable
@@ -96,12 +111,16 @@ export default function AddClientModal({
           keyboardShouldPersistTaps="handled"
         >
           {/* Name */}
-          <View className="mb-4">
-            <Text className="mb-1.5 text-sm font-medium text-slate-700">
+          <View className="mb-4 w-full" style={rtlFieldDirection}>
+            <Text
+              className="mb-1.5 text-sm font-medium text-slate-700"
+              style={[rtlText, rtlLabelContainer]}
+            >
               {t("clients.name")} *
             </Text>
             <TextInput
-              className="h-12 rounded-lg border border-slate-200 bg-white px-4 text-base text-slate-900"
+              className="h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-base text-slate-900"
+              style={rtlText}
               placeholder={t("clients.namePlaceholder")}
               placeholderTextColor="#94a3b8"
               value={name}
@@ -111,12 +130,16 @@ export default function AddClientModal({
           </View>
 
           {/* Address */}
-          <View className="mb-4">
-            <Text className="mb-1.5 text-sm font-medium text-slate-700">
+          <View className="mb-4 w-full" style={rtlFieldDirection}>
+            <Text
+              className="mb-1.5 text-sm font-medium text-slate-700"
+              style={[rtlText, rtlLabelContainer]}
+            >
               {t("clients.address")}
             </Text>
             <TextInput
-              className="h-12 rounded-lg border border-slate-200 bg-white px-4 text-base text-slate-900"
+              className="h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-base text-slate-900"
+              style={rtlText}
               placeholder={t("clients.addressPlaceholder")}
               placeholderTextColor="#94a3b8"
               value={address}
@@ -126,12 +149,16 @@ export default function AddClientModal({
           </View>
 
           {/* Email */}
-          <View className="mb-4">
-            <Text className="mb-1.5 text-sm font-medium text-slate-700">
+          <View className="mb-4 w-full" style={rtlFieldDirection}>
+            <Text
+              className="mb-1.5 text-sm font-medium text-slate-700"
+              style={[rtlText, rtlLabelContainer]}
+            >
               {t("clients.emailLabel")}
             </Text>
             <TextInput
-              className="h-12 rounded-lg border border-slate-200 bg-white px-4 text-base text-slate-900"
+              className="h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-base text-slate-900"
+              style={rtlText}
               placeholder={t("clients.emailPlaceholder")}
               placeholderTextColor="#94a3b8"
               value={email}
@@ -142,12 +169,16 @@ export default function AddClientModal({
           </View>
 
           {/* Phone */}
-          <View className="mb-4">
-            <Text className="mb-1.5 text-sm font-medium text-slate-700">
+          <View className="mb-4 w-full" style={rtlFieldDirection}>
+            <Text
+              className="mb-1.5 text-sm font-medium text-slate-700"
+              style={[rtlText, rtlLabelContainer]}
+            >
               {t("clients.phone")}
             </Text>
             <TextInput
-              className="h-12 rounded-lg border border-slate-200 bg-white px-4 text-base text-slate-900"
+              className="h-12 w-full rounded-lg border border-slate-200 bg-white px-4 text-base text-slate-900"
+              style={rtlText}
               placeholder={t("clients.phonePlaceholder")}
               placeholderTextColor="#94a3b8"
               value={phone}

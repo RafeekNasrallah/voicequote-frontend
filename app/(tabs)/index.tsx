@@ -6,6 +6,7 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
     Alert,
+    I18nManager,
     Pressable,
     RefreshControl,
     ScrollView,
@@ -53,6 +54,8 @@ interface QuoteStats {
   draft?: number;
 }
 
+const RTL_LANGUAGES = ["ar", "he"];
+
 // ─── Helpers ────────────────────────────────────────────────
 
 function getInitials(
@@ -86,6 +89,9 @@ function StatsCard({
   color,
   isLoading,
   onPress,
+  rtlText,
+  rtlRowDirection,
+  rtlLabelWrapStyle,
 }: {
   label: string;
   value: number;
@@ -93,18 +99,34 @@ function StatsCard({
   color: string;
   isLoading?: boolean;
   onPress?: () => void;
+  rtlText?: { textAlign: "right"; writingDirection: "rtl" };
+  rtlRowDirection?: { direction: "rtl" };
+  /** RTL: wrap the label so the text block sits on the right side (force LTR row so flex-end = right). */
+  rtlLabelWrapStyle?: { flexDirection: "row"; justifyContent: "flex-end"; width: "100%"; direction: "ltr" };
 }) {
   const content = (
     <View className="flex-1 rounded-xl bg-white p-4 shadow-sm border border-slate-100">
-      <View className="flex-row items-center justify-between">
+      <View
+        className="flex-row items-center justify-between"
+        style={rtlRowDirection}
+      >
         {isLoading ? (
           <Skeleton width={32} height={28} borderRadius={6} />
         ) : (
-          <Text className="text-2xl font-bold text-slate-900">{value}</Text>
+          <Text
+            className="text-2xl font-bold text-slate-900"
+            style={rtlText}
+          >
+            {value}
+          </Text>
         )}
         <Icon size={20} color={color} />
       </View>
-      <Text className="mt-1 text-sm text-slate-600">{label}</Text>
+      <View className="mt-1" style={rtlLabelWrapStyle}>
+        <Text className="text-sm text-slate-600" style={rtlText}>
+          {label}
+        </Text>
+      </View>
     </View>
   );
 
@@ -133,6 +155,8 @@ function QuoteCard({
   taxRate,
   taxInclusive,
   locale,
+  isRTL,
+  rtlText,
 }: {
   quote: Quote;
   onPress: () => void;
@@ -144,6 +168,8 @@ function QuoteCard({
   taxRate?: number | null;
   taxInclusive?: boolean;
   locale?: string;
+  isRTL: boolean;
+  rtlText?: { textAlign: "right"; writingDirection: "rtl" };
 }) {
   const status = getQuoteStatusBadge(deriveQuoteWorkflowStatus(quote), t);
   const displayTotal = calculateQuoteGrandTotal(quote, {
@@ -152,6 +178,8 @@ function QuoteCard({
     taxRate,
     taxInclusive,
   });
+  const titleSpacing = isRTL ? { marginLeft: 12 as const } : { marginRight: 12 as const };
+  const totalSpacing = isRTL ? { marginRight: 12 as const } : { marginLeft: 12 as const };
 
   return (
     <Pressable
@@ -160,28 +188,80 @@ function QuoteCard({
       className="mb-3 rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
     >
-      <View className="flex-row items-center justify-between">
-        <Text
-          className="flex-1 text-base font-semibold text-slate-900 mr-3"
-          numberOfLines={1}
-        >
-          {getQuoteTitle(quote)}
-        </Text>
-        <View className={`rounded-full px-3 py-1 ${status.bg}`}>
-          <Text className={`text-xs font-semibold ${status.text}`}>
-            {status.label}
-          </Text>
-        </View>
+      <View className="flex-row items-center" style={{ direction: "ltr" }}>
+        {isRTL ? (
+          <>
+            <View className={`rounded-full px-3 py-1 ${status.bg}`}>
+              <Text
+                className={`text-xs font-semibold ${status.text}`}
+                style={rtlText}
+              >
+                {status.label}
+              </Text>
+            </View>
+            <View className="flex-1" style={[titleSpacing, { minWidth: 0 }]}>
+              <Text
+                className="text-base font-semibold text-slate-900"
+                numberOfLines={1}
+                style={rtlText}
+              >
+                {getQuoteTitle(quote)}
+              </Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <View className="flex-1" style={[titleSpacing, { minWidth: 0 }]}>
+              <Text
+                className="text-base font-semibold text-slate-900"
+                numberOfLines={1}
+              >
+                {getQuoteTitle(quote)}
+              </Text>
+            </View>
+            <View className={`rounded-full px-3 py-1 ${status.bg}`}>
+              <Text className={`text-xs font-semibold ${status.text}`}>
+                {status.label}
+              </Text>
+            </View>
+          </>
+        )}
       </View>
-      <View className="mt-2 flex-row items-center">
-        <Text className="text-sm text-slate-500">
-          {formatDate(quote.createdAt, locale)}
-        </Text>
-        {displayTotal != null && (
-          <Text className="ml-3 text-sm font-medium text-slate-600">
-            {currencySymbol}
-            {displayTotal.toFixed(2)}
-          </Text>
+      <View className="mt-2 flex-row items-center" style={{ direction: "ltr" }}>
+        {isRTL ? (
+          <>
+            {displayTotal != null && (
+              <Text
+                className="text-sm font-medium text-slate-600"
+                style={[rtlText, totalSpacing]}
+              >
+                {currencySymbol}
+                {displayTotal.toFixed(2)}
+              </Text>
+            )}
+            <View className="flex-1" style={{ minWidth: 0 }}>
+              <Text className="text-sm text-slate-500" style={rtlText}>
+                {formatDate(quote.createdAt, locale)}
+              </Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <View className="flex-1" style={{ minWidth: 0 }}>
+              <Text className="text-sm text-slate-500">
+                {formatDate(quote.createdAt, locale)}
+              </Text>
+            </View>
+            {displayTotal != null && (
+              <Text
+                className="text-sm font-medium text-slate-600"
+                style={totalSpacing}
+              >
+                {currencySymbol}
+                {displayTotal.toFixed(2)}
+              </Text>
+            )}
+          </>
         )}
       </View>
     </Pressable>
@@ -207,6 +287,19 @@ export default function HomeScreen() {
   const createQuote = useCreateQuote();
   const { t, i18n } = useTranslation();
   const activeLocale = i18n.resolvedLanguage ?? i18n.language ?? undefined;
+  const languageIsRTL = RTL_LANGUAGES.includes(
+    (i18n.language || "").split("-")[0]
+  );
+  const isRTL = I18nManager.isRTL || languageIsRTL;
+  const rtlText = isRTL
+    ? { textAlign: "right" as const, writingDirection: "rtl" as const }
+    : undefined;
+  /** RTL row: direction 'rtl' so first child is on the right, second on the left. */
+  const rtlRowDirection = isRTL ? { direction: "rtl" as const } : undefined;
+  /** RTL: put the stats card label text block on the right side (LTR row so flex-end = right). */
+  const rtlLabelWrapStyle = isRTL
+    ? { flexDirection: "row" as const, justifyContent: "flex-end" as const, width: "100%" as const, direction: "ltr" as const }
+    : undefined;
 
   // Fetch user profile for currency
   const { data: userProfile } = useQuery({
@@ -385,6 +478,9 @@ export default function HomeScreen() {
             color="#ea580c"
             isLoading={statsLoading}
             onPress={() => router.push("/(tabs)/quotes" as any)}
+            rtlText={rtlText}
+            rtlRowDirection={rtlRowDirection}
+            rtlLabelWrapStyle={rtlLabelWrapStyle}
           />
           <StatsCard
             label={t("quotes.statusNoClient")}
@@ -393,6 +489,9 @@ export default function HomeScreen() {
             color="#ea580c"
             isLoading={statsLoading}
             onPress={() => router.push("/(tabs)/quotes?status=needs_client" as any)}
+            rtlText={rtlText}
+            rtlRowDirection={rtlRowDirection}
+            rtlLabelWrapStyle={rtlLabelWrapStyle}
           />
           <StatsCard
             label={t("home.ready")}
@@ -401,6 +500,9 @@ export default function HomeScreen() {
             color="#ea580c"
             isLoading={statsLoading}
             onPress={() => router.push("/(tabs)/quotes?status=ready" as any)}
+            rtlText={rtlText}
+            rtlRowDirection={rtlRowDirection}
+            rtlLabelWrapStyle={rtlLabelWrapStyle}
           />
         </View>
 
@@ -440,8 +542,14 @@ export default function HomeScreen() {
 
         {/* ─── Recent Quotes ─────────────────────────── */}
         <View className="px-6">
-          <View className="mb-3 flex-row items-center justify-between">
-            <Text className="text-base font-semibold text-slate-900">
+          <View
+            className="mb-3 flex-row items-center justify-between"
+            style={rtlRowDirection}
+          >
+            <Text
+              className="text-base font-semibold text-slate-900"
+              style={rtlText}
+            >
               {t("home.recentQuotes")}
             </Text>
             {quotes.length > 0 && (
@@ -449,7 +557,10 @@ export default function HomeScreen() {
                 onPress={() => router.push("/(tabs)/quotes" as any)}
                 style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
               >
-                <Text className="text-sm font-semibold text-orange-600">
+                <Text
+                  className="text-sm font-semibold text-orange-600"
+                  style={rtlText}
+                >
                   {t("home.viewAll")}
                 </Text>
               </Pressable>
@@ -467,7 +578,10 @@ export default function HomeScreen() {
           ) : quotes.length === 0 ? (
             <View className="items-center rounded-xl bg-white py-8 border border-slate-100">
               <FileText size={32} color="#cbd5e1" />
-              <Text className="mt-2 text-sm text-slate-500">
+              <Text
+                className="mt-2 text-sm text-slate-500"
+                style={rtlText}
+              >
                 {t("home.noQuotesYet")}
               </Text>
             </View>
@@ -500,8 +614,10 @@ export default function HomeScreen() {
                   taxRate={userProfile?.taxRate}
                   taxInclusive={userProfile?.taxInclusive}
                   locale={activeLocale}
+                  isRTL={isRTL}
                   onPress={() => router.push(`/quote/${quote.id}` as any)}
                   onLongPress={() => handleDeleteQuote(quote)}
+                  rtlText={rtlText}
                 />
               ))}
             </>

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  I18nManager,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -17,6 +18,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import api from "@/src/lib/api";
+
+const RTL_LANGUAGES = ["ar", "he"];
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -32,7 +35,18 @@ interface UserProfile {
 export default function BusinessInfoScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const languageIsRTL = RTL_LANGUAGES.includes((i18n.language || "").split("-")[0]);
+  const isRTL = I18nManager.isRTL || languageIsRTL;
+  const rtlText = isRTL
+    ? { textAlign: "right" as const, writingDirection: "rtl" as const }
+    : undefined;
+  const rtlHeaderDirection = isRTL ? { direction: "rtl" as const } : undefined;
+  const rtlTitleWrapStyle = isRTL
+    ? { flexDirection: "row" as const, justifyContent: "flex-end" as const, width: "100%" as const, direction: "ltr" as const }
+    : undefined;
+  const backArrowStyle = isRTL ? { transform: [{ scaleX: -1 }] } : undefined;
+  const inputRtlStyle = isRTL ? { textAlign: "right" as const, writingDirection: "rtl" as const } : undefined;
 
   const [companyName, setCompanyName] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
@@ -144,26 +158,36 @@ export default function BusinessInfoScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-slate-200">
+      {/* Header — RTL: title on right, back arrow mirrored */}
+      <View
+        className="flex-row items-center px-4 py-3 border-b border-slate-200"
+        style={rtlHeaderDirection}
+      >
         <Pressable
           onPress={handleBack}
-          className="mr-3 h-11 w-11 items-center justify-center rounded-lg"
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          className="h-11 w-11 items-center justify-center rounded-lg"
+          style={({ pressed }) => [
+            { opacity: pressed ? 0.6 : 1 },
+            isRTL ? { marginLeft: 12 } : { marginRight: 12 },
+          ]}
           accessibilityLabel={t("quoteEditor.goBack")}
           accessibilityRole="button"
         >
-          <ArrowLeft size={22} color="#0f172a" />
+          <View style={backArrowStyle}>
+            <ArrowLeft size={22} color="#ea580c" />
+          </View>
         </Pressable>
-        <Text className="flex-1 text-lg font-bold text-slate-900">
-          {t("businessInfo.title")}
-        </Text>
+        <View className="flex-1" style={rtlTitleWrapStyle}>
+          <Text className="text-lg font-bold text-slate-900" style={rtlText}>
+            {t("businessInfo.title")}
+          </Text>
+        </View>
         {/* Save Button */}
         <Pressable
           onPress={handleSave}
           disabled={!hasChanges || saveInfo.isPending}
           className={`h-11 px-4 items-center justify-center rounded-lg ${
-            hasChanges ? "bg-slate-900" : "bg-slate-200"
+            hasChanges ? "bg-orange-600" : "bg-slate-200"
           }`}
           style={({ pressed }) => ({
             opacity: pressed || saveInfo.isPending ? 0.7 : 1,
@@ -189,7 +213,7 @@ export default function BusinessInfoScreen() {
       >
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#0f172a" size="large" />
+            <ActivityIndicator color="#ea580c" size="large" />
           </View>
         ) : (
           <ScrollView
@@ -197,18 +221,26 @@ export default function BusinessInfoScreen() {
             contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Info Text */}
-            <Text className="text-sm text-slate-500 mb-4">
-              {t("businessInfo.description")}
-            </Text>
+            {/* Info Text — RTL: on right */}
+            <View className="mb-4" style={rtlTitleWrapStyle}>
+              <Text className="text-sm text-slate-500" style={rtlText}>
+                {t("businessInfo.description")}
+              </Text>
+            </View>
 
-            {/* Company Name */}
+            {/* Company Name — RTL: label row + input */}
             <View className="mb-4 rounded-xl bg-white border border-slate-100 shadow-sm overflow-hidden">
-              <View className="flex-row items-center px-4 py-3 border-b border-slate-100">
-                <View className="h-8 w-8 items-center justify-center rounded-lg bg-blue-50 mr-3">
+              <View
+                className="flex-row items-center px-4 py-3 border-b border-slate-100"
+                style={isRTL ? { direction: "rtl" as const } : undefined}
+              >
+                <View
+                  className="h-8 w-8 items-center justify-center rounded-lg bg-blue-50"
+                  style={isRTL ? { marginLeft: 12 } : { marginRight: 12 }}
+                >
                   <Building2 size={16} color="#3b82f6" />
                 </View>
-                <Text className="text-sm font-medium text-slate-700">
+                <Text className="text-sm font-medium text-slate-700" style={rtlText}>
                   {t("businessInfo.companyName")}
                 </Text>
               </View>
@@ -219,16 +251,23 @@ export default function BusinessInfoScreen() {
                 placeholder={t("businessInfo.companyNamePlaceholder")}
                 placeholderTextColor="#94a3b8"
                 autoCapitalize="words"
+                style={inputRtlStyle}
               />
             </View>
 
-            {/* Address */}
+            {/* Address — RTL: label row + input */}
             <View className="mb-4 rounded-xl bg-white border border-slate-100 shadow-sm overflow-hidden">
-              <View className="flex-row items-center px-4 py-3 border-b border-slate-100">
-                <View className="h-8 w-8 items-center justify-center rounded-lg bg-green-50 mr-3">
+              <View
+                className="flex-row items-center px-4 py-3 border-b border-slate-100"
+                style={isRTL ? { direction: "rtl" as const } : undefined}
+              >
+                <View
+                  className="h-8 w-8 items-center justify-center rounded-lg bg-green-50"
+                  style={isRTL ? { marginLeft: 12 } : { marginRight: 12 }}
+                >
                   <MapPin size={16} color="#22c55e" />
                 </View>
-                <Text className="text-sm font-medium text-slate-700">
+                <Text className="text-sm font-medium text-slate-700" style={rtlText}>
                   {t("businessInfo.address")}
                 </Text>
               </View>
@@ -241,17 +280,23 @@ export default function BusinessInfoScreen() {
                 multiline
                 numberOfLines={3}
                 textAlignVertical="top"
-                style={{ minHeight: 80 }}
+                style={[{ minHeight: 80 }, inputRtlStyle]}
               />
             </View>
 
-            {/* Phone */}
+            {/* Phone — RTL: label row + input */}
             <View className="mb-4 rounded-xl bg-white border border-slate-100 shadow-sm overflow-hidden">
-              <View className="flex-row items-center px-4 py-3 border-b border-slate-100">
-                <View className="h-8 w-8 items-center justify-center rounded-lg bg-purple-50 mr-3">
+              <View
+                className="flex-row items-center px-4 py-3 border-b border-slate-100"
+                style={isRTL ? { direction: "rtl" as const } : undefined}
+              >
+                <View
+                  className="h-8 w-8 items-center justify-center rounded-lg bg-purple-50"
+                  style={isRTL ? { marginLeft: 12 } : { marginRight: 12 }}
+                >
                   <Phone size={16} color="#a855f7" />
                 </View>
-                <Text className="text-sm font-medium text-slate-700">
+                <Text className="text-sm font-medium text-slate-700" style={rtlText}>
                   {t("businessInfo.phone")}
                 </Text>
               </View>
@@ -262,16 +307,23 @@ export default function BusinessInfoScreen() {
                 placeholder={t("businessInfo.phonePlaceholder")}
                 placeholderTextColor="#94a3b8"
                 keyboardType="phone-pad"
+                style={inputRtlStyle}
               />
             </View>
 
-            {/* Email */}
+            {/* Email — RTL: label row + input */}
             <View className="mb-4 rounded-xl bg-white border border-slate-100 shadow-sm overflow-hidden">
-              <View className="flex-row items-center px-4 py-3 border-b border-slate-100">
-                <View className="h-8 w-8 items-center justify-center rounded-lg bg-orange-50 mr-3">
+              <View
+                className="flex-row items-center px-4 py-3 border-b border-slate-100"
+                style={isRTL ? { direction: "rtl" as const } : undefined}
+              >
+                <View
+                  className="h-8 w-8 items-center justify-center rounded-lg bg-orange-50"
+                  style={isRTL ? { marginLeft: 12 } : { marginRight: 12 }}
+                >
                   <Mail size={16} color="#f97316" />
                 </View>
-                <Text className="text-sm font-medium text-slate-700">
+                <Text className="text-sm font-medium text-slate-700" style={rtlText}>
                   {t("businessInfo.email")}
                 </Text>
               </View>
@@ -283,6 +335,7 @@ export default function BusinessInfoScreen() {
                 placeholderTextColor="#94a3b8"
                 keyboardType="email-address"
                 autoCapitalize="none"
+                style={inputRtlStyle}
               />
             </View>
           </ScrollView>

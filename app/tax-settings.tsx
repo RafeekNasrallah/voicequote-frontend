@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  I18nManager,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -19,6 +20,18 @@ import { useTranslation } from "react-i18next";
 
 import api from "@/src/lib/api";
 import { getCurrencySymbol } from "@/src/lib/currency";
+
+const RTL_LANGUAGES = ["ar", "he"];
+
+/** Default tax label in each locale; if profile has one of these, show current language default instead. */
+const DEFAULT_TAX_LABEL_BY_LOCALE: Record<string, string> = {
+  en: "Tax",
+  ar: "ضريبة",
+  de: "Steuer",
+  es: "Impuesto",
+  he: "מס",
+};
+const DEFAULT_TAX_LABEL_VALUES = new Set(Object.values(DEFAULT_TAX_LABEL_BY_LOCALE));
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -35,7 +48,18 @@ interface UserProfile {
 export default function TaxSettingsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const languageIsRTL = RTL_LANGUAGES.includes((i18n.language || "").split("-")[0]);
+  const isRTL = I18nManager.isRTL || languageIsRTL;
+  const rtlText = isRTL
+    ? { textAlign: "right" as const, writingDirection: "rtl" as const }
+    : undefined;
+  const rtlHeaderDirection = isRTL ? { direction: "rtl" as const } : undefined;
+  const backArrowStyle = isRTL ? { transform: [{ scaleX: -1 }] } : undefined;
+  /** RTL: put title text block on the right (LTR row + flex-end). */
+  const rtlTitleWrapStyle = isRTL
+    ? { flexDirection: "row" as const, justifyContent: "flex-end" as const, width: "100%" as const, direction: "ltr" as const }
+    : undefined;
 
   const [taxEnabled, setTaxEnabled] = useState(false);
   const [taxRate, setTaxRate] = useState("");
@@ -58,13 +82,16 @@ export default function TaxSettingsScreen() {
     },
   });
 
-  // Sync server data to local state on first load
+  // Sync server data to local state; use current language default when stored value is empty or is a default label from another locale
   useEffect(() => {
     if (profile) {
+      const defaultTaxLabel = t("taxSettings.defaultLabel");
+      const stored = profile.taxLabel?.trim() || "";
+      const useDefault = !stored || DEFAULT_TAX_LABEL_VALUES.has(stored);
       const values = {
         taxEnabled: profile.taxEnabled ?? false,
         taxRate: profile.taxRate?.toString() ?? "",
-        taxLabel: profile.taxLabel ?? "",
+        taxLabel: useDefault ? defaultTaxLabel : stored,
         taxInclusive: profile.taxInclusive ?? false,
       };
       setTaxEnabled(values.taxEnabled);
@@ -73,7 +100,7 @@ export default function TaxSettingsScreen() {
       setTaxInclusive(values.taxInclusive);
       setInitialValues(values);
     }
-  }, [profile]);
+  }, [profile, t]);
 
   // Track changes
   useEffect(() => {
@@ -173,26 +200,36 @@ export default function TaxSettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-slate-200">
+      {/* Header — RTL: title on right, back arrow mirrored */}
+      <View
+        className="flex-row items-center px-4 py-3 border-b border-slate-200"
+        style={rtlHeaderDirection}
+      >
         <Pressable
           onPress={handleBack}
-          className="mr-3 h-11 w-11 items-center justify-center rounded-lg"
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          className="h-11 w-11 items-center justify-center rounded-lg"
+          style={({ pressed }) => [
+            { opacity: pressed ? 0.6 : 1 },
+            isRTL ? { marginLeft: 12 } : { marginRight: 12 },
+          ]}
           accessibilityLabel={t("quoteEditor.goBack")}
           accessibilityRole="button"
         >
-          <ArrowLeft size={22} color="#0f172a" />
+          <View style={backArrowStyle}>
+            <ArrowLeft size={22} color="#ea580c" />
+          </View>
         </Pressable>
-        <Text className="flex-1 text-lg font-bold text-slate-900">
-          {t("taxSettings.title")}
-        </Text>
+        <View className="flex-1" style={rtlTitleWrapStyle}>
+          <Text className="text-lg font-bold text-slate-900" style={rtlText}>
+            {t("taxSettings.title")}
+          </Text>
+        </View>
         {/* Save Button */}
         <Pressable
           onPress={handleSave}
           disabled={!hasChanges || saveSettings.isPending}
           className={`h-11 px-4 items-center justify-center rounded-lg ${
-            hasChanges ? "bg-slate-900" : "bg-slate-200"
+            hasChanges ? "bg-orange-600" : "bg-slate-200"
           }`}
           style={({ pressed }) => ({
             opacity: pressed || saveSettings.isPending ? 0.7 : 1,
@@ -218,7 +255,7 @@ export default function TaxSettingsScreen() {
       >
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#0f172a" size="large" />
+            <ActivityIndicator color="#ea580c" size="large" />
           </View>
         ) : (
           <ScrollView
@@ -226,16 +263,21 @@ export default function TaxSettingsScreen() {
             contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Enable Tax Toggle */}
+            {/* Enable Tax Toggle — RTL: text on right, switch on left */}
             <View className="mb-4 rounded-xl bg-white border border-slate-100 shadow-sm overflow-hidden">
-              <View className="flex-row items-center justify-between px-4 py-4">
-                <View className="flex-1">
-                  <Text className="text-base font-medium text-slate-900">
-                    {t("taxSettings.enableTax")}
-                  </Text>
-                  <Text className="mt-0.5 text-sm text-slate-500">
-                    {t("taxSettings.enableTaxDesc")}
-                  </Text>
+              <View
+                className="flex-row items-center justify-between px-4 py-4"
+                style={isRTL ? { direction: "rtl" as const } : undefined}
+              >
+                <View className="flex-1" style={rtlTitleWrapStyle}>
+                  <View>
+                    <Text className="text-base font-medium text-slate-900" style={rtlText}>
+                      {t("taxSettings.enableTax")}
+                    </Text>
+                    <Text className="mt-0.5 text-sm text-slate-500" style={rtlText}>
+                      {t("taxSettings.enableTaxDesc")}
+                    </Text>
+                  </View>
                 </View>
                 <Switch
                   value={taxEnabled}
@@ -247,17 +289,26 @@ export default function TaxSettingsScreen() {
               </View>
             </View>
 
-            {/* Tax Rate */}
+            {/* Tax Rate — RTL: label + icon on right; input row and text on right */}
             <View className="mb-4 rounded-xl bg-white border border-slate-100 shadow-sm overflow-hidden">
-              <View className="flex-row items-center px-4 py-3 border-b border-slate-100">
-                <View className="h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 mr-3">
+              <View
+                className="flex-row items-center px-4 py-3 border-b border-slate-100"
+                style={isRTL ? { direction: "rtl" as const } : undefined}
+              >
+                <View
+                  className="h-8 w-8 items-center justify-center rounded-lg bg-emerald-50"
+                  style={isRTL ? { marginLeft: 12 } : { marginRight: 12 }}
+                >
                   <Percent size={16} color="#10b981" />
                 </View>
-                <Text className="text-sm font-medium text-slate-700">
+                <Text className="text-sm font-medium text-slate-700" style={rtlText}>
                   {t("taxSettings.taxRate")}
                 </Text>
               </View>
-              <View className="flex-row items-center px-4 py-3">
+              <View
+                className="flex-row items-center px-4 py-3"
+                style={isRTL ? { direction: "rtl" as const } : undefined}
+              >
                 <TextInput
                   className="flex-1 text-base text-slate-900"
                   value={taxRate}
@@ -266,19 +317,33 @@ export default function TaxSettingsScreen() {
                   placeholderTextColor="#94a3b8"
                   keyboardType="decimal-pad"
                   editable={taxEnabled}
-                  style={{ opacity: taxEnabled ? 1 : 0.5 }}
+                  style={[
+                    { opacity: taxEnabled ? 1 : 0.5 },
+                    isRTL && { textAlign: "right" as const, writingDirection: "rtl" as const },
+                  ]}
                 />
-                <Text className="text-base text-slate-500 ml-2">%</Text>
+                <Text
+                  className="text-base text-slate-500"
+                  style={[rtlText, isRTL ? { marginRight: 8 } : { marginLeft: 8 }]}
+                >
+                  %
+                </Text>
               </View>
             </View>
 
-            {/* Tax Label */}
+            {/* Tax Label — RTL: label + icon on right; input text on right */}
             <View className="mb-4 rounded-xl bg-white border border-slate-100 shadow-sm overflow-hidden">
-              <View className="flex-row items-center px-4 py-3 border-b border-slate-100">
-                <View className="h-8 w-8 items-center justify-center rounded-lg bg-violet-50 mr-3">
+              <View
+                className="flex-row items-center px-4 py-3 border-b border-slate-100"
+                style={isRTL ? { direction: "rtl" as const } : undefined}
+              >
+                <View
+                  className="h-8 w-8 items-center justify-center rounded-lg bg-violet-50"
+                  style={isRTL ? { marginLeft: 12 } : { marginRight: 12 }}
+                >
                   <Tag size={16} color="#8b5cf6" />
                 </View>
-                <Text className="text-sm font-medium text-slate-700">
+                <Text className="text-sm font-medium text-slate-700" style={rtlText}>
                   {t("taxSettings.taxLabel")}
                 </Text>
               </View>
@@ -289,22 +354,33 @@ export default function TaxSettingsScreen() {
                 placeholder={t("taxSettings.taxLabelPlaceholder")}
                 placeholderTextColor="#94a3b8"
                 editable={taxEnabled}
-                style={{ opacity: taxEnabled ? 1 : 0.5 }}
+                style={[
+                  { opacity: taxEnabled ? 1 : 0.5 },
+                  isRTL && { textAlign: "right" as const, writingDirection: "rtl" as const },
+                ]}
               />
             </View>
 
-            {/* Tax Inclusive Toggle */}
+            {/* Tax Inclusive Toggle — RTL: text on right, switch on left */}
             <View className="mb-4 rounded-xl bg-white border border-slate-100 shadow-sm overflow-hidden" style={{ opacity: taxEnabled ? 1 : 0.5 }}>
-              <View className="flex-row items-center justify-between px-4 py-4">
-                <View className="flex-1 pr-4">
-                  <Text className="text-base font-medium text-slate-900">
-                    {t("taxSettings.taxInclusive")}
-                  </Text>
-                  <Text className="mt-0.5 text-sm text-slate-500">
-                    {taxInclusive
-                      ? t("taxSettings.taxInclusiveHint")
-                      : t("taxSettings.taxExclusiveHint")}
-                  </Text>
+              <View
+                className="flex-row items-center justify-between px-4 py-4"
+                style={isRTL ? { direction: "rtl" as const } : undefined}
+              >
+                <View
+                  className="flex-1"
+                  style={[rtlTitleWrapStyle, isRTL ? { paddingLeft: 16 } : { paddingRight: 16 }]}
+                >
+                  <View>
+                    <Text className="text-base font-medium text-slate-900" style={rtlText}>
+                      {t("taxSettings.taxInclusive")}
+                    </Text>
+                    <Text className="mt-0.5 text-sm text-slate-500" style={rtlText}>
+                      {taxInclusive
+                        ? t("taxSettings.taxInclusiveHint")
+                        : t("taxSettings.taxExclusiveHint")}
+                    </Text>
+                  </View>
                 </View>
                 <Switch
                   value={taxInclusive}
@@ -317,11 +393,13 @@ export default function TaxSettingsScreen() {
               </View>
             </View>
 
-            {/* Preview Section */}
+            {/* Preview Section — RTL: section title on right */}
             <View className="mb-4">
-              <Text className="text-xs font-semibold uppercase text-slate-400 px-1 mb-2">
-                {t("taxSettings.preview")}
-              </Text>
+              <View className="mb-2" style={rtlTitleWrapStyle}>
+                <Text className="text-xs font-semibold uppercase text-slate-400 px-1" style={rtlText}>
+                  {t("taxSettings.preview")}
+                </Text>
+              </View>
               <View className="rounded-xl bg-white border border-slate-100 shadow-sm overflow-hidden p-4">
                 {/* Item Prices */}
                 <View className="flex-row justify-between mb-2">

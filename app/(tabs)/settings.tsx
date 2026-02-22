@@ -2,7 +2,7 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import Constants from "expo-constants";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Building2, Camera, Check, ChevronRight, Clock, Coins, Crown, DollarSign, FileText, Globe, LogOut, Receipt, Shield, Trash2, User } from "lucide-react-native";
+import { Building2, Camera, Clock, Coins, Crown, DollarSign, FileText, Globe, LogOut, Receipt, Shield, Trash2, User } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
@@ -24,7 +24,6 @@ import api from "@/src/lib/api";
 import { SUPPORTED_LANGUAGES, changeLanguage } from "@/src/i18n";
 import {
   SUPPORTED_CURRENCIES,
-  getCurrencyLabel,
   getCurrencySymbol,
   DEFAULT_CURRENCY,
 } from "@/src/lib/currency";
@@ -71,6 +70,12 @@ export default function SettingsScreen() {
     : undefined;
   const rtlAlignEnd = isRTL ? { alignItems: "flex-start" as const } : undefined;
   const rtlRowReverse = isRTL ? { flexDirection: "row-reverse" as const } : undefined;
+  /** RTL row: direction 'rtl' so first child (title) is on the right, like home/quotes. */
+  const rtlHeaderDirection = isRTL ? { direction: "rtl" as const } : undefined;
+  /** RTL: put section titles on the right (LTR row + flex-end). */
+  const rtlSectionTitleWrapStyle = isRTL
+    ? { flexDirection: "row" as const, justifyContent: "flex-end" as const, width: "100%" as const, direction: "ltr" as const }
+    : undefined;
 
   // Modal states
   const [laborRateModalVisible, setLaborRateModalVisible] = useState(false);
@@ -316,16 +321,21 @@ export default function SettingsScreen() {
             className="mx-6 w-full max-w-sm rounded-2xl bg-white p-6"
             onPress={(e) => e.stopPropagation()}
           >
-            <Text className="text-lg font-bold text-slate-900 mb-4">
-              {t("settings.laborRate")}
-            </Text>
-            <Text className="text-sm text-slate-500 mb-4">
-              {t("settings.laborRateModalDesc")}
-            </Text>
-            <View className="flex-row items-center border border-slate-200 rounded-lg px-4 py-3 mb-4">
-              <Text className="text-lg font-semibold text-slate-400 me-2">{currencySymbol}</Text>
+            <View className="mb-4" style={rtlSectionTitleWrapStyle}>
+              <Text className="text-lg font-bold text-slate-900" style={rtlText}>
+                {t("settings.laborRate")}
+              </Text>
+            </View>
+            <View className="mb-4" style={rtlSectionTitleWrapStyle}>
+              <Text className="text-sm text-slate-500" style={rtlText}>
+                {t("settings.laborRateModalDesc")}
+              </Text>
+            </View>
+            <View className="flex-row items-center border border-slate-200 rounded-lg px-4 py-3 mb-4" style={isRTL ? { direction: "rtl" as const } : undefined}>
+              <Text className="text-lg font-semibold text-slate-400 me-2" style={rtlText}>{currencySymbol}</Text>
               <TextInput
                 className="flex-1 text-lg font-semibold text-slate-900"
+                style={rtlText}
                 value={laborRateInput}
                 onChangeText={setLaborRateInput}
                 placeholder="0.00"
@@ -333,22 +343,22 @@ export default function SettingsScreen() {
                 keyboardType="decimal-pad"
                 autoFocus
               />
-              <Text className="text-sm text-slate-400">{t("settings.perHour")}</Text>
+              <Text className="text-sm text-slate-400" style={rtlText}>{t("settings.perHour")}</Text>
             </View>
-            <View className="flex-row gap-3">
+            <View className="flex-row gap-3" style={isRTL ? { flexDirection: "row-reverse" as const } : undefined}>
               <Pressable
                 onPress={() => setLaborRateModalVisible(false)}
-                className="flex-1 h-11 items-center justify-center rounded-lg border border-slate-200"
+                className="flex-1 h-11 items-center justify-center rounded-lg border border-orange-200"
                 style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
               >
-                <Text className="text-sm font-semibold text-slate-600">
+                <Text className="text-sm font-semibold text-orange-600">
                   {t("common.cancel")}
                 </Text>
               </Pressable>
               <Pressable
                 onPress={handleSaveLaborRate}
                 disabled={updateLaborRate.isPending}
-                className="flex-1 h-11 items-center justify-center rounded-lg bg-slate-900"
+                className="flex-1 h-11 items-center justify-center rounded-lg bg-orange-600"
                 style={({ pressed }) => ({ opacity: pressed || updateLaborRate.isPending ? 0.7 : 1 })}
               >
                 {updateLaborRate.isPending ? (
@@ -379,42 +389,37 @@ export default function SettingsScreen() {
             className="mx-6 w-full max-w-sm rounded-2xl bg-white p-6"
             onPress={(e) => e.stopPropagation()}
           >
-            <Text className="text-lg font-bold text-slate-900 mb-4">
-              {t("settings.selectCurrency")}
-            </Text>
-            <ScrollView className="max-h-80">
+            <View className="mb-4" style={rtlSectionTitleWrapStyle}>
+              <Text className="text-lg font-bold text-slate-900" style={rtlText}>
+                {t("settings.selectCurrency")}
+              </Text>
+            </View>
+            <ScrollView className="max-h-80" style={isRTL ? { direction: "rtl" as const } : undefined}>
               {SUPPORTED_CURRENCIES.map((currency) => (
                 <Pressable
                   key={currency.code}
                   onPress={() => updateCurrency.mutate(currency.code)}
                   className="flex-row items-center justify-between py-3 border-b border-slate-100"
-                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                  style={({ pressed }) => [
+                    { opacity: pressed ? 0.7 : 1 },
+                    isRTL && { flexDirection: "row-reverse" as const },
+                  ]}
                 >
-                  <View className="flex-row items-center">
-                    <Text className="text-lg font-semibold text-slate-700 w-10">
-                      {currency.symbol}
-                    </Text>
-                    <View className="ms-2">
-                      <Text className="text-sm font-medium text-slate-900">
-                        {currency.code}
-                      </Text>
-                      <Text className="text-xs text-slate-400">
-                        {currency.name}
-                      </Text>
-                    </View>
-                  </View>
+                  <Text className="text-base font-medium text-slate-900" style={rtlText}>
+                    {t(`settings.currencies.${currency.code}`)}
+                  </Text>
                   {currentCurrency === currency.code && (
-                    <Text className="text-blue-500 font-semibold">✓</Text>
+                    <Text className="text-orange-600 font-semibold" style={rtlText}>✓</Text>
                   )}
                 </Pressable>
               ))}
             </ScrollView>
             <Pressable
               onPress={() => setCurrencyModalVisible(false)}
-              className="mt-4 h-11 items-center justify-center rounded-lg border border-slate-200"
+              className="mt-4 h-11 items-center justify-center rounded-lg border border-orange-200"
               style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
             >
-              <Text className="text-sm font-semibold text-slate-600">
+              <Text className="text-sm font-semibold text-orange-600">
                 {t("common.cancel")}
               </Text>
             </Pressable>
@@ -437,37 +442,42 @@ export default function SettingsScreen() {
             className="mx-6 w-full max-w-sm rounded-2xl bg-white p-6"
             onPress={(e) => e.stopPropagation()}
           >
-            <Text className="text-lg font-bold text-slate-900 mb-4">
-              {t("settings.selectLanguage")}
-            </Text>
-            <ScrollView className="max-h-80">
+            <View className="mb-4" style={rtlSectionTitleWrapStyle}>
+              <Text className="text-lg font-bold text-slate-900" style={rtlText}>
+                {t("settings.selectLanguage")}
+              </Text>
+            </View>
+            <ScrollView className="max-h-80" style={isRTL ? { direction: "rtl" as const } : undefined}>
               {SUPPORTED_LANGUAGES.map((lang) => (
                 <Pressable
                   key={lang.code}
                   onPress={() => handleLanguageChange(lang.code)}
                   className="flex-row items-center justify-between py-3 border-b border-slate-100"
-                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                  style={({ pressed }) => [
+                    { opacity: pressed ? 0.7 : 1 },
+                    isRTL && { flexDirection: "row-reverse" as const },
+                  ]}
                 >
-                  <View>
-                    <Text className="text-sm font-medium text-slate-900">
+                  <View style={rtlAlignEnd}>
+                    <Text className="text-sm font-medium text-slate-900" style={rtlText}>
                       {lang.nativeLabel}
                     </Text>
-                    <Text className="text-xs text-slate-400">
+                    <Text className="text-xs text-slate-400" style={rtlText}>
                       {lang.label}
                     </Text>
                   </View>
                   {currentLang === lang.code && (
-                    <Text className="text-blue-500 font-semibold">✓</Text>
+                    <Text className="text-orange-600 font-semibold" style={rtlText}>✓</Text>
                   )}
                 </Pressable>
               ))}
             </ScrollView>
             <Pressable
               onPress={() => setLanguageModalVisible(false)}
-              className="mt-4 h-11 items-center justify-center rounded-lg border border-slate-200"
+              className="mt-4 h-11 items-center justify-center rounded-lg border border-orange-200"
               style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
             >
-              <Text className="text-sm font-semibold text-slate-600">
+              <Text className="text-sm font-semibold text-orange-600">
                 {t("common.cancel")}
               </Text>
             </Pressable>
@@ -475,11 +485,15 @@ export default function SettingsScreen() {
         </Pressable>
       </Modal>
 
-      {/* Header */}
-      <View className="px-6 pt-4 pb-4">
+      {/* Header — same structure as home/quotes: title + spacer so in RTL title is on the right */}
+      <View
+        className="px-6 pt-4 pb-4 flex-row items-center justify-between"
+        style={rtlHeaderDirection}
+      >
         <Text className="text-2xl font-bold text-slate-900" style={rtlText}>
           {t("settings.title")}
         </Text>
+        <View style={{ flex: 1 }} />
       </View>
 
       <ScrollView 
@@ -583,16 +597,17 @@ export default function SettingsScreen() {
                   {t("settings.manageSubscriptionHint")}
                 </Text>
               </View>
-              <ChevronRight size={16} color="#cbd5e1" />
             </Pressable>
           </View>
         )}
 
         {/* Preferences Section */}
         <View className="mx-6 mb-4">
-          <Text className="mb-2 text-xs font-semibold uppercase text-slate-400 px-1" style={rtlText}>
-            {t("settings.preferences")}
-          </Text>
+          <View className="mb-2" style={rtlSectionTitleWrapStyle}>
+            <Text className="text-xs font-semibold uppercase text-slate-400 px-1" style={rtlText}>
+              {t("settings.preferences")}
+            </Text>
+          </View>
           <View className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden">
           {/* Language */}
           <Pressable
@@ -619,11 +634,10 @@ export default function SettingsScreen() {
                   {currentLangLabel}
                 </Text>
               )}
-              <ChevronRight size={16} color="#cbd5e1" />
             </View>
           </Pressable>
 
-          {/* Currency */}
+          {/* Currency — icon + label; value = translated currency name for RTL/LTR */}
           <Pressable
             onPress={() => setCurrencyModalVisible(true)}
             className="flex-row items-center px-4 py-3.5 border-b border-slate-100"
@@ -645,10 +659,9 @@ export default function SettingsScreen() {
                 <ActivityIndicator size="small" color="#94a3b8" />
               ) : (
                 <Text className="me-1 text-sm text-slate-400" style={rtlText}>
-                  {getCurrencyLabel(currentCurrency)}
+                  {t(`settings.currencies.${currentCurrency}`)}
                 </Text>
               )}
-              <ChevronRight size={16} color="#cbd5e1" />
             </View>
           </Pressable>
 
@@ -679,7 +692,6 @@ export default function SettingsScreen() {
                   {t("settings.taxDisabled")}
                 </Text>
               )}
-              <ChevronRight size={16} color="#cbd5e1" />
             </View>
           </Pressable>
 
@@ -704,7 +716,6 @@ export default function SettingsScreen() {
               <Text className="me-1 text-sm text-slate-400" style={rtlText}>
                 {profile?.priceList?.length ?? 0}
               </Text>
-              <ChevronRight size={16} color="#cbd5e1" />
             </View>
           </Pressable>
 
@@ -735,17 +746,18 @@ export default function SettingsScreen() {
                     : t("settings.laborRateNotSet")}
                 </Text>
               )}
-              <ChevronRight size={16} color="#cbd5e1" />
-              </View>
-            </Pressable>
+            </View>
+          </Pressable>
           </View>
         </View>
 
         {/* Business Section */}
         <View className="mx-6 mb-4">
-          <Text className="mb-2 text-xs font-semibold uppercase text-slate-400 px-1" style={rtlText}>
-            {t("settings.business")}
-          </Text>
+          <View className="mb-2" style={rtlSectionTitleWrapStyle}>
+            <Text className="text-xs font-semibold uppercase text-slate-400 px-1" style={rtlText}>
+              {t("settings.business")}
+            </Text>
+          </View>
           <View className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden">
             {/* Business Info */}
           <Pressable
@@ -766,18 +778,12 @@ export default function SettingsScreen() {
             </View>
             <View className="flex-row items-center" style={rtlRowReverse}>
               {profile?.companyName ? (
-                <View className="flex-row items-center" style={rtlRowReverse}>
-                  <View className="h-5 w-5 items-center justify-center rounded-full bg-green-100 me-1">
-                    <Check size={12} color="#16a34a" />
-                  </View>
-                  <Text className="text-sm text-slate-400 max-w-[100]" numberOfLines={1} style={rtlText}>
-                    {profile.companyName}
-                  </Text>
-                </View>
+                <Text className="text-sm text-slate-400 max-w-[100]" numberOfLines={1} style={rtlText}>
+                  {profile.companyName}
+                </Text>
               ) : (
                 <Text className="text-sm text-slate-400" style={rtlText}>{t("settings.notConfigured")}</Text>
               )}
-              <ChevronRight size={16} color="#cbd5e1" style={{ marginStart: 4 }} />
             </View>
           </Pressable>
 
@@ -803,16 +809,10 @@ export default function SettingsScreen() {
               {logoUploading ? (
                 <ActivityIndicator size="small" color="#94a3b8" />
               ) : profile?.logoKey ? (
-                <View className="flex-row items-center" style={rtlRowReverse}>
-                  <View className="h-5 w-5 items-center justify-center rounded-full bg-green-100 me-1">
-                    <Check size={12} color="#16a34a" />
-                  </View>
-                  <Text className="text-sm text-slate-400" style={rtlText}>{t("settings.uploaded")}</Text>
-                </View>
+                <Text className="text-sm text-slate-400" style={rtlText}>{t("settings.uploaded")}</Text>
               ) : (
                 <Text className="text-sm text-slate-400" style={rtlText}>{t("settings.uploadLogo")}</Text>
               )}
-              <ChevronRight size={16} color="#cbd5e1" style={{ marginStart: 4 }} />
             </View>
           </Pressable>
 
@@ -835,18 +835,12 @@ export default function SettingsScreen() {
             </View>
             <View className="flex-row items-center" style={rtlRowReverse}>
               {profile?.termsAndConditions && profile.termsAndConditions.length > 0 ? (
-                <View className="flex-row items-center" style={rtlRowReverse}>
-                  <View className="h-5 w-5 items-center justify-center rounded-full bg-green-100 me-1">
-                    <Check size={12} color="#16a34a" />
-                  </View>
-                  <Text className="text-sm text-slate-400" style={rtlText}>
-                    {profile.termsAndConditions.length} {t("terms.items")}
-                  </Text>
-                </View>
+                <Text className="text-sm text-slate-400" style={rtlText}>
+                  {profile.termsAndConditions.length} {t("terms.items")}
+                </Text>
               ) : (
                 <Text className="text-sm text-slate-400" style={rtlText}>{t("terms.usingDefaults")}</Text>
               )}
-              <ChevronRight size={16} color="#cbd5e1" style={{ marginStart: 4 }} />
             </View>
           </Pressable>
         </View>
@@ -854,9 +848,11 @@ export default function SettingsScreen() {
 
       {/* Legal Section */}
         <View className="mx-6 mb-4">
-          <Text className="mb-2 text-xs font-semibold uppercase text-slate-400 px-1" style={rtlText}>
-            {t("settings.legal")}
-          </Text>
+          <View className="mb-2" style={rtlSectionTitleWrapStyle}>
+            <Text className="text-xs font-semibold uppercase text-slate-400 px-1" style={rtlText}>
+              {t("settings.legal")}
+            </Text>
+          </View>
           <View className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden">
             <Pressable
               onPress={() => openUrl(privacyPolicyUrl, t("settings.privacyPolicy"))}
@@ -874,7 +870,6 @@ export default function SettingsScreen() {
                   {t("settings.privacyPolicyDesc")}
                 </Text>
               </View>
-              <ChevronRight size={16} color="#cbd5e1" />
             </Pressable>
             <Pressable
               onPress={() => openUrl(termsOfUseUrl, t("settings.termsOfUse"))}
@@ -892,16 +887,17 @@ export default function SettingsScreen() {
                   {t("settings.termsOfUseDesc")}
                 </Text>
               </View>
-              <ChevronRight size={16} color="#cbd5e1" />
             </Pressable>
           </View>
         </View>
 
         {/* Account Section */}
         <View className="mx-6">
-          <Text className="mb-2 text-xs font-semibold uppercase text-slate-400 px-1" style={rtlText}>
-            {t("settings.account")}
-          </Text>
+          <View className="mb-2" style={rtlSectionTitleWrapStyle}>
+            <Text className="text-xs font-semibold uppercase text-slate-400 px-1" style={rtlText}>
+              {t("settings.account")}
+            </Text>
+          </View>
           <View className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden">
             {/* Sign Out */}
             <Pressable
@@ -917,16 +913,17 @@ export default function SettingsScreen() {
                   {t("settings.signOut")}
                 </Text>
               </View>
-              <ChevronRight size={16} color="#cbd5e1" />
             </Pressable>
           </View>
         </View>
 
         {/* Danger Zone */}
         <View className="mx-6 mt-4">
-          <Text className="mb-2 text-xs font-semibold uppercase text-red-600 px-1" style={rtlText}>
-            {t("settings.dangerZone")}
-          </Text>
+          <View className="mb-2" style={rtlSectionTitleWrapStyle}>
+            <Text className="text-xs font-semibold uppercase text-red-600 px-1" style={rtlText}>
+              {t("settings.dangerZone")}
+            </Text>
+          </View>
           <View className="rounded-xl bg-red-50 shadow-sm border border-red-200 overflow-hidden">
             <Pressable
               onPress={handleDeleteAccount}
@@ -949,9 +946,7 @@ export default function SettingsScreen() {
               </View>
               {deleteAccount.isPending ? (
                 <ActivityIndicator size="small" color="#dc2626" />
-              ) : (
-                <ChevronRight size={16} color="#f87171" />
-              )}
+              ) : null}
             </Pressable>
           </View>
         </View>

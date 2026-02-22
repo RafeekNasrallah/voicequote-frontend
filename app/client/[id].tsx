@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
     Alert,
+    I18nManager,
     KeyboardAvoidingView,
     Platform,
     Pressable,
@@ -18,6 +19,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import api from "@/src/lib/api";
 import { getCurrencySymbol } from "@/src/lib/currency";
+
+const RTL_LANGUAGES = ["ar", "he"];
 
 interface Client {
   id: number;
@@ -61,6 +64,19 @@ export default function ClientDetailScreen() {
   const queryClient = useQueryClient();
   const { t, i18n } = useTranslation();
   const activeLocale = i18n.resolvedLanguage ?? i18n.language ?? undefined;
+  const languageIsRTL = RTL_LANGUAGES.includes(
+    (i18n.language || "").split("-")[0]
+  );
+  const isRTL = I18nManager.isRTL || languageIsRTL;
+  const rtlText = isRTL
+    ? { textAlign: "right" as const, writingDirection: "rtl" as const }
+    : undefined;
+  const rtlFieldDirection = isRTL ? { direction: "rtl" as const } : undefined;
+  const rtlLabelAlign = isRTL ? { alignSelf: "flex-start" as const } : undefined;
+  /** Header row: RTL puts title+arrow group on right, trash on left. */
+  const rtlHeaderDirection = isRTL ? { direction: "rtl" as const } : undefined;
+  /** Title group: RTL puts arrow on right, text on left (arrow first in DOM). */
+  const rtlTitleGroupDirection = isRTL ? { direction: "rtl" as const } : undefined;
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
@@ -214,31 +230,47 @@ export default function ClientDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-slate-200">
-        <Pressable
-          onPress={() => {
-            queryClient.invalidateQueries({ queryKey: ["clients"] });
-            router.replace("/(tabs)/clients");
-          }}
-          onPressIn={() => setBackPressed(true)}
-          onPressOut={() => setBackPressed(false)}
-          className="mr-3 h-11 w-11 items-center justify-center rounded-lg"
-          style={{ opacity: backPressed ? 0.6 : 1 }}
-          accessibilityLabel={t("quoteEditor.goBack")}
-          accessibilityRole="button"
+      {/* Header: one order; RTL = trash left, right side = arrow then text */}
+      <View
+        className="flex-row items-center px-4 py-3 border-b border-slate-200"
+        style={rtlHeaderDirection}
+      >
+        <View
+          className="flex-1 flex-row items-center"
+          style={[rtlTitleGroupDirection, { marginEnd: 12 }]}
         >
-          <ArrowLeft size={22} color="#ea580c" />
-        </Pressable>
-        <Text className="flex-1 text-lg font-bold text-slate-900">
-          {t("clients.editClient")}
-        </Text>
+          <Pressable
+            onPress={() => {
+              queryClient.invalidateQueries({ queryKey: ["clients"] });
+              router.replace("/(tabs)/clients");
+            }}
+            onPressIn={() => setBackPressed(true)}
+            onPressOut={() => setBackPressed(false)}
+            className="h-11 w-11 items-center justify-center rounded-lg"
+            style={{ opacity: backPressed ? 0.6 : 1 }}
+            accessibilityLabel={t("quoteEditor.goBack")}
+            accessibilityRole="button"
+          >
+            <View style={isRTL ? { transform: [{ scaleX: -1 }] } : undefined}>
+              <ArrowLeft size={22} color="#ea580c" />
+            </View>
+          </Pressable>
+          <Text
+            className="text-lg font-bold text-slate-900"
+            style={[rtlText, { marginStart: 12 }]}
+          >
+            {t("clients.editClient")}
+          </Text>
+        </View>
         <Pressable
           onPress={handleDelete}
           onPressIn={() => setDeletePressed(true)}
           onPressOut={() => setDeletePressed(false)}
-          className="ml-2 h-11 w-11 items-center justify-center rounded-lg"
-          style={{ opacity: deletePressed ? 0.5 : 1 }}
+          className="h-11 w-11 items-center justify-center rounded-lg"
+          style={[
+            { opacity: deletePressed ? 0.5 : 1 },
+            isRTL ? { marginEnd: 8 } : { marginStart: 8 },
+          ]}
           accessibilityLabel={t("clients.deleteClient")}
           accessibilityHint={t("clients.deleteClientConfirm")}
           accessibilityRole="button"
@@ -257,12 +289,16 @@ export default function ClientDetailScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Name */}
-          <View className="mb-5">
-            <Text className="mb-1.5 text-sm font-medium text-slate-700">
+          <View className="mb-5 w-full" style={rtlFieldDirection}>
+            <Text
+              className="mb-1.5 text-sm font-medium text-slate-700"
+              style={[rtlText, rtlLabelAlign]}
+            >
               {t("clients.name")} *
             </Text>
             <TextInput
-              className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-900"
+              className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-900"
+              style={rtlText}
               placeholder={t("clients.namePlaceholder")}
               placeholderTextColor="#94a3b8"
               value={name}
@@ -272,12 +308,16 @@ export default function ClientDetailScreen() {
           </View>
 
           {/* Address */}
-          <View className="mb-5">
-            <Text className="mb-1.5 text-sm font-medium text-slate-700">
+          <View className="mb-5 w-full" style={rtlFieldDirection}>
+            <Text
+              className="mb-1.5 text-sm font-medium text-slate-700"
+              style={[rtlText, rtlLabelAlign]}
+            >
               {t("clients.address")}
             </Text>
             <TextInput
-              className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-900"
+              className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-900"
+              style={rtlText}
               placeholder={t("clients.addressPlaceholder")}
               placeholderTextColor="#94a3b8"
               value={address}
@@ -287,12 +327,16 @@ export default function ClientDetailScreen() {
           </View>
 
           {/* Email */}
-          <View className="mb-5">
-            <Text className="mb-1.5 text-sm font-medium text-slate-700">
+          <View className="mb-5 w-full" style={rtlFieldDirection}>
+            <Text
+              className="mb-1.5 text-sm font-medium text-slate-700"
+              style={[rtlText, rtlLabelAlign]}
+            >
               {t("clients.emailLabel")}
             </Text>
             <TextInput
-              className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-900"
+              className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-900"
+              style={rtlText}
               placeholder={t("clients.emailPlaceholder")}
               placeholderTextColor="#94a3b8"
               value={email}
@@ -303,12 +347,16 @@ export default function ClientDetailScreen() {
           </View>
 
           {/* Phone */}
-          <View className="mb-5">
-            <Text className="mb-1.5 text-sm font-medium text-slate-700">
+          <View className="mb-5 w-full" style={rtlFieldDirection}>
+            <Text
+              className="mb-1.5 text-sm font-medium text-slate-700"
+              style={[rtlText, rtlLabelAlign]}
+            >
               {t("clients.phone")}
             </Text>
             <TextInput
-              className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-900"
+              className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-900"
+              style={rtlText}
               placeholder={t("clients.phonePlaceholder")}
               placeholderTextColor="#94a3b8"
               value={phone}
@@ -331,21 +379,33 @@ export default function ClientDetailScreen() {
             {saveClient.isPending ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text className="text-base font-semibold text-white">
+              <Text
+                className="text-base font-semibold text-white"
+                style={rtlText}
+              >
                 {t("clients.saveChanges")}
               </Text>
             )}
           </Pressable>
 
-          {/* Quote History Section */}
-          <View className="mt-8">
-            <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-lg font-bold text-slate-900">
+          {/* Quote History Section — RTL: align to the right */}
+          <View className="mt-8 w-full" style={rtlFieldDirection}>
+            <View
+              className="flex-row items-center justify-between mb-3"
+              style={rtlHeaderDirection}
+            >
+              <Text
+                className="text-lg font-bold text-slate-900"
+                style={rtlText}
+              >
                 {t("clients.quoteHistory")}
               </Text>
               {quotesData && quotesData.totalQuotes > 0 && (
                 <View className="bg-slate-100 px-2.5 py-1 rounded-full">
-                  <Text className="text-xs font-semibold text-slate-600">
+                  <Text
+                    className="text-xs font-semibold text-slate-600"
+                    style={rtlText}
+                  >
                     {quotesData.totalQuotes}{" "}
                     {quotesData.totalQuotes === 1
                       ? t("clients.quote")
@@ -358,20 +418,38 @@ export default function ClientDetailScreen() {
             {/* Summary Card */}
             {quotesData && quotesData.totalQuotes > 0 && (
               <View className="mb-4 rounded-xl bg-white border border-slate-100 shadow-sm p-4">
-                <View className="flex-row justify-between">
-                  <View className="flex-1">
-                    <Text className="text-xs text-slate-500 uppercase">
+                <View
+                  className="flex-row justify-between"
+                  style={isRTL ? { flexDirection: "row-reverse" } : undefined}
+                >
+                  <View className="flex-1" style={isRTL ? { alignItems: "flex-end" } : undefined}>
+                    <Text
+                      className="text-xs text-slate-500 uppercase"
+                      style={rtlText}
+                    >
                       {t("clients.totalQuotes")}
                     </Text>
-                    <Text className="text-xl font-bold text-slate-900 mt-1">
+                    <Text
+                      className="text-xl font-bold text-slate-900 mt-1"
+                      style={rtlText}
+                    >
                       {quotesData.totalQuotes}
                     </Text>
                   </View>
-                  <View className="flex-1 items-end">
-                    <Text className="text-xs text-slate-500 uppercase">
+                  <View
+                    className="flex-1"
+                    style={isRTL ? { alignItems: "flex-start" } : { alignItems: "flex-end" }}
+                  >
+                    <Text
+                      className="text-xs text-slate-500 uppercase"
+                      style={rtlText}
+                    >
                       {t("clients.totalValue")}
                     </Text>
-                    <Text className="text-xl font-bold text-slate-900 mt-1">
+                    <Text
+                      className="text-xl font-bold text-slate-900 mt-1"
+                      style={rtlText}
+                    >
                       {currencySymbol}
                       {quotesData.totalValue.toFixed(2)}
                     </Text>
@@ -398,32 +476,50 @@ export default function ClientDetailScreen() {
                         ? "border-b border-slate-100"
                         : ""
                     }`}
-                    style={{ opacity: pressedQuoteId === quote.id ? 0.7 : 1 }}
+                    style={[
+                      { opacity: pressedQuoteId === quote.id ? 0.7 : 1 },
+                      isRTL ? { flexDirection: "row-reverse" } : undefined,
+                    ]}
                   >
                     <View className="h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
                       <FileText size={18} color="#64748b" />
                     </View>
-                    <View className="ml-3 flex-1">
+                    <View
+                      className="flex-1"
+                      style={{ marginStart: 12 }}
+                    >
                       <Text
                         className="text-sm font-medium text-slate-900"
                         numberOfLines={1}
+                        style={rtlText}
                       >
                         {quote.name || `Quote #${quote.id}`}
                       </Text>
-                      <Text className="text-xs text-slate-500 mt-0.5">
+                      <Text
+                        className="text-xs text-slate-500 mt-0.5"
+                        style={rtlText}
+                      >
                         {new Date(quote.createdAt).toLocaleDateString(
                           activeLocale,
                         )}
                       </Text>
                     </View>
-                    <View className="flex-row items-center">
+                    <View
+                      className="flex-row items-center"
+                      style={isRTL ? { flexDirection: "row-reverse", marginEnd: 8 } : { marginStart: 8 }}
+                    >
                       {(quote.grandTotal ?? quote.totalCost) !== null && (
-                        <Text className="text-sm font-semibold text-slate-700 mr-2">
+                        <Text
+                          className="text-sm font-semibold text-slate-700"
+                          style={[rtlText, isRTL ? { marginStart: 8 } : { marginEnd: 8 }]}
+                        >
                           {currencySymbol}
                           {(quote.grandTotal ?? quote.totalCost)?.toFixed(2)}
                         </Text>
                       )}
-                      <ChevronRight size={16} color="#cbd5e1" />
+                      <View style={isRTL ? { transform: [{ scaleX: -1 }] } : undefined}>
+                        <ChevronRight size={16} color="#cbd5e1" />
+                      </View>
                     </View>
                   </Pressable>
                 ))}
@@ -431,7 +527,10 @@ export default function ClientDetailScreen() {
             ) : (
               <View className="items-center py-8 rounded-xl bg-white border border-slate-100">
                 <FileText size={32} color="#cbd5e1" />
-                <Text className="mt-2 text-sm text-slate-500">
+                <Text
+                  className="mt-2 text-sm text-slate-500"
+                  style={rtlText}
+                >
                   {t("clients.noQuotesForClient")}
                 </Text>
               </View>

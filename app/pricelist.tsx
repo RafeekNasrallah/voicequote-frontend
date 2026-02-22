@@ -13,6 +13,7 @@ import {
     ActivityIndicator,
     Alert,
     FlatList,
+    I18nManager,
     KeyboardAvoidingView,
     Platform,
     Pressable,
@@ -23,6 +24,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import api from "@/src/lib/api";
+
+const RTL_LANGUAGES = ["ar", "he"];
 import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/src/lib/currency";
 
 // ─── Types ──────────────────────────────────────────────────
@@ -43,7 +46,17 @@ interface UserProfile {
 export default function PriceListScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const languageIsRTL = RTL_LANGUAGES.includes((i18n.language || "").split("-")[0]);
+  const isRTL = I18nManager.isRTL || languageIsRTL;
+  const rtlText = isRTL
+    ? { textAlign: "right" as const, writingDirection: "rtl" as const }
+    : undefined;
+  const rtlHeaderDirection = isRTL ? { direction: "rtl" as const } : undefined;
+  const rtlTitleWrapStyle = isRTL
+    ? { flexDirection: "row" as const, justifyContent: "flex-end" as const, width: "100%" as const, direction: "ltr" as const }
+    : undefined;
+  const backArrowStyle = isRTL ? { transform: [{ scaleX: -1 }] } : undefined;
 
   const [items, setItems] = useState<PriceItem[]>([]);
   const [search, setSearch] = useState("");
@@ -196,6 +209,7 @@ export default function PriceListScreen() {
   const renderItem = useCallback(
     ({ item }: { item: PriceItem }) => {
       const originalIndex = getOriginalIndex(item);
+      const inputRtlStyle = isRTL ? { textAlign: "right" as const, writingDirection: "rtl" as const } : undefined;
       return (
         <View className="mb-2 rounded-xl bg-white border border-slate-100 shadow-sm overflow-hidden">
           {/* Row 1: Name */}
@@ -208,16 +222,21 @@ export default function PriceListScreen() {
               placeholderTextColor="#94a3b8"
               autoCapitalize="words"
               maxLength={200}
+              style={inputRtlStyle}
             />
           </View>
 
-          {/* Row 2: Price, Unit, Delete */}
-          <View className="flex-row items-center px-4 pb-3 pt-1">
+          {/* Row 2: Price, Unit, Delete — RTL: row direction so order flips */}
+          <View
+            className="flex-row items-center px-4 pb-3 pt-1"
+            style={isRTL ? { direction: "rtl" as const } : undefined}
+          >
             {/* Price */}
-            <View className="flex-row items-center flex-1">
-              <Text className="text-sm text-slate-400">{currencySymbol}</Text>
+            <View className="flex-row items-center flex-1" style={isRTL ? { direction: "rtl" as const } : undefined}>
+              <Text className="text-sm text-slate-400" style={[isRTL && { marginRight: 4 }]}>{currencySymbol}</Text>
               <TextInput
-                className="ml-1 text-sm text-slate-700 min-w-[60px]"
+                className="text-sm text-slate-700 min-w-[60px]"
+                style={[isRTL ? { marginRight: 4 } : { marginLeft: 4 }, inputRtlStyle]}
                 value={item.price ? item.price.toString() : ""}
                 onChangeText={(v) => updateItem(originalIndex, "price", v)}
                 placeholder={t("priceList.pricePlaceholder")}
@@ -227,14 +246,15 @@ export default function PriceListScreen() {
             </View>
 
             {/* Unit */}
-            <View className="flex-row items-center flex-1">
-              <Text className="text-xs text-slate-400 mr-1">/</Text>
+            <View className="flex-row items-center flex-1" style={isRTL ? { direction: "rtl" as const } : undefined}>
+              <Text className="text-xs text-slate-400" style={isRTL ? { marginLeft: 4 } : { marginRight: 4 }}>/</Text>
               <TextInput
                 className="text-sm text-slate-700 min-w-[60px]"
                 value={item.unit || ""}
                 onChangeText={(v) => updateItem(originalIndex, "unit", v)}
                 placeholder={t("priceList.unitPlaceholder")}
                 placeholderTextColor="#cbd5e1"
+                style={inputRtlStyle}
               />
             </View>
 
@@ -253,33 +273,43 @@ export default function PriceListScreen() {
         </View>
       );
     },
-    [getOriginalIndex, updateItem, deleteItem, t, currencySymbol],
+    [getOriginalIndex, updateItem, deleteItem, t, currencySymbol, isRTL, rtlText],
   );
 
   // ─── Render ───────────────────────────────────────────────
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-slate-200">
+      {/* Header — RTL: title on right, back arrow mirrored */}
+      <View
+        className="flex-row items-center px-4 py-3 border-b border-slate-200"
+        style={rtlHeaderDirection}
+      >
         <Pressable
           onPress={handleBack}
-          className="mr-3 h-11 w-11 items-center justify-center rounded-lg"
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          className="h-11 w-11 items-center justify-center rounded-lg"
+          style={({ pressed }) => [
+            { opacity: pressed ? 0.6 : 1 },
+            isRTL ? { marginLeft: 12 } : { marginRight: 12 },
+          ]}
           accessibilityLabel={t("quoteEditor.goBack")}
           accessibilityRole="button"
         >
-          <ArrowLeft size={22} color="#0f172a" />
+          <View style={backArrowStyle}>
+            <ArrowLeft size={22} color="#ea580c" />
+          </View>
         </Pressable>
-        <Text className="flex-1 text-lg font-bold text-slate-900">
-          {t("priceList.title")}
-        </Text>
+        <View className="flex-1" style={rtlTitleWrapStyle}>
+          <Text className="text-lg font-bold text-slate-900" style={rtlText}>
+            {t("priceList.title")}
+          </Text>
+        </View>
         {/* Save Button */}
         <Pressable
           onPress={handleSave}
           disabled={!hasChanges || savePriceList.isPending}
           className={`h-11 px-4 items-center justify-center rounded-lg ${
-            hasChanges ? "bg-slate-900" : "bg-slate-200"
+            hasChanges ? "bg-orange-600" : "bg-slate-200"
           }`}
           style={({ pressed }) => ({
             opacity: pressed || savePriceList.isPending ? 0.7 : 1,
@@ -303,12 +333,22 @@ export default function PriceListScreen() {
         className="flex-1 bg-slate-50"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        {/* Search + Add */}
-        <View className="px-4 pt-3 pb-2 flex-row items-center gap-2">
-          <View className="flex-1 flex-row items-center rounded-full bg-slate-100 px-4 h-10">
+        {/* Search + Add — RTL: search row direction, input text right-aligned */}
+        <View
+          className="px-4 pt-3 pb-2 flex-row items-center gap-2"
+          style={isRTL ? { direction: "rtl" as const } : undefined}
+        >
+          <View
+            className="flex-1 flex-row items-center rounded-full bg-slate-100 px-4 h-10"
+            style={isRTL ? { direction: "rtl" as const } : undefined}
+          >
             <Search size={16} color="#94a3b8" />
             <TextInput
-              className="ml-2 flex-1 text-sm text-slate-900"
+              className="flex-1 text-sm text-slate-900"
+              style={[
+                isRTL ? { textAlign: "right" as const, writingDirection: "rtl" as const } : undefined,
+                isRTL ? { marginRight: 8 } : { marginLeft: 8 },
+              ]}
               placeholder={t("priceList.searchPlaceholder")}
               placeholderTextColor="#94a3b8"
               value={search}
@@ -318,7 +358,7 @@ export default function PriceListScreen() {
           </View>
           <Pressable
             onPress={addItem}
-            className="h-11 w-11 items-center justify-center rounded-full bg-slate-900"
+            className="h-11 w-11 items-center justify-center rounded-full bg-orange-600"
             style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
             accessibilityLabel={t("priceList.addItem")}
             accessibilityRole="button"
@@ -327,9 +367,9 @@ export default function PriceListScreen() {
           </Pressable>
         </View>
 
-        {/* Item Count */}
-        <View className="px-5 pb-2">
-          <Text className="text-xs text-slate-400">
+        {/* Item Count — RTL: text on right */}
+        <View className="px-5 pb-2" style={rtlTitleWrapStyle}>
+          <Text className="text-xs text-slate-400" style={rtlText}>
             {items.length === 0
               ? t("priceList.itemCount_zero")
               : items.length === 1
@@ -341,16 +381,16 @@ export default function PriceListScreen() {
         {/* List */}
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#0f172a" size="large" />
+            <ActivityIndicator color="#ea580c" size="large" />
           </View>
         ) : filteredItems.length === 0 ? (
           <View className="flex-1 items-center justify-center px-6">
             <DollarSign size={40} color="#cbd5e1" />
-            <Text className="mt-3 text-base font-medium text-slate-400">
+            <Text className="mt-3 text-base font-medium text-slate-400" style={rtlText}>
               {search ? t("priceList.noMatchSearch") : t("priceList.noItems")}
             </Text>
             {!search && (
-              <Text className="mt-1 text-sm text-slate-300 text-center">
+              <Text className="mt-1 text-sm text-slate-300 text-center" style={rtlText}>
                 {t("priceList.noItemsMsg")}
               </Text>
             )}

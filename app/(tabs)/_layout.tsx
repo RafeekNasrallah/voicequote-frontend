@@ -1,9 +1,17 @@
 import { Tabs } from "expo-router";
 import { FileText, Home, Settings, Users } from "lucide-react-native";
+import { I18nManager } from "react-native";
 import { useTranslation } from "react-i18next";
 
+const RTL_LANGUAGES = ["ar", "he"];
+
 export default function TabLayout() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const languageIsRTL = RTL_LANGUAGES.includes(
+    (i18n.language || "").split("-")[0]
+  );
+  const isRTL = I18nManager.isRTL || languageIsRTL;
+  const tabDirection = isRTL ? "rtl" : "ltr";
 
   return (
     <Tabs
@@ -16,10 +24,10 @@ export default function TabLayout() {
           borderTopColor: "#e2e8f0",
           borderTopWidth: 1,
           paddingTop: 6,
-          direction: "ltr",
+          direction: tabDirection,
         },
         tabBarItemStyle: {
-          direction: "ltr",
+          direction: tabDirection,
         },
         tabBarLabelStyle: {
           fontSize: 13,

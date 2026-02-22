@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import {
     Alert,
     FlatList,
+    I18nManager,
     Modal,
     Pressable,
     RefreshControl,
@@ -47,6 +48,8 @@ interface Quote {
   status?: string | null;
 }
 
+const RTL_LANGUAGES = ["ar", "he"];
+
 // ─── Helpers ────────────────────────────────────────────────
 
 function formatDate(dateStr: string, locale?: string): string {
@@ -76,6 +79,8 @@ function QuoteCard({
   taxRate,
   taxInclusive,
   locale,
+  isRTL,
+  rtlText,
 }: {
   quote: Quote;
   onPress: () => void;
@@ -87,6 +92,8 @@ function QuoteCard({
   taxRate?: number | null;
   taxInclusive?: boolean;
   locale?: string;
+  isRTL: boolean;
+  rtlText?: { textAlign: "right"; writingDirection: "rtl" };
 }) {
   const status = getQuoteStatusBadge(deriveQuoteWorkflowStatus(quote), t);
   const displayTotal = calculateQuoteGrandTotal(quote, {
@@ -95,6 +102,8 @@ function QuoteCard({
     taxRate,
     taxInclusive,
   });
+  const titleSpacing = isRTL ? { marginLeft: 12 as const } : { marginRight: 12 as const };
+  const totalSpacing = isRTL ? { marginRight: 12 as const } : { marginLeft: 12 as const };
 
   return (
     <Pressable
@@ -103,28 +112,80 @@ function QuoteCard({
       className="mb-3 rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
     >
-      <View className="flex-row items-center justify-between">
-        <Text
-          className="flex-1 text-base font-semibold text-slate-900 mr-3"
-          numberOfLines={1}
-        >
-          {getQuoteTitle(quote)}
-        </Text>
-        <View className={`rounded-full px-3 py-1 ${status.bg}`}>
-          <Text className={`text-xs font-semibold ${status.text}`}>
-            {status.label}
-          </Text>
-        </View>
+      <View className="flex-row items-center" style={{ direction: "ltr" }}>
+        {isRTL ? (
+          <>
+            <View className={`rounded-full px-3 py-1 ${status.bg}`}>
+              <Text
+                className={`text-xs font-semibold ${status.text}`}
+                style={rtlText}
+              >
+                {status.label}
+              </Text>
+            </View>
+            <View className="flex-1" style={[titleSpacing, { minWidth: 0 }]}>
+              <Text
+                className="text-base font-semibold text-slate-900"
+                numberOfLines={1}
+                style={rtlText}
+              >
+                {getQuoteTitle(quote)}
+              </Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <View className="flex-1" style={[titleSpacing, { minWidth: 0 }]}>
+              <Text
+                className="text-base font-semibold text-slate-900"
+                numberOfLines={1}
+              >
+                {getQuoteTitle(quote)}
+              </Text>
+            </View>
+            <View className={`rounded-full px-3 py-1 ${status.bg}`}>
+              <Text className={`text-xs font-semibold ${status.text}`}>
+                {status.label}
+              </Text>
+            </View>
+          </>
+        )}
       </View>
-      <View className="mt-2 flex-row items-center">
-        <Text className="text-sm text-slate-500">
-          {formatDate(quote.createdAt, locale)}
-        </Text>
-        {displayTotal != null && (
-          <Text className="ml-3 text-sm font-medium text-slate-600">
-            {currencySymbol}
-            {displayTotal.toFixed(2)}
-          </Text>
+      <View className="mt-2 flex-row items-center" style={{ direction: "ltr" }}>
+        {isRTL ? (
+          <>
+            {displayTotal != null && (
+              <Text
+                className="text-sm font-medium text-slate-600"
+                style={[rtlText, totalSpacing]}
+              >
+                {currencySymbol}
+                {displayTotal.toFixed(2)}
+              </Text>
+            )}
+            <View className="flex-1" style={{ minWidth: 0 }}>
+              <Text className="text-sm text-slate-500" style={rtlText}>
+                {formatDate(quote.createdAt, locale)}
+              </Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <View className="flex-1" style={{ minWidth: 0 }}>
+              <Text className="text-sm text-slate-500">
+                {formatDate(quote.createdAt, locale)}
+              </Text>
+            </View>
+            {displayTotal != null && (
+              <Text
+                className="text-sm font-medium text-slate-600"
+                style={totalSpacing}
+              >
+                {currencySymbol}
+                {displayTotal.toFixed(2)}
+              </Text>
+            )}
+          </>
         )}
       </View>
     </Pressable>
@@ -158,6 +219,17 @@ export default function AllQuotesScreen() {
   const [recordingModalVisible, setRecordingModalVisible] = useState(false);
   const { t, i18n } = useTranslation();
   const activeLocale = i18n.resolvedLanguage ?? i18n.language ?? undefined;
+  const languageIsRTL = RTL_LANGUAGES.includes(
+    (i18n.language || "").split("-")[0]
+  );
+  const isRTL = I18nManager.isRTL || languageIsRTL;
+  const rtlText = isRTL
+    ? { textAlign: "right" as const, writingDirection: "rtl" as const }
+    : undefined;
+  /** RTL: put section titles on the right (LTR row + flex-end so block stays right). */
+  const rtlSectionTitleWrapStyle = isRTL
+    ? { flexDirection: "row" as const, justifyContent: "flex-end" as const, width: "100%" as const, direction: "ltr" as const }
+    : undefined;
   const queryClient = useQueryClient();
 
   // Sync URL params from homepage (e.g. "View Ready" -> status=ready)
@@ -386,6 +458,8 @@ export default function AllQuotesScreen() {
         taxRate={userProfile?.taxRate}
         taxInclusive={userProfile?.taxInclusive}
         locale={activeLocale}
+        isRTL={isRTL}
+        rtlText={rtlText}
         onPress={() => router.push(`/quote/${item.id}` as any)}
         onLongPress={() => handleDeleteQuote(item)}
       />
@@ -399,6 +473,8 @@ export default function AllQuotesScreen() {
       userProfile?.taxEnabled,
       userProfile?.taxRate,
       userProfile?.taxInclusive,
+      isRTL,
+      rtlText,
     ],
   );
 
@@ -411,9 +487,12 @@ export default function AllQuotesScreen() {
       />
       <ProcessingModal visible={createQuote.isPending} />
 
-      {/* Header */}
-      <View className="px-6 pt-4 pb-2 flex-row items-center justify-between">
-        <Text className="text-2xl font-bold text-slate-900">
+      {/* Header — RTL: direction rtl so title on right, buttons on left; thin orange line under title */}
+      <View
+        className="px-6 pt-4 pb-2 flex-row items-center justify-between"
+        style={isRTL ? { direction: "rtl" as const } : undefined}
+      >
+        <Text className="text-2xl font-bold text-slate-900" style={rtlText}>
           {t("quotes.title")}
         </Text>
         <View className="flex-row items-center gap-2">
@@ -453,12 +532,19 @@ export default function AllQuotesScreen() {
         </View>
       </View>
 
-      {/* Search */}
+      {/* Search — RTL: row direction so icon on right; input text right-aligned (LTR wrapper trick not needed for input, textAlign + writingDirection suffice). */}
       <View className="px-6 py-3">
-        <View className="flex-row items-center rounded-full bg-slate-100 px-4 h-11">
+        <View
+          className="flex-row items-center rounded-full bg-slate-100 px-4 h-11"
+          style={isRTL ? { direction: "rtl" as const } : undefined}
+        >
           <Search size={18} color="#94a3b8" />
           <TextInput
-            className="ml-3 flex-1 text-base text-slate-900"
+            className="flex-1 text-base text-slate-900"
+            style={[
+              isRTL ? { textAlign: "right" as const, writingDirection: "rtl" as const } : undefined,
+              isRTL ? { marginRight: 12, marginLeft: 0 } : { marginLeft: 12 },
+            ]}
             placeholder={t("quotes.searchPlaceholder")}
             placeholderTextColor="#94a3b8"
             value={search}
@@ -540,13 +626,15 @@ export default function AllQuotesScreen() {
             }}
             onPress={(e) => e.stopPropagation()}
           >
-            <View className="px-5 pt-5 pb-2">
-              <Text className="text-lg font-semibold text-slate-900">
-                {t("quotes.filterLabel")}
-              </Text>
-              <Text className="mt-0.5 text-sm text-slate-500">
-                {t("quotes.filterSubtitle")}
-              </Text>
+            <View className="px-5 pt-5 pb-2" style={rtlSectionTitleWrapStyle}>
+              <View>
+                <Text className="text-lg font-semibold text-slate-900" style={rtlText}>
+                  {t("quotes.filterLabel")}
+                </Text>
+                <Text className="mt-0.5 text-sm text-slate-500" style={rtlText}>
+                  {t("quotes.filterSubtitle")}
+                </Text>
+              </View>
             </View>
             <View className="py-2">
               {(
@@ -628,13 +716,15 @@ export default function AllQuotesScreen() {
             }}
             onPress={(e) => e.stopPropagation()}
           >
-            <View className="px-5 pt-5 pb-2">
-              <Text className="text-lg font-semibold text-slate-900">
-                {t("quotes.sortByDate")}
-              </Text>
-              <Text className="mt-0.5 text-sm text-slate-500">
-                {t("quotes.sortSubtitle")}
-              </Text>
+            <View className="px-5 pt-5 pb-2" style={rtlSectionTitleWrapStyle}>
+              <View>
+                <Text className="text-lg font-semibold text-slate-900" style={rtlText}>
+                  {t("quotes.sortByDate")}
+                </Text>
+                <Text className="mt-0.5 text-sm text-slate-500" style={rtlText}>
+                  {t("quotes.sortSubtitle")}
+                </Text>
+              </View>
             </View>
             <View className="py-2">
               <Pressable

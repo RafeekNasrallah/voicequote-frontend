@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
+  I18nManager,
   Linking,
   Pressable,
   ScrollView,
@@ -23,6 +24,8 @@ import {
   isRevenueCatConfigured,
   REVENUECAT_ENTITLEMENT_ID,
 } from "@/src/lib/revenueCat";
+
+const RTL_LANGUAGES = ["ar", "he"];
 
 type BillingUnit = "day" | "week" | "month" | "year";
 
@@ -75,7 +78,17 @@ function normalizePeriodUnit(periodUnit: string | null | undefined): BillingUnit
 export default function PaywallScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const languageIsRTL = RTL_LANGUAGES.includes((i18n.language || "").split("-")[0]);
+  const isRTL = I18nManager.isRTL || languageIsRTL;
+  const rtlText = isRTL
+    ? { textAlign: "right" as const, writingDirection: "rtl" as const }
+    : undefined;
+  const rtlHeaderDirection = isRTL ? { direction: "rtl" as const } : undefined;
+  const rtlTitleWrapStyle = isRTL
+    ? { flexDirection: "row" as const, justifyContent: "flex-end" as const, width: "100%" as const, direction: "ltr" as const }
+    : undefined;
+
   const [offering, setOffering] = useState<PurchasesOffering | null>(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
@@ -274,12 +287,17 @@ export default function PaywallScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
-      {/* Header */}
-      <View className="flex-row items-center justify-between bg-white px-4 py-3 border-b border-slate-100 shadow-sm">
+      {/* Header — RTL: close on right, title centered (in wrapper) */}
+      <View
+        className="flex-row items-center justify-between bg-white px-4 py-3 border-b border-slate-100 shadow-sm"
+        style={rtlHeaderDirection}
+      >
         <View className="w-10" />
-        <Text className="text-lg font-bold text-slate-900">
-          {t("paywall.title")}
-        </Text>
+        <View className="flex-1 items-center justify-center" style={rtlTitleWrapStyle}>
+          <Text className="text-lg font-bold text-slate-900" style={rtlText}>
+            {t("paywall.title")}
+          </Text>
+        </View>
         <Pressable
           onPress={handleClose}
           className="h-11 w-11 items-center justify-center rounded-full active:bg-slate-100"
@@ -299,25 +317,25 @@ export default function PaywallScreen() {
         {loading ? (
           <View className="items-center justify-center py-16">
             <ActivityIndicator size="large" color="#ea580c" />
-            <Text className="mt-3 text-sm text-slate-500">
+            <Text className="mt-3 text-sm text-slate-500" style={rtlText}>
               {t("paywall.loading")}
             </Text>
           </View>
         ) : (
           <>
-            {/* Hero section */}
+            {/* Hero section — RTL: subtitle alignment */}
             <View className="mx-6 mt-8 mb-6 items-center">
               <View className="mb-4 h-16 w-16 items-center justify-center rounded-2xl bg-amber-100">
                 <Crown size={32} color="#d97706" />
               </View>
-              <Text className="text-center text-sm text-slate-500">
+              <Text className="text-center text-sm text-slate-500" style={rtlText}>
                 {t("paywall.subtitle")}
               </Text>
             </View>
 
-            {/* Benefits card */}
+            {/* Benefits card — RTL: row direction, icon margin, text alignment */}
             <View className="mx-6 mb-6 rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
-              <Text className="mb-4 text-sm font-semibold text-slate-700">
+              <Text className="mb-4 text-sm font-semibold text-slate-700" style={rtlText}>
                 {t("paywall.benefitsTitle")}
               </Text>
               {[
@@ -325,11 +343,18 @@ export default function PaywallScreen() {
                 t("paywall.benefit2"),
                 t("paywall.benefit3"),
               ].map((label, i) => (
-                <View key={i} className="mb-4 flex-row items-center last:mb-0">
-                  <View className="mr-4 h-7 w-7 items-center justify-center rounded-full bg-emerald-100">
+                <View
+                  key={i}
+                  className="mb-4 flex-row items-center last:mb-0"
+                  style={isRTL ? { direction: "rtl" as const } : undefined}
+                >
+                  <View
+                    className="h-7 w-7 items-center justify-center rounded-full bg-emerald-100"
+                    style={isRTL ? { marginLeft: 16 } : { marginRight: 16 }}
+                  >
                     <Check size={14} color="#16a34a" strokeWidth={3} />
                   </View>
-                  <Text className="flex-1 text-sm text-slate-700">{label}</Text>
+                  <Text className="flex-1 text-sm text-slate-700" style={rtlText}>{label}</Text>
                 </View>
               ))}
             </View>
@@ -348,7 +373,7 @@ export default function PaywallScreen() {
                   {purchasing ? (
                     <ActivityIndicator color="#ffffff" size="small" />
                   ) : (
-                    <Text className="text-base font-bold text-white">
+                    <Text className="text-base font-bold text-white" style={rtlText}>
                       {t("paywall.subscribeFor", {
                         price: selectedPackage.product.priceString,
                         period: periodLabel,
@@ -356,45 +381,48 @@ export default function PaywallScreen() {
                     </Text>
                   )}
                 </Pressable>
-                <Text className="mt-3 text-center text-xs text-slate-400">
+                <Text className="mt-3 text-center text-xs text-slate-400" style={rtlText}>
                   {renewalPriceLine}
                 </Text>
                 {introPriceLine ? (
-                  <Text className="mt-2 text-center text-xs text-slate-400">
+                  <Text className="mt-2 text-center text-xs text-slate-400" style={rtlText}>
                     {introPriceLine}
                   </Text>
                 ) : null}
-                <Text className="mt-2 text-center text-xs text-slate-400">
+                <Text className="mt-2 text-center text-xs text-slate-400" style={rtlText}>
                   {t("paywall.autoRenewDisclosure")}
                 </Text>
-                <Text className="mt-2 text-center text-xs text-slate-400">
+                <Text className="mt-2 text-center text-xs text-slate-400" style={rtlText}>
                   {t("paywall.manageDisclosure")}
                 </Text>
               </View>
             ) : configError ? (
               <View className="mx-6 mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                <Text className="mb-1 text-sm font-semibold text-amber-800">
+                <Text className="mb-1 text-sm font-semibold text-amber-800" style={rtlText}>
                   {t("paywall.configErrorTitle")}
                 </Text>
-                <Text className="text-sm text-amber-700">
+                <Text className="text-sm text-amber-700" style={rtlText}>
                   {t("paywall.configErrorMsg")}
                 </Text>
               </View>
             ) : (
               !loading && (
-                <Text className="mx-6 mb-6 text-center text-sm text-slate-500">
+                <Text className="mx-6 mb-6 text-center text-sm text-slate-500" style={rtlText}>
                   {t("paywall.noOffers")}
                 </Text>
               )
             )}
 
-            {/* Legal links */}
-            <View className="mx-6 mb-2 flex-row items-center justify-center">
+            {/* Legal links — RTL: row direction */}
+            <View
+              className="mx-6 mb-2 flex-row items-center justify-center"
+              style={isRTL ? { direction: "rtl" as const } : undefined}
+            >
               <Pressable
                 onPress={() => openUrl(termsOfUseUrl, t("paywall.termsOfUse"))}
                 style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
               >
-                <Text className="text-xs text-slate-500 underline">
+                <Text className="text-xs text-slate-500 underline" style={rtlText}>
                   {t("paywall.termsOfUse")}
                 </Text>
               </Pressable>
@@ -403,7 +431,7 @@ export default function PaywallScreen() {
                 onPress={() => openUrl(privacyPolicyUrl, t("paywall.privacyPolicy"))}
                 style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
               >
-                <Text className="text-xs text-slate-500 underline">
+                <Text className="text-xs text-slate-500 underline" style={rtlText}>
                   {t("paywall.privacyPolicy")}
                 </Text>
               </Pressable>
@@ -421,7 +449,7 @@ export default function PaywallScreen() {
               {restoring ? (
                 <ActivityIndicator size="small" color="#64748b" />
               ) : (
-                <Text className="text-sm font-medium text-slate-500 underline">
+                <Text className="text-sm font-medium text-slate-500 underline" style={rtlText}>
                   {t("paywall.restorePurchases")}
                 </Text>
               )}
