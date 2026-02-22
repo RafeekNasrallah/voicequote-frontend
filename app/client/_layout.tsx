@@ -1,11 +1,7 @@
-import { Stack } from "expo-router";
+import { Slot } from "expo-router";
 
 export default function ClientLayout() {
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    />
-  );
+  // Keep client routes in the parent router context to avoid first-render
+  // nested navigator race conditions on fast taps.
+  return <Slot />;
 }

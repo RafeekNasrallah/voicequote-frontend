@@ -38,10 +38,10 @@ export function useCreateQuote() {
   return useMutation({
     mutationFn: async ({ localUri }: CreateQuoteParams) => {
       // File size pre-check (before upload)
-      const fileInfo = await FileSystem.getInfoAsync(localUri, { size: true });
+      const fileInfo = await FileSystem.getInfoAsync(localUri);
       if (
         fileInfo.exists &&
-        "size" in fileInfo &&
+        typeof fileInfo.size === "number" &&
         fileInfo.size > MAX_FILE_BYTES
       ) {
         const err = new Error("FILE_TOO_LARGE") as Error & {

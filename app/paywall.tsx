@@ -212,7 +212,10 @@ export default function PaywallScreen() {
   const openUrl = useCallback(
     (url: string, title: string) => {
       if (!url || !url.startsWith("http")) {
-        Alert.alert(t("common.error"), `${title} URL is not configured.`);
+        Alert.alert(
+          t("common.error"),
+          t("settings.urlNotConfigured", { title }),
+        );
         return;
       }
       Linking.openURL(url).catch(() => {
@@ -279,8 +282,10 @@ export default function PaywallScreen() {
         </Text>
         <Pressable
           onPress={handleClose}
-          className="h-10 w-10 items-center justify-center rounded-full active:bg-slate-100"
+          className="h-11 w-11 items-center justify-center rounded-full active:bg-slate-100"
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          accessibilityLabel={t("common.cancel")}
+          accessibilityRole="button"
         >
           <X size={22} color="#64748b" strokeWidth={2} />
         </Pressable>
@@ -386,7 +391,7 @@ export default function PaywallScreen() {
             {/* Legal links */}
             <View className="mx-6 mb-2 flex-row items-center justify-center">
               <Pressable
-                onPress={() => openUrl(termsOfUseUrl, "Terms of Use")}
+                onPress={() => openUrl(termsOfUseUrl, t("paywall.termsOfUse"))}
                 style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
               >
                 <Text className="text-xs text-slate-500 underline">
@@ -395,7 +400,7 @@ export default function PaywallScreen() {
               </Pressable>
               <Text className="mx-2 text-xs text-slate-400">|</Text>
               <Pressable
-                onPress={() => openUrl(privacyPolicyUrl, "Privacy Policy")}
+                onPress={() => openUrl(privacyPolicyUrl, t("paywall.privacyPolicy"))}
                 style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
               >
                 <Text className="text-xs text-slate-500 underline">

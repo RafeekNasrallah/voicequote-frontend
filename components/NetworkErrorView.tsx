@@ -20,7 +20,7 @@ export default function NetworkErrorView({ onRetry, compact }: NetworkErrorViewP
         </Text>
         <Pressable
           onPress={onRetry}
-          className="mt-4 h-10 items-center justify-center rounded-lg bg-slate-900 px-5"
+          className="mt-4 h-11 items-center justify-center rounded-lg bg-slate-900 px-5"
           style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
         >
           <Text className="text-sm font-semibold text-white">{t("errors.retry")}</Text>

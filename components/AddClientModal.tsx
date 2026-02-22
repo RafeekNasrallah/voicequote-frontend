@@ -82,7 +82,9 @@ export default function AddClientModal({
           </Text>
           <Pressable
             onPress={() => { resetForm(); onClose(); }}
-            className="h-9 w-9 items-center justify-center rounded-full bg-slate-100"
+            className="h-11 w-11 items-center justify-center rounded-full bg-slate-100"
+            accessibilityLabel={t("common.cancel")}
+            accessibilityRole="button"
           >
             <X size={18} color="#64748b" />
           </Pressable>

@@ -48,9 +48,9 @@ interface Quote {
 
 // ─── Helpers ────────────────────────────────────────────────
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, locale?: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -74,6 +74,7 @@ function QuoteCard({
   taxEnabled,
   taxRate,
   taxInclusive,
+  locale,
 }: {
   quote: Quote;
   onPress: () => void;
@@ -84,6 +85,7 @@ function QuoteCard({
   taxEnabled?: boolean;
   taxRate?: number | null;
   taxInclusive?: boolean;
+  locale?: string;
 }) {
   const status = getQuoteStatusBadge(deriveQuoteWorkflowStatus(quote), t);
   const displayTotal = calculateQuoteGrandTotal(quote, {
@@ -114,8 +116,8 @@ function QuoteCard({
         </View>
       </View>
       <View className="mt-2 flex-row items-center">
-        <Text className="text-sm text-slate-400">
-          {formatDate(quote.createdAt)}
+        <Text className="text-sm text-slate-500">
+          {formatDate(quote.createdAt, locale)}
         </Text>
         {displayTotal != null && (
           <Text className="ml-3 text-sm font-medium text-slate-600">
@@ -153,7 +155,8 @@ export default function AllQuotesScreen() {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const [recordingModalVisible, setRecordingModalVisible] = useState(false);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const activeLocale = i18n.resolvedLanguage ?? i18n.language ?? undefined;
   const queryClient = useQueryClient();
 
   // Sync URL params from homepage (e.g. "View Ready" -> status=ready)
@@ -233,7 +236,7 @@ export default function AllQuotesScreen() {
     const term = search.toLowerCase();
     return quotes.filter((q) => {
       const title = getQuoteTitle(q).toLowerCase();
-      const date = formatDate(q.createdAt).toLowerCase();
+      const date = formatDate(q.createdAt, activeLocale).toLowerCase();
       const displayTotal = calculateQuoteGrandTotal(q, {
         defaultLaborRate: userProfile?.laborRate,
         taxEnabled: userProfile?.taxEnabled,
@@ -263,6 +266,7 @@ export default function AllQuotesScreen() {
     search,
     t,
     currencySymbol,
+    activeLocale,
     userProfile?.laborRate,
     userProfile?.taxEnabled,
     userProfile?.taxRate,
@@ -363,6 +367,7 @@ export default function AllQuotesScreen() {
         taxEnabled={userProfile?.taxEnabled}
         taxRate={userProfile?.taxRate}
         taxInclusive={userProfile?.taxInclusive}
+        locale={activeLocale}
         onPress={() => router.push(`/quote/${item.id}` as any)}
         onLongPress={() => handleDeleteQuote(item)}
       />
@@ -396,28 +401,34 @@ export default function AllQuotesScreen() {
         <View className="flex-row items-center gap-2">
           <Pressable
             onPress={() => setFilterModalVisible(true)}
-            className="h-10 w-10 items-center justify-center rounded-full bg-slate-100"
+            className="h-11 w-11 items-center justify-center rounded-full bg-slate-100"
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            accessibilityLabel={t("quotes.filterLabel")}
+            accessibilityRole="button"
           >
             <Filter size={20} color="#475569" />
           </Pressable>
           <Pressable
             onPress={() => setSortModalVisible(true)}
-            className="h-10 w-10 items-center justify-center rounded-full bg-slate-100"
+            className="h-11 w-11 items-center justify-center rounded-full bg-slate-100"
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            accessibilityLabel={t("quotes.sortLabel")}
+            accessibilityRole="button"
           >
             <ArrowDownUp size={20} color="#475569" />
           </Pressable>
           <Pressable
             onPress={handleCreateQuoteAction}
             disabled={createManualQuote.isPending || createQuote.isPending}
-            className="h-10 w-10 items-center justify-center rounded-full bg-orange-600"
+            className="h-11 w-11 items-center justify-center rounded-full bg-orange-600"
             style={({ pressed }) => ({
               opacity:
                 pressed || createManualQuote.isPending || createQuote.isPending
                   ? 0.7
                   : 1,
             })}
+            accessibilityLabel={t("quotes.newQuote")}
+            accessibilityRole="button"
           >
             <Plus size={20} color="#ffffff" />
           </Pressable>
@@ -447,7 +458,7 @@ export default function AllQuotesScreen() {
       ) : filteredQuotes.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <FileText size={40} color="#cbd5e1" />
-          <Text className="mt-3 text-base font-medium text-slate-400">
+          <Text className="mt-3 text-base font-medium text-slate-500">
             {search ? t("quotes.noMatchSearch") : t("quotes.noQuotesYet")}
           </Text>
         </View>
@@ -460,7 +471,7 @@ export default function AllQuotesScreen() {
               </Text>
               <Pressable
                 onPress={() => refetch()}
-                className="bg-orange-600 px-2 py-1 rounded"
+                className="h-11 items-center justify-center rounded bg-orange-600 px-3"
                 style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
               >
                 <Text className="text-xs font-semibold text-white">
@@ -559,7 +570,7 @@ export default function AllQuotesScreen() {
                       {label}
                     </Text>
                     <Text
-                      className="mt-0.5 text-xs text-slate-400"
+                      className="mt-0.5 text-xs text-slate-500"
                       numberOfLines={2}
                     >
                       {desc}
@@ -601,7 +612,7 @@ export default function AllQuotesScreen() {
           >
             <View className="px-5 pt-5 pb-2">
               <Text className="text-lg font-semibold text-slate-900">
-                {t("quotes.sortLabel")} by date
+                {t("quotes.sortByDate")}
               </Text>
               <Text className="mt-0.5 text-sm text-slate-500">
                 {t("quotes.sortSubtitle")}

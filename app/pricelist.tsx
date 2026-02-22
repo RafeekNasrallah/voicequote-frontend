@@ -241,8 +241,11 @@ export default function PriceListScreen() {
             {/* Delete */}
             <Pressable
               onPress={() => deleteItem(originalIndex)}
-              className="h-8 w-8 items-center justify-center rounded-lg"
+              className="h-11 w-11 items-center justify-center rounded-lg"
               style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+              accessibilityLabel={t("priceList.deleteItem")}
+              accessibilityHint={t("priceList.deleteItemConfirm")}
+              accessibilityRole="button"
             >
               <Trash2 size={16} color="#ef4444" />
             </Pressable>
@@ -261,8 +264,10 @@ export default function PriceListScreen() {
       <View className="flex-row items-center px-4 py-3 border-b border-slate-200">
         <Pressable
           onPress={handleBack}
-          className="mr-3 h-10 w-10 items-center justify-center rounded-lg"
+          className="mr-3 h-11 w-11 items-center justify-center rounded-lg"
           style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          accessibilityLabel={t("quoteEditor.goBack")}
+          accessibilityRole="button"
         >
           <ArrowLeft size={22} color="#0f172a" />
         </Pressable>
@@ -273,7 +278,7 @@ export default function PriceListScreen() {
         <Pressable
           onPress={handleSave}
           disabled={!hasChanges || savePriceList.isPending}
-          className={`h-9 px-4 items-center justify-center rounded-lg ${
+          className={`h-11 px-4 items-center justify-center rounded-lg ${
             hasChanges ? "bg-slate-900" : "bg-slate-200"
           }`}
           style={({ pressed }) => ({
@@ -313,8 +318,10 @@ export default function PriceListScreen() {
           </View>
           <Pressable
             onPress={addItem}
-            className="h-10 w-10 items-center justify-center rounded-full bg-slate-900"
+            className="h-11 w-11 items-center justify-center rounded-full bg-slate-900"
             style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+            accessibilityLabel={t("priceList.addItem")}
+            accessibilityRole="button"
           >
             <Plus size={18} color="#ffffff" />
           </Pressable>

@@ -148,8 +148,10 @@ export default function BusinessInfoScreen() {
       <View className="flex-row items-center px-4 py-3 border-b border-slate-200">
         <Pressable
           onPress={handleBack}
-          className="mr-3 h-10 w-10 items-center justify-center rounded-lg"
+          className="mr-3 h-11 w-11 items-center justify-center rounded-lg"
           style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          accessibilityLabel={t("quoteEditor.goBack")}
+          accessibilityRole="button"
         >
           <ArrowLeft size={22} color="#0f172a" />
         </Pressable>
@@ -160,7 +162,7 @@ export default function BusinessInfoScreen() {
         <Pressable
           onPress={handleSave}
           disabled={!hasChanges || saveInfo.isPending}
-          className={`h-9 px-4 items-center justify-center rounded-lg ${
+          className={`h-11 px-4 items-center justify-center rounded-lg ${
             hasChanges ? "bg-slate-900" : "bg-slate-200"
           }`}
           style={({ pressed }) => ({

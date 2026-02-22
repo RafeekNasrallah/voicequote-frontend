@@ -191,8 +191,10 @@ export default function RecordingModal({
         {/* Close button */}
         <Pressable
           onPress={handleCancel}
-          className="absolute top-16 right-6 h-10 w-10 items-center justify-center rounded-full bg-white/20"
+          className="absolute top-16 right-6 h-11 w-11 items-center justify-center rounded-full bg-white/20"
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          accessibilityLabel={t("common.cancel")}
+          accessibilityRole="button"
         >
           <X size={24} color="#ffffff" />
         </Pressable>
@@ -220,7 +222,13 @@ export default function RecordingModal({
             )}
 
             {/* Main button */}
-            <Pressable onPress={isRecording ? stopRecording : startRecording}>
+            <Pressable
+              onPress={isRecording ? stopRecording : startRecording}
+              accessibilityLabel={
+                isRecording ? t("recording.tapToStop") : t("recording.tapToRecord")
+              }
+              accessibilityRole="button"
+            >
               {({ pressed }) => (
                 <View
                   className={`h-32 w-32 items-center justify-center rounded-full ${

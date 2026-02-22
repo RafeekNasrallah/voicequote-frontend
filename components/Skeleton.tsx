@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Animated, View } from "react-native";
 
 interface SkeletonProps {
-  width?: number | string;
+  width?: number | `${number}%` | "auto";
   height?: number;
   borderRadius?: number;
   className?: string;

@@ -99,7 +99,8 @@ export default function QuoteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const activeLocale = i18n.resolvedLanguage ?? i18n.language ?? undefined;
 
   const [clientModalVisible, setClientModalVisible] = useState(false);
   const [localItems, setLocalItems] = useState<QuoteItem[]>([]);
@@ -339,7 +340,9 @@ export default function QuoteScreen() {
     if (localLaborRate !== serverRate) {
       const rate =
         localLaborRate.trim() === "" ? null : parseFloat(localLaborRate);
-      patchLaborRate.mutate(rate === undefined || isNaN(rate) ? null : rate);
+      patchLaborRate.mutate(
+        rate === null || Number.isNaN(rate) ? null : rate,
+      );
     }
   }, [localLaborRate, quote?.laborRate, patchLaborRate]);
 
@@ -603,7 +606,7 @@ export default function QuoteScreen() {
         <View className="px-6 pb-8">
           <Pressable
             onPress={() => router.replace("/(tabs)/quotes")}
-            className="h-10 items-center justify-center rounded-lg border border-slate-200"
+            className="h-11 items-center justify-center rounded-lg border border-slate-200"
             style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
           >
             <Text className="text-sm font-semibold text-slate-600">
@@ -615,7 +618,7 @@ export default function QuoteScreen() {
     );
   }
 
-  const formattedDate = new Date().toLocaleDateString("en-US", {
+  const formattedDate = new Date().toLocaleDateString(activeLocale, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -640,8 +643,10 @@ export default function QuoteScreen() {
             queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
             router.replace("/(tabs)/quotes");
           }}
-          className="mr-3 h-10 w-10 items-center justify-center rounded-lg"
+          className="mr-3 h-11 w-11 items-center justify-center rounded-lg"
           style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          accessibilityLabel={t("quoteEditor.goBack")}
+          accessibilityRole="button"
         >
           <ArrowLeft size={22} color="#ea580c" />
         </Pressable>
@@ -669,7 +674,7 @@ export default function QuoteScreen() {
                 : localName || `Quote #${quote.id}`}
             </Text>
           )}
-          <Text className="text-xs text-slate-400">
+          <Text className="text-sm text-slate-500">
             {isEditingName
               ? ""
               : localName
@@ -679,8 +684,11 @@ export default function QuoteScreen() {
         </Pressable>
         <Pressable
           onPress={handleDeleteQuote}
-          className="ml-2 h-10 w-10 items-center justify-center rounded-lg"
+          className="ml-2 h-11 w-11 items-center justify-center rounded-lg"
           style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+          accessibilityLabel={t("quotes.deleteQuote")}
+          accessibilityHint={t("quotes.deleteQuoteConfirm")}
+          accessibilityRole="button"
         >
           <Trash2 size={20} color="#ef4444" />
         </Pressable>
@@ -701,7 +709,7 @@ export default function QuoteScreen() {
             {/* ─── Play recording (when quote has audio) ─────── */}
             {audioUrl && (
               <View className="border-b border-slate-100 p-4">
-                <Text className="mb-2 text-xs font-semibold uppercase text-slate-400">
+                <Text className="mb-2 text-xs font-semibold uppercase text-slate-500">
                   {t("quoteEditor.recording")}
                 </Text>
                 <Pressable
@@ -760,16 +768,16 @@ export default function QuoteScreen() {
             <View className="p-4">
               {/* Table Header */}
               <View className="mb-2 flex-row items-center">
-                <Text className="flex-1 text-xs font-semibold uppercase text-slate-400">
+                <Text className="flex-1 text-xs font-semibold uppercase text-slate-500">
                   {t("quoteEditor.item")}
                 </Text>
-                <Text className="w-16 text-center text-xs font-semibold uppercase text-slate-400">
+                <Text className="w-16 text-center text-xs font-semibold uppercase text-slate-500">
                   {t("quoteEditor.unit")}
                 </Text>
-                <Text className="w-14 text-center text-xs font-semibold uppercase text-slate-400">
+                <Text className="w-14 text-center text-xs font-semibold uppercase text-slate-500">
                   {t("quoteEditor.qty")}
                 </Text>
-                <Text className="w-20 text-right text-xs font-semibold uppercase text-slate-400">
+                <Text className="w-20 text-right text-xs font-semibold uppercase text-slate-500">
                   {t("quoteEditor.price")}
                 </Text>
                 <View className="w-14" />
@@ -829,9 +837,11 @@ export default function QuoteScreen() {
                   <View className="ml-3 border-l border-slate-200 pl-2">
                     <Pressable
                       onPress={() => removeItem(index)}
-                      className="h-10 w-10 items-center justify-center rounded-full border border-red-100 bg-red-50"
+                      className="h-11 w-11 items-center justify-center rounded-full border border-red-100 bg-red-50"
                       style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
                       hitSlop={4}
+                      accessibilityLabel={`${t("common.delete")} ${t("quoteEditor.item")}`}
+                      accessibilityRole="button"
                     >
                       <Trash2 size={16} color="#dc2626" />
                     </Pressable>
@@ -842,7 +852,7 @@ export default function QuoteScreen() {
               {/* Add Item Button */}
               <Pressable
                 onPress={addItem}
-                className="mt-3 flex-row items-center justify-center rounded-lg border border-dashed border-slate-300 py-2.5"
+                className="mt-3 h-11 flex-row items-center justify-center rounded-lg border border-dashed border-slate-300"
                 style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
               >
                 <Plus size={16} color="#64748b" />
@@ -858,7 +868,7 @@ export default function QuoteScreen() {
               <View className="flex-row items-center justify-between mb-3">
                 <View className="flex-row items-center">
                   <Clock size={14} color="#64748b" />
-                  <Text className="ml-2 text-xs font-semibold uppercase text-slate-400">
+                  <Text className="ml-2 text-xs font-semibold uppercase text-slate-500">
                     {t("quoteEditor.labor")}
                   </Text>
                 </View>
@@ -868,6 +878,7 @@ export default function QuoteScreen() {
                   trackColor={{ false: "#e2e8f0", true: "#ea580c" }}
                   thumbColor="#ffffff"
                   ios_backgroundColor="#e2e8f0"
+                  accessibilityLabel={t("quoteEditor.labor")}
                 />
               </View>
 
@@ -891,7 +902,7 @@ export default function QuoteScreen() {
                       placeholderTextColor="#cbd5e1"
                       keyboardType="decimal-pad"
                     />
-                    <Text className="mx-2 text-sm text-slate-400">
+                    <Text className="mx-2 text-sm text-slate-600">
                       {t("quoteEditor.hours")} ×
                     </Text>
                     {/* Rate */}
@@ -917,7 +928,7 @@ export default function QuoteScreen() {
                         keyboardType="decimal-pad"
                       />
                     </View>
-                    <Text className="ml-1 text-sm text-slate-400">
+                    <Text className="ml-1 text-sm text-slate-600">
                       {t("settings.perHour")}
                     </Text>
                   </View>
@@ -936,7 +947,7 @@ export default function QuoteScreen() {
               {laborCost !== null && laborCost > 0 && (
                 <>
                   <View className="flex-row items-center justify-between mb-1.5">
-                    <Text className="text-sm text-slate-400">
+                    <Text className="text-sm text-slate-600">
                       {t("quoteEditor.materials")}
                     </Text>
                     <Text className="text-sm text-slate-500">
@@ -945,7 +956,7 @@ export default function QuoteScreen() {
                     </Text>
                   </View>
                   <View className="flex-row items-center justify-between mb-2">
-                    <Text className="text-sm text-slate-400">
+                    <Text className="text-sm text-slate-600">
                       {t("quoteEditor.labor")}
                     </Text>
                     <Text className="text-sm text-slate-500">
@@ -960,7 +971,7 @@ export default function QuoteScreen() {
               {taxEnabled && taxRate > 0 && (
                 <>
                   <View className="flex-row items-center justify-between mb-1.5">
-                    <Text className="text-sm text-slate-400">
+                    <Text className="text-sm text-slate-600">
                       {taxInclusive
                         ? t("taxSettings.subtotalExclTax")
                         : t("taxSettings.subtotal")}
@@ -971,7 +982,7 @@ export default function QuoteScreen() {
                     </Text>
                   </View>
                   <View className="flex-row items-center justify-between mb-2">
-                    <Text className="text-sm text-slate-400">
+                    <Text className="text-sm text-slate-600">
                       {taxLabel} ({taxRate}%)
                     </Text>
                     <Text className="text-sm text-slate-500">
@@ -996,7 +1007,7 @@ export default function QuoteScreen() {
 
             {/* ─── Client Section ──────────────────── */}
             <View className="border-t border-slate-100 p-4">
-              <Text className="mb-2 text-xs font-semibold uppercase text-slate-400">
+              <Text className="mb-2 text-xs font-semibold uppercase text-slate-500">
                 {t("quoteEditor.client")}
               </Text>
               {quote.clientName ? (
@@ -1009,7 +1020,7 @@ export default function QuoteScreen() {
                     <Text className="text-sm font-semibold text-slate-900">
                       {quote.clientName}
                     </Text>
-                    <Text className="mt-0.5 text-xs text-slate-400">
+                    <Text className="mt-0.5 text-xs text-slate-500">
                       {t("quoteEditor.tapToChange")}
                     </Text>
                   </Pressable>
@@ -1052,10 +1063,10 @@ export default function QuoteScreen() {
 
             {/* ─── Terms for this quote (from recording / manual) ──────────────────── */}
             <View className="border-t border-slate-100 p-4">
-              <Text className="mb-2 text-xs font-semibold uppercase text-slate-400">
+              <Text className="mb-2 text-xs font-semibold uppercase text-slate-500">
                 {t("quoteEditor.termsForThisQuote")}
               </Text>
-              <Text className="mb-3 text-xs text-slate-500">
+              <Text className="mb-3 text-sm text-slate-600">
                 {t("quoteEditor.additionalTermsFromRecording")}
               </Text>
               {localExtraTerms.length === 0 ? (
@@ -1083,11 +1094,12 @@ export default function QuoteScreen() {
                       />
                       <Pressable
                         onPress={() => removeExtraTerm(index)}
-                        className="h-9 w-9 items-center justify-center"
+                        className="h-11 w-11 items-center justify-center"
                         style={({ pressed }) => ({
                           opacity: pressed ? 0.5 : 1,
                         })}
                         accessibilityLabel={t("quoteEditor.removeQuoteTerm")}
+                        accessibilityRole="button"
                       >
                         <Trash2 size={18} color="#ef4444" />
                       </Pressable>
@@ -1097,7 +1109,7 @@ export default function QuoteScreen() {
               )}
               <Pressable
                 onPress={addExtraTerm}
-                className="mt-3 flex-row items-center justify-center rounded-lg border border-dashed border-slate-300 py-2.5"
+                className="mt-3 h-11 flex-row items-center justify-center rounded-lg border border-dashed border-slate-300"
                 style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
               >
                 <Plus size={16} color="#64748b" />

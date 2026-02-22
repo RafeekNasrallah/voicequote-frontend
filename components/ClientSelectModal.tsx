@@ -85,14 +85,18 @@ export default function ClientSelectModal({
           <View className="flex-row items-center gap-2">
             <Pressable
               onPress={() => setAddModalVisible(true)}
-              className="h-9 w-9 items-center justify-center rounded-full bg-slate-900"
+              className="h-11 w-11 items-center justify-center rounded-full bg-slate-900"
               style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              accessibilityLabel={t("clients.newClient")}
+              accessibilityRole="button"
             >
               <Plus size={18} color="#ffffff" />
             </Pressable>
             <Pressable
               onPress={onClose}
-              className="h-9 w-9 items-center justify-center rounded-full bg-slate-100"
+              className="h-11 w-11 items-center justify-center rounded-full bg-slate-100"
+              accessibilityLabel={t("common.cancel")}
+              accessibilityRole="button"
             >
               <X size={18} color="#64748b" />
             </Pressable>

@@ -17,9 +17,12 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.getquotio.quotio",
       "buildNumber": "1",
+      "icon": "./assets/images/icon-ios-v2.png",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Quotio needs access to your microphone to transcribe your voice into professional estimates.",
+        "NSPhotoLibraryUsageDescription": "Quotio needs access to your photo library so you can choose a logo for your business profile.",
+        "NSPhotoLibraryAddUsageDescription": "Quotio needs permission to save exported files and generated assets to your photo library when you choose to do so.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },

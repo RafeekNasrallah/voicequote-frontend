@@ -303,6 +303,8 @@ export default function SignUpScreen() {
                 <Pressable
                   onPress={() => setShowPassword(!showPassword)}
                   hitSlop={8}
+                  accessibilityLabel={t("auth.password")}
+                  accessibilityRole="button"
                 >
                   {showPassword ? (
                     <EyeOff size={18} color="#94a3b8" />

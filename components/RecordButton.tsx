@@ -221,7 +221,13 @@ export default function RecordButton({
         )}
 
         {/* Main button */}
-        <Pressable onPress={handlePress}>
+        <Pressable
+          onPress={handlePress}
+          accessibilityLabel={
+            isRecording ? t("recording.tapToStop") : t("recording.tapToRecord")
+          }
+          accessibilityRole="button"
+        >
           {({ pressed }) => (
             <View
               className="h-32 w-32 items-center justify-center rounded-full bg-orange-600"

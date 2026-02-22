@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { Href } from "expo-router";
-import { Link } from "expo-router";
+import { useRouter } from "expo-router";
 import { ChevronRight, Plus, Search, User } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -42,6 +41,7 @@ export default function ClientsScreen() {
   const [search, setSearch] = useState("");
   const [addModalVisible, setAddModalVisible] = useState(false);
   const { t } = useTranslation();
+  const router = useRouter();
 
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
     queryKey: ["clients"],
@@ -62,54 +62,73 @@ export default function ClientsScreen() {
     );
   });
 
+  const handleOpenClient = useCallback(
+    (clientId: number) => {
+      const href = `/client/${clientId}` as any;
+      try {
+        router.push(href);
+      } catch (error) {
+        // Rare first-tap race in Expo Go: retry on next tick instead of crashing.
+        console.warn("Client navigation failed, retrying...", error);
+        setTimeout(() => {
+          try {
+            router.push(href);
+          } catch (retryError) {
+            console.warn("Client navigation retry failed", retryError);
+          }
+        }, 50);
+      }
+    },
+    [router],
+  );
+
   const renderClient = useCallback(
     ({ item }: { item: Client }) => {
       const quoteCount = item.quoteCount ?? 0;
       return (
-        <Link href={`/client/${item.id}` as Href} asChild className="mb-3">
-          <Pressable
-            className="flex-row items-center rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-          >
-            {/* Avatar */}
-            <View className="h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-              <Text className="text-base font-bold text-slate-600">
-                {getInitials(item.name)}
+        <Pressable
+          onPress={() => handleOpenClient(item.id)}
+          className="mb-3 flex-row items-center rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-100"
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        >
+          {/* Avatar */}
+          <View className="h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+            <Text className="text-base font-bold text-slate-600">
+              {getInitials(item.name)}
+            </Text>
+          </View>
+          {/* Info */}
+          <View className="ml-4 flex-1">
+            <Text className="text-base font-semibold text-slate-900">
+              {item.name}
+            </Text>
+            {item.address ? (
+              <Text
+                className="mt-1 text-sm text-slate-500"
+                numberOfLines={1}
+              >
+                {item.address}
+              </Text>
+            ) : null}
+            <View className="mt-2 flex-row items-center">
+              <Text className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {t("clients.totalQuotes")}
+              </Text>
+              <Text
+                className={`ml-2 text-sm font-bold ${
+                  quoteCount > 0 ? "text-orange-600" : "text-slate-500"
+                }`}
+              >
+                {quoteCount}
               </Text>
             </View>
-            {/* Info */}
-            <View className="ml-4 flex-1">
-              <Text className="text-base font-semibold text-slate-900">
-                {item.name}
-              </Text>
-              {item.address ? (
-                <Text
-                  className="mt-1 text-sm text-slate-400"
-                  numberOfLines={1}
-                >
-                  {item.address}
-                </Text>
-              ) : null}
-              <View className="mt-2 flex-row items-center">
-                <Text className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                  {t("clients.totalQuotes")}
-                </Text>
-                <Text
-                  className={`ml-2 text-sm font-bold ${
-                    quoteCount > 0 ? "text-orange-600" : "text-slate-500"
-                  }`}
-                >
-                  {quoteCount}
-                </Text>
-              </View>
-            </View>
-            {/* Arrow */}
-            <ChevronRight size={20} color="#cbd5e1" />
-          </Pressable>
-        </Link>
+          </View>
+          {/* Arrow */}
+          <ChevronRight size={20} color="#cbd5e1" />
+        </Pressable>
       );
     },
-    [t],
+    [handleOpenClient, t],
   );
 
   return (
@@ -127,8 +146,10 @@ export default function ClientsScreen() {
         </Text>
         <Pressable
           onPress={() => setAddModalVisible(true)}
-          className="h-10 w-10 items-center justify-center rounded-full bg-orange-600"
+          className="h-11 w-11 items-center justify-center rounded-full bg-orange-600"
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          accessibilityLabel={t("clients.newClient")}
+          accessibilityRole="button"
         >
           <Plus size={20} color="#ffffff" />
         </Pressable>
@@ -157,11 +178,11 @@ export default function ClientsScreen() {
       ) : filteredClients.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <User size={40} color="#cbd5e1" />
-          <Text className="mt-3 text-base font-medium text-slate-400">
+          <Text className="mt-3 text-base font-medium text-slate-500">
             {search ? t("clients.noClientsFound") : t("clients.noClientsYet")}
           </Text>
           {!search && (
-            <Text className="mt-1 text-sm text-slate-300">
+            <Text className="mt-1 text-sm text-slate-500">
               {t("clients.addFirstClient")}
             </Text>
           )}

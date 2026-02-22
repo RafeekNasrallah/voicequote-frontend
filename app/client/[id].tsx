@@ -31,6 +31,7 @@ interface ClientQuote {
   id: number;
   name: string | null;
   totalCost: number | null;
+  grandTotal?: number | null;
   createdAt: string;
   pdfUrl: string | null;
 }
@@ -58,7 +59,8 @@ export default function ClientDetailScreen() {
   const hasValidId = Number.isInteger(numericId) && numericId > 0;
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const activeLocale = i18n.resolvedLanguage ?? i18n.language ?? undefined;
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
@@ -191,7 +193,7 @@ export default function ClientDetailScreen() {
         </Text>
         <Pressable
           onPress={() => refetchClient()}
-          className="mt-4 h-10 items-center justify-center rounded-lg border border-slate-200 px-6"
+          className="mt-4 h-11 items-center justify-center rounded-lg border border-slate-200 px-6"
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
           <Text className="text-sm font-semibold text-slate-700">
@@ -200,7 +202,7 @@ export default function ClientDetailScreen() {
         </Pressable>
         <Pressable
           onPress={() => router.replace("/(tabs)/clients")}
-          className="mt-4 h-10 items-center justify-center rounded-lg bg-slate-900 px-6"
+          className="mt-4 h-11 items-center justify-center rounded-lg bg-slate-900 px-6"
         >
           <Text className="text-sm font-semibold text-white">
             {t("quoteEditor.goBack")}
@@ -221,8 +223,10 @@ export default function ClientDetailScreen() {
           }}
           onPressIn={() => setBackPressed(true)}
           onPressOut={() => setBackPressed(false)}
-          className="mr-3 h-10 w-10 items-center justify-center rounded-lg"
+          className="mr-3 h-11 w-11 items-center justify-center rounded-lg"
           style={{ opacity: backPressed ? 0.6 : 1 }}
+          accessibilityLabel={t("quoteEditor.goBack")}
+          accessibilityRole="button"
         >
           <ArrowLeft size={22} color="#ea580c" />
         </Pressable>
@@ -233,8 +237,11 @@ export default function ClientDetailScreen() {
           onPress={handleDelete}
           onPressIn={() => setDeletePressed(true)}
           onPressOut={() => setDeletePressed(false)}
-          className="ml-2 h-10 w-10 items-center justify-center rounded-lg"
+          className="ml-2 h-11 w-11 items-center justify-center rounded-lg"
           style={{ opacity: deletePressed ? 0.5 : 1 }}
+          accessibilityLabel={t("clients.deleteClient")}
+          accessibilityHint={t("clients.deleteClientConfirm")}
+          accessibilityRole="button"
         >
           <Trash2 size={20} color="#ef4444" />
         </Pressable>
@@ -353,7 +360,7 @@ export default function ClientDetailScreen() {
               <View className="mb-4 rounded-xl bg-white border border-slate-100 shadow-sm p-4">
                 <View className="flex-row justify-between">
                   <View className="flex-1">
-                    <Text className="text-xs text-slate-400 uppercase">
+                    <Text className="text-xs text-slate-500 uppercase">
                       {t("clients.totalQuotes")}
                     </Text>
                     <Text className="text-xl font-bold text-slate-900 mt-1">
@@ -361,7 +368,7 @@ export default function ClientDetailScreen() {
                     </Text>
                   </View>
                   <View className="flex-1 items-end">
-                    <Text className="text-xs text-slate-400 uppercase">
+                    <Text className="text-xs text-slate-500 uppercase">
                       {t("clients.totalValue")}
                     </Text>
                     <Text className="text-xl font-bold text-slate-900 mt-1">
@@ -403,15 +410,17 @@ export default function ClientDetailScreen() {
                       >
                         {quote.name || `Quote #${quote.id}`}
                       </Text>
-                      <Text className="text-xs text-slate-400 mt-0.5">
-                        {new Date(quote.createdAt).toLocaleDateString()}
+                      <Text className="text-xs text-slate-500 mt-0.5">
+                        {new Date(quote.createdAt).toLocaleDateString(
+                          activeLocale,
+                        )}
                       </Text>
                     </View>
                     <View className="flex-row items-center">
-                      {quote.totalCost !== null && (
+                      {(quote.grandTotal ?? quote.totalCost) !== null && (
                         <Text className="text-sm font-semibold text-slate-700 mr-2">
                           {currencySymbol}
-                          {quote.totalCost.toFixed(2)}
+                          {(quote.grandTotal ?? quote.totalCost)?.toFixed(2)}
                         </Text>
                       )}
                       <ChevronRight size={16} color="#cbd5e1" />
@@ -422,7 +431,7 @@ export default function ClientDetailScreen() {
             ) : (
               <View className="items-center py-8 rounded-xl bg-white border border-slate-100">
                 <FileText size={32} color="#cbd5e1" />
-                <Text className="mt-2 text-sm text-slate-400">
+                <Text className="mt-2 text-sm text-slate-500">
                   {t("clients.noQuotesForClient")}
                 </Text>
               </View>

@@ -89,6 +89,8 @@ export default function MicFAB({ style }: MicFABProps) {
           },
           style,
         ]}
+        accessibilityLabel={t("recording.tapToRecord")}
+        accessibilityRole="button"
       >
         {({ pressed }: { pressed: boolean }) => (
           <Mic size={24} color="#ffffff" style={{ opacity: pressed ? 0.7 : 1 }} />

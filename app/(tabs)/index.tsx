@@ -63,9 +63,12 @@ function getInitials(
   return first + last || "VQ";
 }
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, locale?: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, {
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function getQuoteTitle(quote: Quote): string {
@@ -100,7 +103,7 @@ function StatsCard({
         )}
         <Icon size={20} color={color} />
       </View>
-      <Text className="mt-1 text-xs text-slate-500">{label}</Text>
+      <Text className="mt-1 text-sm text-slate-600">{label}</Text>
     </View>
   );
 
@@ -128,6 +131,7 @@ function QuoteCard({
   taxEnabled,
   taxRate,
   taxInclusive,
+  locale,
 }: {
   quote: Quote;
   onPress: () => void;
@@ -138,6 +142,7 @@ function QuoteCard({
   taxEnabled?: boolean;
   taxRate?: number | null;
   taxInclusive?: boolean;
+  locale?: string;
 }) {
   const status = getQuoteStatusBadge(deriveQuoteWorkflowStatus(quote), t);
   const displayTotal = calculateQuoteGrandTotal(quote, {
@@ -168,8 +173,8 @@ function QuoteCard({
         </View>
       </View>
       <View className="mt-2 flex-row items-center">
-        <Text className="text-sm text-slate-400">
-          {formatDate(quote.createdAt)}
+        <Text className="text-sm text-slate-500">
+          {formatDate(quote.createdAt, locale)}
         </Text>
         {displayTotal != null && (
           <Text className="ml-3 text-sm font-medium text-slate-600">
@@ -199,7 +204,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const createQuote = useCreateQuote();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const activeLocale = i18n.resolvedLanguage ?? i18n.language ?? undefined;
 
   // Fetch user profile for currency
   const { data: userProfile } = useQuery({
@@ -456,7 +462,7 @@ export default function HomeScreen() {
           ) : quotes.length === 0 ? (
             <View className="items-center rounded-xl bg-white py-8 border border-slate-100">
               <FileText size={32} color="#cbd5e1" />
-              <Text className="mt-2 text-sm text-slate-400">
+              <Text className="mt-2 text-sm text-slate-500">
                 {t("home.noQuotesYet")}
               </Text>
             </View>
@@ -488,6 +494,7 @@ export default function HomeScreen() {
                   taxEnabled={userProfile?.taxEnabled}
                   taxRate={userProfile?.taxRate}
                   taxInclusive={userProfile?.taxInclusive}
+                  locale={activeLocale}
                   onPress={() => router.push(`/quote/${quote.id}` as any)}
                   onLongPress={() => handleDeleteQuote(quote)}
                 />

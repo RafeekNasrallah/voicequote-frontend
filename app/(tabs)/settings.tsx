@@ -224,11 +224,13 @@ export default function SettingsScreen() {
     }
   }, [laborRateInput, updateLaborRate]);
 
-  const currentLang = i18n.language || "en";
+  const currentLang =
+    (i18n.resolvedLanguage || i18n.language || "en").split("-")[0];
+  const activeLocale = i18n.resolvedLanguage ?? i18n.language ?? undefined;
   const currentLangEntry = SUPPORTED_LANGUAGES.find((l) => l.code === currentLang);
   const currentLangLabel = currentLangEntry
     ? `${currentLangEntry.nativeLabel}`
-    : "English";
+    : t("settings.languageUnknown");
 
   const handleLanguageChange = useCallback(async (langCode: string) => {
     setLanguageModalVisible(false);
@@ -238,7 +240,7 @@ export default function SettingsScreen() {
       // RTL change requires a restart
       Alert.alert(
         t("settings.language"),
-        "Please close and reopen the app for the layout direction change to take effect."
+        t("settings.languageRestartRequired"),
       );
     }
   }, [updateBackendLanguage, t]);
@@ -286,7 +288,10 @@ export default function SettingsScreen() {
 
   const openUrl = useCallback((url: string, title: string) => {
     if (!url || !url.startsWith("http")) {
-      Alert.alert(t("common.error"), `${title} URL is not configured.`);
+      Alert.alert(
+        t("common.error"),
+        t("settings.urlNotConfigured", { title }),
+      );
       return;
     }
     Linking.openURL(url).catch(() => {
@@ -535,7 +540,7 @@ export default function SettingsScreen() {
                 {profile?.periodEnd ? (
                   <Text className="text-xs text-slate-500 mb-4" style={rtlText}>
                     {t("settings.resetsOn", {
-                      date: new Date(profile.periodEnd).toLocaleDateString(undefined, {
+                      date: new Date(profile.periodEnd).toLocaleDateString(activeLocale, {
                         month: "short",
                         day: "numeric",
                         year: "numeric",
@@ -547,7 +552,7 @@ export default function SettingsScreen() {
                 )}
                 <Pressable
                   onPress={() => router.push("/paywall" as any)}
-                  className="h-10 items-center justify-center rounded-lg bg-orange-600"
+                  className="h-11 items-center justify-center rounded-lg bg-orange-600"
                   style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
                 >
                   <Text className="text-sm font-semibold text-white">
@@ -854,7 +859,7 @@ export default function SettingsScreen() {
           </Text>
           <View className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden">
             <Pressable
-              onPress={() => openUrl(privacyPolicyUrl, "Privacy Policy")}
+              onPress={() => openUrl(privacyPolicyUrl, t("settings.privacyPolicy"))}
               className="flex-row items-center px-4 py-3.5 border-b border-slate-100"
               style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
             >
@@ -872,7 +877,7 @@ export default function SettingsScreen() {
               <ChevronRight size={16} color="#cbd5e1" />
             </Pressable>
             <Pressable
-              onPress={() => openUrl(termsOfUseUrl, "Terms of Use")}
+              onPress={() => openUrl(termsOfUseUrl, t("settings.termsOfUse"))}
               className="flex-row items-center px-4 py-3.5"
               style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
             >
