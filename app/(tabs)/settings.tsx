@@ -901,20 +901,28 @@ export default function SettingsScreen() {
             {/* Sign Out */}
             <Pressable
               onPress={handleSignOut}
-              className="flex-row items-center px-4 py-3.5 border-b border-slate-100"
+              className="flex-row items-center px-4 py-3.5"
               style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
             >
-              <View className="h-9 w-9 items-center justify-center rounded-lg bg-red-50">
-                <LogOut size={18} color="#ef4444" />
+              <View className="h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
+                <LogOut size={18} color="#64748b" />
               </View>
               <View className="ms-3 flex-1" style={rtlAlignEnd}>
-                <Text className="text-sm font-medium text-red-600" style={rtlText}>
+                <Text className="text-sm font-medium text-slate-700" style={rtlText}>
                   {t("settings.signOut")}
                 </Text>
               </View>
               <ChevronRight size={16} color="#cbd5e1" />
             </Pressable>
-            {/* Delete Account */}
+          </View>
+        </View>
+
+        {/* Danger Zone */}
+        <View className="mx-6 mt-4">
+          <Text className="mb-2 text-xs font-semibold uppercase text-red-600 px-1" style={rtlText}>
+            {t("settings.dangerZone")}
+          </Text>
+          <View className="rounded-xl bg-red-50 shadow-sm border border-red-200 overflow-hidden">
             <Pressable
               onPress={handleDeleteAccount}
               disabled={deleteAccount.isPending}
@@ -923,21 +931,21 @@ export default function SettingsScreen() {
                 opacity: pressed || deleteAccount.isPending ? 0.7 : 1,
               })}
             >
-              <View className="h-9 w-9 items-center justify-center rounded-lg bg-red-50">
-                <Trash2 size={18} color="#ef4444" />
+              <View className="h-9 w-9 items-center justify-center rounded-lg bg-red-100">
+                <Trash2 size={18} color="#dc2626" />
               </View>
               <View className="ms-3 flex-1" style={rtlAlignEnd}>
-                <Text className="text-sm font-medium text-red-600" style={rtlText}>
+                <Text className="text-sm font-semibold text-red-700" style={rtlText}>
                   {t("settings.deleteAccount")}
                 </Text>
-                <Text className="mt-0.5 text-xs text-slate-400" style={rtlText}>
+                <Text className="mt-0.5 text-xs text-red-500" style={rtlText}>
                   {t("settings.deleteAccountDesc")}
                 </Text>
               </View>
               {deleteAccount.isPending ? (
-                <ActivityIndicator size="small" color="#ef4444" />
+                <ActivityIndicator size="small" color="#dc2626" />
               ) : (
-                <ChevronRight size={16} color="#cbd5e1" />
+                <ChevronRight size={16} color="#f87171" />
               )}
             </Pressable>
           </View>

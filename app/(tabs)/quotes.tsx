@@ -15,10 +15,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import MicFAB from "@/components/MicFAB";
 import NetworkErrorView from "@/components/NetworkErrorView";
+import ProcessingModal from "@/components/ProcessingModal";
+import RecordingModal from "@/components/RecordingModal";
 import { QuotesListSkeleton } from "@/components/Skeleton";
 import { useCreateManualQuote } from "@/src/hooks/useCreateManualQuote";
+import { useCreateQuote } from "@/src/hooks/useCreateQuote";
 import api from "@/src/lib/api";
 import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/src/lib/currency";
 import { isNetworkError } from "@/src/lib/networkError";
@@ -27,6 +29,7 @@ import {
   getQuoteStatusBadge,
   type QuoteWorkflowFilter,
 } from "@/src/lib/quoteStatus";
+import { calculateQuoteGrandTotal } from "@/src/lib/quoteTotals";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -35,6 +38,9 @@ interface Quote {
   name: string | null;
   createdAt: string;
   totalCost: number | null;
+  laborHours?: number | null;
+  laborRate?: number | null;
+  laborEnabled?: boolean;
   clientId: number | null;
   clientName: string | null;
   status?: string | null;
@@ -64,14 +70,28 @@ function QuoteCard({
   onLongPress,
   t,
   currencySymbol,
+  defaultLaborRate,
+  taxEnabled,
+  taxRate,
+  taxInclusive,
 }: {
   quote: Quote;
   onPress: () => void;
   onLongPress?: () => void;
   t: (key: string) => string;
   currencySymbol: string;
+  defaultLaborRate?: number | null;
+  taxEnabled?: boolean;
+  taxRate?: number | null;
+  taxInclusive?: boolean;
 }) {
   const status = getQuoteStatusBadge(deriveQuoteWorkflowStatus(quote), t);
+  const displayTotal = calculateQuoteGrandTotal(quote, {
+    defaultLaborRate,
+    taxEnabled,
+    taxRate,
+    taxInclusive,
+  });
 
   return (
     <Pressable
@@ -97,10 +117,10 @@ function QuoteCard({
         <Text className="text-sm text-slate-400">
           {formatDate(quote.createdAt)}
         </Text>
-        {quote.totalCost != null && (
+        {displayTotal != null && (
           <Text className="ml-3 text-sm font-medium text-slate-600">
             {currencySymbol}
-            {quote.totalCost.toFixed(2)}
+            {displayTotal.toFixed(2)}
           </Text>
         )}
       </View>
@@ -110,6 +130,10 @@ function QuoteCard({
 
 interface UserProfile {
   currency: string;
+  laborRate?: number | null;
+  taxEnabled?: boolean;
+  taxRate?: number | null;
+  taxInclusive?: boolean;
 }
 
 // ─── Main Screen ────────────────────────────────────────────
@@ -128,6 +152,7 @@ export default function AllQuotesScreen() {
   const [sortOrder, setSortOrder] = useState<QuoteSortOrder>("createdAt_desc");
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [sortModalVisible, setSortModalVisible] = useState(false);
+  const [recordingModalVisible, setRecordingModalVisible] = useState(false);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
@@ -209,7 +234,14 @@ export default function AllQuotesScreen() {
     return quotes.filter((q) => {
       const title = getQuoteTitle(q).toLowerCase();
       const date = formatDate(q.createdAt).toLowerCase();
-      const cost = q.totalCost != null ? `$${q.totalCost.toFixed(2)}` : "";
+      const displayTotal = calculateQuoteGrandTotal(q, {
+        defaultLaborRate: userProfile?.laborRate,
+        taxEnabled: userProfile?.taxEnabled,
+        taxRate: userProfile?.taxRate,
+        taxInclusive: userProfile?.taxInclusive,
+      });
+      const cost =
+        displayTotal != null ? `${currencySymbol}${displayTotal.toFixed(2)}` : "";
       const status = getQuoteStatusBadge(
         deriveQuoteWorkflowStatus(q),
         t,
@@ -226,7 +258,16 @@ export default function AllQuotesScreen() {
         idStr.includes(term)
       );
     });
-  }, [quotes, search, t]);
+  }, [
+    quotes,
+    search,
+    t,
+    currencySymbol,
+    userProfile?.laborRate,
+    userProfile?.taxEnabled,
+    userProfile?.taxRate,
+    userProfile?.taxInclusive,
+  ]);
 
   const deleteQuote = useMutation({
     mutationFn: async (quoteId: number) => {
@@ -255,6 +296,62 @@ export default function AllQuotesScreen() {
   );
 
   const createManualQuote = useCreateManualQuote();
+  const createQuote = useCreateQuote();
+
+  const handleRecordingComplete = useCallback(
+    (uri: string) => {
+      createQuote.mutate(
+        { localUri: uri },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
+            queryClient.invalidateQueries({ queryKey: ["quotes"] });
+            queryClient.invalidateQueries({ queryKey: ["quoteStats"] });
+          },
+          onError: (error: any) => {
+            if (error?.fileTooLarge) {
+              return; // useCreateQuote already showed the alert
+            }
+            if (error?.response?.status === 403) {
+              const code = error?.response?.data?.code;
+              if (code === "QUOTA_EXCEEDED") {
+                router.push("/paywall" as any);
+                return;
+              }
+            }
+            if (isNetworkError(error)) {
+              Alert.alert(
+                t("errors.noConnection"),
+                t("errors.somethingWentWrong"),
+              );
+            } else {
+              const detail = error?.response?.data?.detail;
+              const message = detail
+                ? `${t("home.processingFailedMsg")}\n\n${detail}`
+                : t("home.processingFailedMsg");
+              Alert.alert(t("home.processingFailed"), message);
+            }
+            console.error("Create quote error:", error);
+          },
+        },
+      );
+    },
+    [createQuote, queryClient, router, t],
+  );
+
+  const handleCreateQuoteAction = useCallback(() => {
+    Alert.alert(t("quotes.newQuote"), "", [
+      {
+        text: t("recording.tapToRecord"),
+        onPress: () => setRecordingModalVisible(true),
+      },
+      {
+        text: t("home.newQuoteManual"),
+        onPress: () => createManualQuote.mutate(undefined),
+      },
+      { text: t("common.cancel"), style: "cancel" },
+    ]);
+  }, [createManualQuote, t]);
 
   const renderQuote = useCallback(
     ({ item }: { item: Quote }) => (
@@ -262,15 +359,35 @@ export default function AllQuotesScreen() {
         quote={item}
         t={t}
         currencySymbol={currencySymbol}
+        defaultLaborRate={userProfile?.laborRate}
+        taxEnabled={userProfile?.taxEnabled}
+        taxRate={userProfile?.taxRate}
+        taxInclusive={userProfile?.taxInclusive}
         onPress={() => router.push(`/quote/${item.id}` as any)}
         onLongPress={() => handleDeleteQuote(item)}
       />
     ),
-    [router, t, handleDeleteQuote, currencySymbol],
+    [
+      router,
+      t,
+      handleDeleteQuote,
+      currencySymbol,
+      userProfile?.laborRate,
+      userProfile?.taxEnabled,
+      userProfile?.taxRate,
+      userProfile?.taxInclusive,
+    ],
   );
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
+      <RecordingModal
+        visible={recordingModalVisible}
+        onClose={() => setRecordingModalVisible(false)}
+        onRecordingComplete={handleRecordingComplete}
+      />
+      <ProcessingModal visible={createQuote.isPending} />
+
       {/* Header */}
       <View className="px-6 pt-4 pb-2 flex-row items-center justify-between">
         <Text className="text-2xl font-bold text-slate-900">
@@ -292,10 +409,15 @@ export default function AllQuotesScreen() {
             <ArrowDownUp size={20} color="#475569" />
           </Pressable>
           <Pressable
-            onPress={() => createManualQuote.mutate(undefined)}
-            disabled={createManualQuote.isPending}
+            onPress={handleCreateQuoteAction}
+            disabled={createManualQuote.isPending || createQuote.isPending}
             className="h-10 w-10 items-center justify-center rounded-full bg-orange-600"
-            style={({ pressed }) => ({ opacity: pressed || createManualQuote.isPending ? 0.7 : 1 })}
+            style={({ pressed }) => ({
+              opacity:
+                pressed || createManualQuote.isPending || createQuote.isPending
+                  ? 0.7
+                  : 1,
+            })}
           >
             <Plus size={20} color="#ffffff" />
           </Pressable>
@@ -353,7 +475,7 @@ export default function AllQuotesScreen() {
             renderItem={renderQuote}
             contentContainerStyle={{
               paddingHorizontal: 24,
-              paddingBottom: 100,
+              paddingBottom: 32,
             }}
             showsVerticalScrollIndicator={false}
             refreshControl={
@@ -540,9 +662,6 @@ export default function AllQuotesScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-
-      {/* Mic FAB */}
-      <MicFAB />
     </SafeAreaView>
   );
 }

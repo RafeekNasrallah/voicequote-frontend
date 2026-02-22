@@ -26,6 +26,7 @@ import {
   deriveQuoteWorkflowStatus,
   getQuoteStatusBadge,
 } from "@/src/lib/quoteStatus";
+import { calculateQuoteGrandTotal } from "@/src/lib/quoteTotals";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -34,6 +35,9 @@ interface Quote {
   name: string | null;
   createdAt: string;
   totalCost: number | null;
+  laborHours?: number | null;
+  laborRate?: number | null;
+  laborEnabled?: boolean;
   clientId: number | null;
   clientName: string | null;
   status?: string | null;
@@ -120,14 +124,28 @@ function QuoteCard({
   onLongPress,
   t,
   currencySymbol,
+  defaultLaborRate,
+  taxEnabled,
+  taxRate,
+  taxInclusive,
 }: {
   quote: Quote;
   onPress: () => void;
   onLongPress?: () => void;
   t: (key: string) => string;
   currencySymbol: string;
+  defaultLaborRate?: number | null;
+  taxEnabled?: boolean;
+  taxRate?: number | null;
+  taxInclusive?: boolean;
 }) {
   const status = getQuoteStatusBadge(deriveQuoteWorkflowStatus(quote), t);
+  const displayTotal = calculateQuoteGrandTotal(quote, {
+    defaultLaborRate,
+    taxEnabled,
+    taxRate,
+    taxInclusive,
+  });
 
   return (
     <Pressable
@@ -153,10 +171,10 @@ function QuoteCard({
         <Text className="text-sm text-slate-400">
           {formatDate(quote.createdAt)}
         </Text>
-        {quote.totalCost != null && (
+        {displayTotal != null && (
           <Text className="ml-3 text-sm font-medium text-slate-600">
             {currencySymbol}
-            {quote.totalCost.toFixed(2)}
+            {displayTotal.toFixed(2)}
           </Text>
         )}
       </View>
@@ -168,6 +186,10 @@ function QuoteCard({
 
 interface UserProfile {
   currency: string;
+  laborRate?: number | null;
+  taxEnabled?: boolean;
+  taxRate?: number | null;
+  taxInclusive?: boolean;
   isPro?: boolean;
   quoteCount?: number;
 }
@@ -462,6 +484,10 @@ export default function HomeScreen() {
                   quote={quote}
                   t={t}
                   currencySymbol={currencySymbol}
+                  defaultLaborRate={userProfile?.laborRate}
+                  taxEnabled={userProfile?.taxEnabled}
+                  taxRate={userProfile?.taxRate}
+                  taxInclusive={userProfile?.taxInclusive}
                   onPress={() => router.push(`/quote/${quote.id}` as any)}
                   onLongPress={() => handleDeleteQuote(quote)}
                 />

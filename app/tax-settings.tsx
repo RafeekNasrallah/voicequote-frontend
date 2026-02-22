@@ -238,7 +238,7 @@ export default function TaxSettingsScreen() {
                 <Switch
                   value={taxEnabled}
                   onValueChange={setTaxEnabled}
-                  trackColor={{ false: "#e2e8f0", true: "#22c55e" }}
+                  trackColor={{ false: "#e2e8f0", true: "#ea580c" }}
                   thumbColor="#ffffff"
                 />
               </View>
@@ -306,7 +306,7 @@ export default function TaxSettingsScreen() {
                 <Switch
                   value={taxInclusive}
                   onValueChange={setTaxInclusive}
-                  trackColor={{ false: "#e2e8f0", true: "#22c55e" }}
+                  trackColor={{ false: "#e2e8f0", true: "#ea580c" }}
                   thumbColor="#ffffff"
                   disabled={!taxEnabled}
                 />

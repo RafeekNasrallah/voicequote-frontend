@@ -772,7 +772,7 @@ export default function QuoteScreen() {
                 <Text className="w-20 text-right text-xs font-semibold uppercase text-slate-400">
                   {t("quoteEditor.price")}
                 </Text>
-                <View className="w-9" />
+                <View className="w-14" />
               </View>
 
               {/* Rows */}
@@ -825,14 +825,17 @@ export default function QuoteScreen() {
                     placeholder="0.00"
                     placeholderTextColor="#cbd5e1"
                   />
-                  {/* Delete */}
-                  <Pressable
-                    onPress={() => removeItem(index)}
-                    className="ml-1 h-9 w-9 items-center justify-center mt-1"
-                    style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
-                  >
-                    <Trash2 size={16} color="#ef4444" />
-                  </Pressable>
+                  {/* Delete action is visually/physically separated from price input to reduce fat-finger deletes */}
+                  <View className="ml-3 border-l border-slate-200 pl-2">
+                    <Pressable
+                      onPress={() => removeItem(index)}
+                      className="h-10 w-10 items-center justify-center rounded-full border border-red-100 bg-red-50"
+                      style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                      hitSlop={4}
+                    >
+                      <Trash2 size={16} color="#dc2626" />
+                    </Pressable>
+                  </View>
                 </View>
               ))}
 
@@ -862,7 +865,7 @@ export default function QuoteScreen() {
                 <Switch
                   value={localLaborEnabled}
                   onValueChange={handleLaborEnabledToggle}
-                  trackColor={{ false: "#e2e8f0", true: "#0f172a" }}
+                  trackColor={{ false: "#e2e8f0", true: "#ea580c" }}
                   thumbColor="#ffffff"
                   ios_backgroundColor="#e2e8f0"
                 />

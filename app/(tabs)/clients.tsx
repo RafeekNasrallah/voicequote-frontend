@@ -15,7 +15,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import AddClientModal from "@/components/AddClientModal";
-import MicFAB from "@/components/MicFAB";
 import NetworkErrorView from "@/components/NetworkErrorView";
 import { ClientsListSkeleton } from "@/components/Skeleton";
 import api from "@/src/lib/api";
@@ -172,7 +171,7 @@ export default function ClientsScreen() {
           data={filteredClients}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderClient}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -184,8 +183,6 @@ export default function ClientsScreen() {
         />
       )}
 
-      {/* Mic FAB */}
-      <MicFAB />
     </SafeAreaView>
   );
 }

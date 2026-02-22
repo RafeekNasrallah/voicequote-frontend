@@ -9,8 +9,8 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#ea580c", // orange-600 brand
-        tabBarInactiveTintColor: "#94a3b8", // slate-400
+        tabBarActiveTintColor: "#c2410c", // orange-700, accessible on white
+        tabBarInactiveTintColor: "#475569", // slate-600, accessible on white
         tabBarStyle: {
           backgroundColor: "#ffffff",
           borderTopColor: "#e2e8f0",
@@ -22,8 +22,10 @@ export default function TabLayout() {
           direction: "ltr",
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "600",
+          fontSize: 13,
+          lineHeight: 18,
+          fontWeight: "700",
+          marginBottom: 1,
         },
       }}
     >

@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Pressable,
   ScrollView,
   Text,
@@ -22,6 +23,54 @@ import {
   isRevenueCatConfigured,
   REVENUECAT_ENTITLEMENT_ID,
 } from "@/src/lib/revenueCat";
+
+type BillingUnit = "day" | "week" | "month" | "year";
+
+interface BillingPeriod {
+  unit: BillingUnit;
+  value: number;
+}
+
+const PACKAGE_TYPE_TO_PERIOD: Record<string, BillingPeriod> = {
+  WEEKLY: { unit: "week", value: 1 },
+  MONTHLY: { unit: "month", value: 1 },
+  TWO_MONTH: { unit: "month", value: 2 },
+  THREE_MONTH: { unit: "month", value: 3 },
+  SIX_MONTH: { unit: "month", value: 6 },
+  ANNUAL: { unit: "year", value: 1 },
+};
+
+function parseIso8601Period(period: string | null): BillingPeriod | null {
+  if (!period) return null;
+  const match = /^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?$/i.exec(period);
+  if (!match) return null;
+
+  const years = Number(match[1] ?? 0);
+  const months = Number(match[2] ?? 0);
+  const weeks = Number(match[3] ?? 0);
+  const days = Number(match[4] ?? 0);
+
+  if (years > 0) return { unit: "year", value: years };
+  if (months > 0) return { unit: "month", value: months };
+  if (weeks > 0) return { unit: "week", value: weeks };
+  if (days > 0) return { unit: "day", value: days };
+  return null;
+}
+
+function normalizePeriodUnit(periodUnit: string | null | undefined): BillingUnit | null {
+  switch ((periodUnit ?? "").toUpperCase()) {
+    case "DAY":
+      return "day";
+    case "WEEK":
+      return "week";
+    case "MONTH":
+      return "month";
+    case "YEAR":
+      return "year";
+    default:
+      return null;
+  }
+}
 
 export default function PaywallScreen() {
   const router = useRouter();
@@ -75,21 +124,109 @@ export default function PaywallScreen() {
     loadOfferings();
   }, [loadOfferings]);
 
-  const monthlyPackage: PurchasesPackage | null = offering
+  const selectedPackage: PurchasesPackage | null = offering
     ? (offering.availablePackages.find(
         (pkg) =>
           pkg.packageType === "MONTHLY" ||
           pkg.identifier.toLowerCase().includes("monthly"),
       ) ??
+      offering.monthly ??
+      offering.annual ??
+      offering.sixMonth ??
+      offering.threeMonth ??
+      offering.twoMonth ??
+      offering.weekly ??
       offering.availablePackages[0] ??
       null)
     : null;
 
+  const billingPeriod: BillingPeriod | null = selectedPackage
+    ? (parseIso8601Period(selectedPackage.product.subscriptionPeriod) ??
+      PACKAGE_TYPE_TO_PERIOD[selectedPackage.packageType] ??
+      null)
+    : null;
+
+  const getPeriodLabel = useCallback(
+    (period: BillingPeriod | null) => {
+      if (!period) return t("paywall.billingCycle");
+      const count = Math.max(1, period.value);
+      switch (period.unit) {
+        case "day":
+          return t("paywall.periodDay", { count });
+        case "week":
+          return t("paywall.periodWeek", { count });
+        case "month":
+          return t("paywall.periodMonth", { count });
+        case "year":
+          return t("paywall.periodYear", { count });
+        default:
+          return t("paywall.billingCycle");
+      }
+    },
+    [t],
+  );
+
+  const periodLabel = getPeriodLabel(billingPeriod);
+  const renewalPriceLine =
+    selectedPackage != null
+      ? t("paywall.renewalPrice", {
+          price: selectedPackage.product.priceString,
+          period: periodLabel,
+        })
+      : null;
+
+  const introPriceLine =
+    selectedPackage != null && renewalPriceLine != null
+      ? (() => {
+          const intro = selectedPackage.product.introPrice;
+          if (!intro) return null;
+
+          const unit = normalizePeriodUnit(intro.periodUnit);
+          if (!unit) return null;
+          const durationCount = Math.max(
+            1,
+            intro.cycles * Math.max(1, intro.periodNumberOfUnits),
+          );
+          const duration = getPeriodLabel({ unit, value: durationCount });
+
+          if (intro.price === 0) {
+            return t("paywall.freeTrialDisclosure", {
+              duration,
+              renewal: renewalPriceLine,
+            });
+          }
+
+          return t("paywall.introPriceDisclosure", {
+            introPrice: intro.priceString,
+            duration,
+            renewal: renewalPriceLine,
+          });
+        })()
+      : null;
+
+  const privacyPolicyUrl =
+    process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ?? "https://www.getquotio.com/privacy";
+  const termsOfUseUrl =
+    process.env.EXPO_PUBLIC_TERMS_OF_USE_URL ?? "https://www.getquotio.com/terms";
+
+  const openUrl = useCallback(
+    (url: string, title: string) => {
+      if (!url || !url.startsWith("http")) {
+        Alert.alert(t("common.error"), `${title} URL is not configured.`);
+        return;
+      }
+      Linking.openURL(url).catch(() => {
+        Alert.alert(t("common.error"), t("paywall.openLinkFailed"));
+      });
+    },
+    [t],
+  );
+
   const handlePurchase = useCallback(async () => {
-    if (!monthlyPackage) return;
+    if (!selectedPackage) return;
     setPurchasing(true);
     try {
-      const { customerInfo } = await Purchases.purchasePackage(monthlyPackage);
+      const { customerInfo } = await Purchases.purchasePackage(selectedPackage);
       if (customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]) {
         await syncSubscriptionAndClose();
       }
@@ -103,7 +240,7 @@ export default function PaywallScreen() {
     } finally {
       setPurchasing(false);
     }
-  }, [monthlyPackage, syncSubscriptionAndClose, t]);
+  }, [selectedPackage, syncSubscriptionAndClose, t]);
 
   const handleRestore = useCallback(async () => {
     setRestoring(true);
@@ -193,7 +330,7 @@ export default function PaywallScreen() {
             </View>
 
             {/* Subscribe CTA */}
-            {monthlyPackage ? (
+            {selectedPackage ? (
               <View className="mx-6 mb-4">
                 <Pressable
                   onPress={handlePurchase}
@@ -207,12 +344,26 @@ export default function PaywallScreen() {
                     <ActivityIndicator color="#ffffff" size="small" />
                   ) : (
                     <Text className="text-base font-bold text-white">
-                      {t("paywall.subscribe")}
+                      {t("paywall.subscribeFor", {
+                        price: selectedPackage.product.priceString,
+                        period: periodLabel,
+                      })}
                     </Text>
                   )}
                 </Pressable>
                 <Text className="mt-3 text-center text-xs text-slate-400">
-                  {t("paywall.priceHint")}
+                  {renewalPriceLine}
+                </Text>
+                {introPriceLine ? (
+                  <Text className="mt-2 text-center text-xs text-slate-400">
+                    {introPriceLine}
+                  </Text>
+                ) : null}
+                <Text className="mt-2 text-center text-xs text-slate-400">
+                  {t("paywall.autoRenewDisclosure")}
+                </Text>
+                <Text className="mt-2 text-center text-xs text-slate-400">
+                  {t("paywall.manageDisclosure")}
                 </Text>
               </View>
             ) : configError ? (
@@ -231,6 +382,27 @@ export default function PaywallScreen() {
                 </Text>
               )
             )}
+
+            {/* Legal links */}
+            <View className="mx-6 mb-2 flex-row items-center justify-center">
+              <Pressable
+                onPress={() => openUrl(termsOfUseUrl, "Terms of Use")}
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              >
+                <Text className="text-xs text-slate-500 underline">
+                  {t("paywall.termsOfUse")}
+                </Text>
+              </Pressable>
+              <Text className="mx-2 text-xs text-slate-400">|</Text>
+              <Pressable
+                onPress={() => openUrl(privacyPolicyUrl, "Privacy Policy")}
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              >
+                <Text className="text-xs text-slate-500 underline">
+                  {t("paywall.privacyPolicy")}
+                </Text>
+              </Pressable>
+            </View>
 
             {/* Restore */}
             <Pressable
