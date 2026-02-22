@@ -163,7 +163,10 @@
     "addQuoteTerm": "Agregar término",
     "removeQuoteTerm": "Quitar término",
     "extraTermsSaved": "Términos del presupuesto guardados.",
-    "extraTermsSaveFailed": "No se pudieron guardar los términos. Inténtalo de nuevo."
+    "extraTermsSaveFailed": "No se pudieron guardar los términos. Inténtalo de nuevo.",
+    "useSavedPrices": "Usar precios guardados",
+    "possibleMatch": "Coincidencia posible",
+    "chooseSavedPrice": "Elegir precio guardado"
   },
   "clients": {
     "title": "Clientes",

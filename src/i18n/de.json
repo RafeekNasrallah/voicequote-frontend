@@ -146,7 +146,10 @@
     "addQuoteTerm": "Bedingung hinzufügen",
     "removeQuoteTerm": "Bedingung entfernen",
     "extraTermsSaved": "Angebotsbedingungen gespeichert.",
-    "extraTermsSaveFailed": "Angebotsbedingungen konnten nicht gespeichert werden. Bitte erneut versuchen."
+    "extraTermsSaveFailed": "Angebotsbedingungen konnten nicht gespeichert werden. Bitte erneut versuchen.",
+    "useSavedPrices": "Gespeicherte Preise anwenden",
+    "possibleMatch": "Moeglicher Treffer",
+    "chooseSavedPrice": "Gespeicherten Preis auswaehlen"
   },
   "clients": {
     "title": "Kunden",

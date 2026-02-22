@@ -16,12 +16,13 @@ import {
     Trash2,
     UserPlus,
 } from "lucide-react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
     Alert,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     Pressable,
     ScrollView,
@@ -36,6 +37,11 @@ import ClientSelectModal from "@/components/ClientSelectModal";
 import NetworkErrorView from "@/components/NetworkErrorView";
 import api from "@/src/lib/api";
 import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/src/lib/currency";
+import {
+  getPriceMatchCandidates,
+  type PriceMatchCandidate,
+  type PriceListItem as SavedPriceItem,
+} from "@/src/lib/priceMatcher";
 
 const QUOTE_NAME_MAX = 255;
 const ITEM_NAME_MAX = 200;
@@ -84,6 +90,12 @@ interface QuoteData {
   extraTerms: string[] | null;
 }
 
+interface MatchPickerState {
+  itemIndex: number;
+  itemName: string;
+  candidates: PriceMatchCandidate[];
+}
+
 interface UserProfile {
   laborRate: number | null;
   currency: string;
@@ -91,6 +103,7 @@ interface UserProfile {
   taxRate: number | null;
   taxLabel: string | null;
   taxInclusive: boolean;
+  priceList: SavedPriceItem[] | null;
 }
 
 // ─── Main Screen ────────────────────────────────────────────
@@ -113,6 +126,7 @@ export default function QuoteScreen() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [localExtraTerms, setLocalExtraTerms] = useState<string[]>([]);
+  const [matchPicker, setMatchPicker] = useState<MatchPickerState | null>(null);
 
   // ─── Fetch Quote ────────────────────────────────────────
   const {
@@ -533,6 +547,25 @@ export default function QuoteScreen() {
     setLocalTotal(total);
   }, []);
 
+  const itemMatchCandidates = useMemo(() => {
+    const priceList = Array.isArray(userProfile?.priceList)
+      ? userProfile.priceList
+      : [];
+    return localItems.map((item) => {
+      const hasValidPrice =
+        typeof item.price === "number" &&
+        Number.isFinite(item.price) &&
+        item.price > 0;
+      if (hasValidPrice || !item.name?.trim() || priceList.length === 0) {
+        return [] as PriceMatchCandidate[];
+      }
+      return getPriceMatchCandidates(item.name, item.unit, priceList, {
+        maxResults: 3,
+        minScore: 0.5,
+      });
+    });
+  }, [localItems, userProfile?.priceList]);
+
   const updateItem = useCallback(
     (index: number, field: keyof QuoteItem, value: string) => {
       setLocalItems((prev) => {
@@ -561,8 +594,46 @@ export default function QuoteScreen() {
       name: (it.name ?? "").trim().slice(0, ITEM_NAME_MAX),
     }));
     setLocalItems(normalized); // Keep UI in sync with limit
+    recalcTotal(normalized);
     patchItems.mutate(normalized);
-  }, [localItems, patchItems]);
+  }, [localItems, recalcTotal, patchItems]);
+
+  const openMatchPickerForItem = useCallback(
+    (itemIndex: number) => {
+      const candidates = itemMatchCandidates[itemIndex] ?? [];
+      if (candidates.length === 0) return;
+      setMatchPicker({
+        itemIndex,
+        itemName: localItems[itemIndex]?.name ?? "",
+        candidates,
+      });
+    },
+    [itemMatchCandidates, localItems],
+  );
+
+  const applyMatchedCandidate = useCallback(
+    (itemIndex: number, candidate: PriceMatchCandidate) => {
+      const updated = localItems.map((item, index) => {
+        if (index !== itemIndex) return item;
+        const nextPrice = candidate.item.price;
+        const nextUnit =
+          (!item.unit || item.unit.trim().length === 0) && candidate.item.unit
+            ? candidate.item.unit
+            : item.unit;
+        return {
+          ...item,
+          unit: nextUnit,
+          price: nextPrice,
+          lineTotal: (item.qty || 0) * nextPrice,
+        };
+      });
+      setLocalItems(updated);
+      recalcTotal(updated);
+      patchItems.mutate(updated);
+      setMatchPicker(null);
+    },
+    [localItems, recalcTotal, patchItems],
+  );
 
   const addItem = useCallback(() => {
     setLocalItems((prev) => [
@@ -634,6 +705,72 @@ export default function QuoteScreen() {
         onClose={() => setClientModalVisible(false)}
         onSelect={(client) => patchClient.mutate(client.id)}
       />
+
+      <Modal
+        visible={matchPicker !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMatchPicker(null)}
+      >
+        <Pressable
+          className="flex-1 justify-end bg-black/45 px-6 pb-10"
+          onPress={() => setMatchPicker(null)}
+        >
+          <Pressable
+            className="rounded-3xl bg-white p-4"
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text className="text-base font-semibold text-slate-900">
+              {t("quoteEditor.chooseSavedPrice")}
+            </Text>
+            <Text className="mt-1 text-sm text-slate-500" numberOfLines={1}>
+              {matchPicker?.itemName || t("quoteEditor.item")}
+            </Text>
+
+            <View className="mt-4 gap-2">
+              {(matchPicker?.candidates ?? []).map((candidate, idx) => (
+                <Pressable
+                  key={`${candidate.item.name}-${candidate.item.unit ?? "unit"}-${idx}`}
+                  onPress={() => {
+                    if (!matchPicker) return;
+                    applyMatchedCandidate(matchPicker.itemIndex, candidate);
+                  }}
+                  className="flex-row items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-3"
+                  style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
+                >
+                  <View className="flex-1 pr-3">
+                    <Text
+                      className="text-sm font-medium text-slate-900"
+                      numberOfLines={1}
+                    >
+                      {candidate.item.name}
+                    </Text>
+                    {!!candidate.item.unit && (
+                      <Text className="mt-0.5 text-xs text-slate-500">
+                        /{candidate.item.unit}
+                      </Text>
+                    )}
+                  </View>
+                  <Text className="text-sm font-semibold text-slate-900">
+                    {currencySymbol}
+                    {candidate.item.price.toFixed(2)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Pressable
+              onPress={() => setMatchPicker(null)}
+              className="mt-4 h-11 items-center justify-center rounded-xl border border-slate-200"
+              style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
+            >
+              <Text className="text-sm font-semibold text-slate-700">
+                {t("common.cancel")}
+              </Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Header Bar */}
       <View className="flex-row items-center px-4 py-3 border-b border-slate-200 border-b-orange-200">
@@ -784,11 +921,18 @@ export default function QuoteScreen() {
               </View>
 
               {/* Rows */}
-              {localItems.map((item, index) => (
+              {localItems.map((item, index) => {
+                const candidates = itemMatchCandidates[index] ?? [];
+                const hasPossibleMatch = candidates.length > 0;
+                return (
                 <View
                   key={index}
                   style={{ minHeight: 56 }}
-                  className="flex-row items-start border-b border-slate-100 py-4"
+                  className={`flex-row items-start border-b py-4 ${
+                    hasPossibleMatch
+                      ? "border-amber-200 bg-amber-50/30"
+                      : "border-slate-100"
+                  }`}
                 >
                   {/* Name — more height so long names can wrap */}
                   <View style={{ flex: 1, maxWidth: 220 }} className="mr-1">
@@ -803,6 +947,19 @@ export default function QuoteScreen() {
                       maxLength={ITEM_NAME_MAX}
                       multiline
                     />
+                    {hasPossibleMatch && (
+                      <Pressable
+                        onPress={() => openMatchPickerForItem(index)}
+                        className="mt-1 self-start rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1"
+                        style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("quoteEditor.possibleMatch")}
+                      >
+                        <Text className="text-[11px] font-semibold text-amber-800">
+                          {t("quoteEditor.possibleMatch")}
+                        </Text>
+                      </Pressable>
+                    )}
                   </View>
                   {/* Unit */}
                   <TextInput
@@ -847,7 +1004,7 @@ export default function QuoteScreen() {
                     </Pressable>
                   </View>
                 </View>
-              ))}
+              )})}
 
               {/* Add Item Button */}
               <Pressable

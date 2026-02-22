@@ -164,7 +164,10 @@
     "addQuoteTerm": "Add term",
     "removeQuoteTerm": "Remove term",
     "extraTermsSaved": "Quote terms saved.",
-    "extraTermsSaveFailed": "Failed to save quote terms. Please try again."
+    "extraTermsSaveFailed": "Failed to save quote terms. Please try again.",
+    "useSavedPrices": "Use saved prices",
+    "possibleMatch": "Possible match",
+    "chooseSavedPrice": "Choose saved price"
   },
   "clients": {
     "title": "Clients",

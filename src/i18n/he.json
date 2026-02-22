@@ -146,7 +146,10 @@
     "addQuoteTerm": "הוסף תנאי",
     "removeQuoteTerm": "הסר תנאי",
     "extraTermsSaved": "תנאי ההצעה נשמרו.",
-    "extraTermsSaveFailed": "שמירת תנאי ההצעה נכשלה. נסה שוב."
+    "extraTermsSaveFailed": "שמירת תנאי ההצעה נכשלה. נסה שוב.",
+    "useSavedPrices": "החל מחירים שמורים",
+    "possibleMatch": "התאמה אפשרית",
+    "chooseSavedPrice": "בחר מחיר שמור"
   },
   "clients": {
     "title": "לקוחות",
