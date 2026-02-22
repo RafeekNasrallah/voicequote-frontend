@@ -1,4 +1,9 @@
-import { useSignIn, useSSO } from "@clerk/clerk-expo";
+import {
+  useSignIn,
+  useSignInWithApple,
+  useSSO,
+} from "@clerk/clerk-expo";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react-native";
@@ -21,6 +26,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function SignInScreen() {
   const { signIn, setActive, isLoaded } = useSignIn();
+  const { startAppleAuthenticationFlow } = useSignInWithApple();
   const { startSSOFlow } = useSSO();
   const router = useRouter();
   const { t } = useTranslation();
@@ -30,6 +36,7 @@ export default function SignInScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
 
   // Warm up the browser for OAuth
   useEffect(() => {
@@ -74,7 +81,7 @@ export default function SignInScreen() {
 
   // Google OAuth sign in
   const handleGoogleSignIn = useCallback(async () => {
-    if (!isLoaded) return;
+    if (!isLoaded || isAppleLoading) return;
 
     setIsGoogleLoading(true);
     try {
@@ -95,7 +102,51 @@ export default function SignInScreen() {
     } finally {
       setIsGoogleLoading(false);
     }
-  }, [isLoaded, startSSOFlow, t]);
+  }, [isLoaded, isAppleLoading, startSSOFlow, t]);
+
+  // Native Apple sign in (iOS only)
+  const handleAppleSignIn = useCallback(async () => {
+    if (
+      !isLoaded ||
+      Platform.OS !== "ios" ||
+      isLoading ||
+      isGoogleLoading ||
+      isAppleLoading
+    ) {
+      return;
+    }
+
+    setIsAppleLoading(true);
+    try {
+      const { createdSessionId, setActive: appleSetActive } =
+        await startAppleAuthenticationFlow();
+
+      if (createdSessionId) {
+        await appleSetActive?.({ session: createdSessionId });
+      }
+    } catch (err: any) {
+      // User canceled the Apple auth sheet.
+      if (err?.code === "ERR_REQUEST_CANCELED") {
+        return;
+      }
+
+      const message =
+        err?.errors?.[0]?.longMessage ||
+        err?.errors?.[0]?.message ||
+        err?.message ||
+        t("auth.appleSignInError");
+      Alert.alert(t("auth.appleSignInFailed"), message);
+    } finally {
+      setIsAppleLoading(false);
+    }
+  }, [
+    isLoaded,
+    isLoading,
+    isGoogleLoading,
+    isAppleLoading,
+    startAppleAuthenticationFlow,
+    t,
+  ]);
 
   return (
     <KeyboardAvoidingView
@@ -132,7 +183,7 @@ export default function SignInScreen() {
                   autoCapitalize="none"
                   autoComplete="email"
                   keyboardType="email-address"
-                  editable={!isLoading && !isGoogleLoading}
+                  editable={!isLoading && !isGoogleLoading && !isAppleLoading}
                 />
               </View>
             </View>
@@ -151,7 +202,7 @@ export default function SignInScreen() {
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
-                  editable={!isLoading && !isGoogleLoading}
+                  editable={!isLoading && !isGoogleLoading && !isAppleLoading}
                 />
                 <Pressable
                   onPress={() => setShowPassword(!showPassword)}
@@ -170,7 +221,7 @@ export default function SignInScreen() {
             <Pressable
               className="mt-6 h-12 items-center justify-center rounded-lg bg-orange-600"
               onPress={handleSignIn}
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading || isGoogleLoading || isAppleLoading}
               style={({ pressed }) => ({
                 opacity: pressed || isLoading ? 0.9 : 1,
               })}
@@ -195,7 +246,7 @@ export default function SignInScreen() {
             <Pressable
               className="h-12 flex-row items-center justify-center rounded-lg border border-slate-200 bg-white"
               onPress={handleGoogleSignIn}
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading || isGoogleLoading || isAppleLoading}
               style={({ pressed }) => ({
                 opacity: pressed || isGoogleLoading ? 0.8 : 1,
               })}
@@ -211,6 +262,29 @@ export default function SignInScreen() {
                 </>
               )}
             </Pressable>
+
+            {/* Apple Sign In (required on iOS when offering third-party sign in) */}
+            {Platform.OS === "ios" && (
+              <View className="mt-3 h-12 overflow-hidden rounded-lg border border-slate-200">
+                {isAppleLoading ? (
+                  <View className="h-full items-center justify-center bg-black">
+                    <ActivityIndicator color="#ffffff" />
+                  </View>
+                ) : (
+                  <AppleAuthentication.AppleAuthenticationButton
+                    buttonType={
+                      AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
+                    }
+                    buttonStyle={
+                      AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+                    }
+                    cornerRadius={8}
+                    style={{ width: "100%", height: "100%" }}
+                    onPress={handleAppleSignIn}
+                  />
+                )}
+              </View>
+            )}
 
             {/* Sign Up Link */}
             <View className="mt-6 flex-row items-center justify-center">
