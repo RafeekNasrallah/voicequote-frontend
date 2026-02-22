@@ -64,20 +64,7 @@ export default function ClientsScreen() {
 
   const handleOpenClient = useCallback(
     (clientId: number) => {
-      const href = `/client/${clientId}` as any;
-      try {
-        router.push(href);
-      } catch (error) {
-        // Rare first-tap race in Expo Go: retry on next tick instead of crashing.
-        console.warn("Client navigation failed, retrying...", error);
-        setTimeout(() => {
-          try {
-            router.push(href);
-          } catch (retryError) {
-            console.warn("Client navigation retry failed", retryError);
-          }
-        }, 50);
-      }
+      router.push(`/client/${clientId}` as any);
     },
     [router],
   );
