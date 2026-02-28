@@ -2,7 +2,7 @@
   "expo": {
     "name": "Quotio",
     "slug": "quotio",
-    "version": "2.0.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "quotio",
@@ -20,7 +20,7 @@
       "icon": "./assets/images/icon-ios-v2.png",
       "usesAppleSignIn": true,
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Quotio needs access to your microphone to transcribe your voice into professional estimates.",
+        "NSMicrophoneUsageDescription": "Quotio needs access to your microphone to record your voice for transcription into professional estimates. You can also choose an existing audio file from your device instead of recording live.",
         "NSPhotoLibraryUsageDescription": "Quotio needs access to your photo library so you can choose a logo for your business profile.",
         "NSPhotoLibraryAddUsageDescription": "Quotio needs permission to save exported files and generated assets to your photo library when you choose to do so.",
         "ITSAppUsesNonExemptEncryption": false

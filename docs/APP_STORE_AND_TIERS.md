@@ -2,7 +2,7 @@
 
 Use this guide to get your app on TestFlight **only for you** (no public App Store release) and set up subscription tiers so RevenueCat and your paywall work.
 
-**Your app:** Quotio · Bundle ID: `com.getquotio.quotio` · Entitlement in code: **Esti Pro**
+**Your app:** Quotio · Bundle ID: `com.getquotio.quotio` · Entitlement in code: **Quotio Pro**
 
 ---
 
@@ -110,7 +110,7 @@ For “only me” and adding tiers, you can stop after TestFlight + Sandbox.
 
 ## Part 2: RevenueCat — Tiers (Products + Entitlement + Offering)
 
-RevenueCat needs: **Products** (from Apple), one **Entitlement** (e.g. “Esti Pro”), and an **Offering** with **packages** so your app’s `getOfferings()` returns something.
+RevenueCat needs: **Products** (from Apple), one **Entitlement** (e.g. “Quotio Pro”), and an **Offering** with **packages** so your app’s `getOfferings()` returns something.
 
 ### 2.1 App Store Connect app in RevenueCat
 
@@ -131,8 +131,8 @@ RevenueCat needs: **Products** (from Apple), one **Entitlement** (e.g. “Esti P
 ### 2.3 Entitlement (access level)
 
 1. RevenueCat → **Entitlements**.
-2. Create an entitlement with identifier: **`Esti Pro`** (must match `ENTITLEMENT_ID` in your paywall code).
-3. Attach the Apple products above to this entitlement (so a purchase of `quotio_pro_monthly` or yearly grants “Esti Pro”).
+2. Create an entitlement with identifier: **`Quotio Pro`** (must match `REVENUECAT_ENTITLEMENT_ID` in your paywall code).
+3. Attach the Apple products above to this entitlement (so a purchase of `quotio_pro_monthly` or yearly grants “Quotio Pro”).
 
 ### 2.4 Offering (what the app fetches)
 
@@ -170,7 +170,7 @@ After this, `Purchases.getOfferings()` in your app will return `offerings.curren
 | Install via TestFlight (only you)                           | iPhone                         | ☐    |
 | App-Specific Shared Secret in RevenueCat                    | RevenueCat + App Store Connect | ☐    |
 | Products in RevenueCat (same IDs as Apple)                  | RevenueCat                     | ☐    |
-| Entitlement **Esti Pro** + products attached                | RevenueCat                     | ☐    |
+| Entitlement **Quotio Pro** + products attached             | RevenueCat                     | ☐    |
 | Current Offering with monthly (and optional yearly) package | RevenueCat                     | ☐    |
 | Sandbox tester + test purchase                              | App Store Connect + device     | ☐    |
 

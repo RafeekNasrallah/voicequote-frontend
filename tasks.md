@@ -51,7 +51,7 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 - **Action:** Create `app/auth/sign-in.tsx`.
 - **Logic:**
   - Use Clerk `useSignIn`.
-  - Create a custom UI (NOT the pre-built component) matching `DESIGN.md`.
+  - Create a custom UI (NOT the pre-built component) matching `designs.md`.
   - Fields: Email/Password or "Sign in with Google".
 - **Success:** Redirect to `/(tabs)`.
 
@@ -72,7 +72,7 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 ### Task 3.1: Dashboard UI
 
 - **Action:** Build `app/(tabs)/index.tsx`.
-- **Reference:** See `DESIGN.md` -> "Home Dashboard".
+- **Reference:** See `designs.md` -> "Home Dashboard".
 - **Components:** Header (Greeting), Stats Cards (Mock data for now), Recent Jobs List.
 
 ### Task 3.2: The Record Button Component
@@ -117,7 +117,7 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 
 - **Action:** Create `app/quote/[id].tsx`.
 - **Query:** `useQuery` fetching `GET /api/quotes/:id`.
-- **Reference:** See `DESIGN.md` -> "Quote Editor".
+- **Reference:** See `designs.md` -> "Quote Editor".
 
 ### Task 5.2: Client Management Integration
 
@@ -1065,11 +1065,11 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
   - Display the current offering’s default package (e.g. monthly) price string.
 - **Logic (purchase):**
   - On primary button press, call `Purchases.purchasePackage(offering.monthly)` (or the package you use).
-  - On success, check `customerInfo.entitlements.active['Esti Pro']` (or your entitlement ID); if active, close paywall (e.g. `router.back()`) and optionally show success feedback.
+  - On success, check `customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]` (or your entitlement ID); if active, close paywall (e.g. `router.back()`) and optionally show success feedback.
   - On error: if not user cancel, show `Alert.alert` with error message.
 - **Logic (restore):**
   - "Restore Purchases" calls `Purchases.restorePurchases()`.
-  - If `customerInfo.entitlements.active['Esti Pro']` is set, show success alert and close paywall; otherwise show "No active subscriptions found to restore."
+  - If `customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID]` is set, show success alert and close paywall; otherwise show "No active subscriptions found to restore."
 
 ### Task 31.4: Intercept 403 Quota Exceeded
 
@@ -1090,7 +1090,7 @@ We are building the **Expo (React Native)** frontend for VoiceQuote.
 
 ### Task 31.6: Restore Purchases (App Store Requirement)
 
-- **Action:** Implement "Restore Purchases" on the paywall (see Task 31.3). Call `Purchases.restorePurchases()`, then check `entitlements.active['Esti Pro']`; show success or "No active subscriptions found" and close paywall on success.
+- **Action:** Implement "Restore Purchases" on the paywall (see Task 31.3). Call `Purchases.restorePurchases()`, then check `entitlements.active[REVENUECAT_ENTITLEMENT_ID]`; show success or "No active subscriptions found" and close paywall on success.
 - **Action:** Ensure the button is visible and clearly labeled (e.g. "Restore Purchases") for Apple review.
 
 ### Task 31.7: Translations (Optional)

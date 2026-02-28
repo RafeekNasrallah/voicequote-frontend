@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowDownUp, Check, FileText, Filter, Mic, Plus, Search, Upload, PenLine } from "lucide-react-native";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     Alert,
@@ -218,6 +218,7 @@ export default function AllQuotesScreen() {
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const [recordingModalVisible, setRecordingModalVisible] = useState(false);
   const [newQuoteModalVisible, setNewQuoteModalVisible] = useState(false);
+  const documentPickInProgressRef = useRef(false);
   const { t, i18n } = useTranslation();
   const activeLocale = i18n.resolvedLanguage ?? i18n.language ?? undefined;
   const languageIsRTL = RTL_LANGUAGES.includes(
@@ -443,21 +444,31 @@ export default function AllQuotesScreen() {
 
   const handleNewQuoteOption = useCallback(
     (option: "record" | "device" | "manual") => {
-      setNewQuoteModalVisible(false);
       if (option === "record") {
+        setNewQuoteModalVisible(false);
         setRecordingModalVisible(true);
       } else if (option === "device") {
-        (async () => {
+        // Keep modal open, open document picker on top, then close modal when done.
+        // Closing the modal first caused the picker to never appear on iOS (Expo Go / TestFlight).
+        if (documentPickInProgressRef.current) return;
+        documentPickInProgressRef.current = true;
+        const runPick = async () => {
           try {
             const selected = await pickAudioFromDevice();
-            if (!selected) return;
-            handleRecordingComplete(selected);
+            setNewQuoteModalVisible(false);
+            if (selected) handleRecordingComplete(selected);
           } catch (error) {
+            setNewQuoteModalVisible(false);
             console.error("Pick audio failed:", error);
             Alert.alert(t("common.error"), t("recording.failedToPick"));
+          } finally {
+            documentPickInProgressRef.current = false;
           }
-        })();
+        };
+        // Short delay so the tap completes and the picker can present over the modal.
+        setTimeout(runPick, 200);
       } else {
+        setNewQuoteModalVisible(false);
         createManualQuote.mutate(undefined);
       }
     },

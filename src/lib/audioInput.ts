@@ -93,9 +93,20 @@ export function inferAudioUploadMetadata(input: AudioInput): {
   return { ext, contentType };
 }
 
+/** Explicit audio types for document picker; iOS maps these to UTType correctly (audio/* can fail). */
+const DOCUMENT_PICKER_AUDIO_TYPES = [
+  "audio/mpeg",
+  "audio/mp4",
+  "audio/x-m4a",
+  "audio/wav",
+  "audio/webm",
+  "audio/ogg",
+  "audio/flac",
+] as const;
+
 export async function pickAudioFromDevice(): Promise<AudioInput | null> {
   const result = await DocumentPicker.getDocumentAsync({
-    type: "audio/*",
+    type: [...DOCUMENT_PICKER_AUDIO_TYPES],
     multiple: false,
     copyToCacheDirectory: true,
   });
