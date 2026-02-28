@@ -10,7 +10,11 @@
     "showingCachedData": "عرض البيانات المخزنة. أنت غير متصل.",
     "quoteNameTooLong": "يجب أن يكون اسم العرض 255 حرفاً أو أقل.",
     "itemNameTooLong": "يجب أن يكون اسم البند 200 حرف أو أقل.",
-    "createQuoteFailed": "تعذر إنشاء العرض. يرجى المحاولة مرة أخرى."
+    "createQuoteFailed": "تعذر إنشاء العرض. يرجى المحاولة مرة أخرى.",
+    "quotaExceededTitle": "تم الوصول إلى حد العروض الصوتية",
+    "quotaExceededMessage": "لقد استخدمت العروض الصوتية الخمسة لهذا الشهر. ترقية إلى Pro لعروض صوتية غير محدودة، أو الاستمرار في إنشاء عروض بالإدخال اليدوي؟",
+    "quotaExceededUpgrade": "الترقية إلى Pro",
+    "quotaExceededManualEntry": "إنشاء عرض يدوي"
   },
   "common": {
     "appName": "Quotio",
@@ -79,7 +83,7 @@
     "noQuotesYet": "لا توجد عروض بعد. سجل أول عرض!",
     "processingFailed": "فشلت المعالجة",
     "processingFailedMsg": "تعذر معالجة التسجيل. يرجى المحاولة مرة أخرى.",
-    "newQuoteManual": "عرض جديد (بدون تسجيل)"
+    "newQuoteManual": "عرض جديد"
   },
   "quotes": {
     "title": "عروض الأسعار",
@@ -93,6 +97,10 @@
     "deleteQuoteConfirm": "هل أنت متأكد أنك تريد حذف هذا العرض؟ لا يمكن التراجع عن هذا الإجراء.",
     "deleteQuoteFailed": "تعذر حذف العرض.",
     "newQuote": "عرض جديد",
+    "newQuoteSubtitle": "إنشاء من الصوت أو إضافة التفاصيل يدوياً",
+    "newQuoteRecordHint": "سجّل بالميكروفون وسنحوّله إلى عرض",
+    "newQuoteDeviceHint": "اختر ملف صوت من جهازك",
+    "newQuoteManualHint": "ابدأ بعرض فارغ وأضف البنود بنفسك",
     "statusNeedsPricing": "بحاجة إلى تسعير",
     "filterAll": "الكل",
     "filterAllDesc": "عرض جميع عروض الأسعار",

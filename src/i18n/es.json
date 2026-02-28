@@ -10,7 +10,11 @@
     "showingCachedData": "Mostrando datos en caché. No hay conexión.",
     "quoteNameTooLong": "El nombre del presupuesto debe tener 255 caracteres o menos.",
     "itemNameTooLong": "El nombre del concepto debe tener 200 caracteres o menos.",
-    "createQuoteFailed": "No se pudo crear el presupuesto. Inténtalo de nuevo."
+    "createQuoteFailed": "No se pudo crear el presupuesto. Inténtalo de nuevo.",
+    "quotaExceededTitle": "Límite de presupuestos por voz",
+    "quotaExceededMessage": "Has usado tus 5 presupuestos por voz este mes. Actualiza a Pro para presupuestos por voz ilimitados, o sigue creando presupuestos con entrada manual.",
+    "quotaExceededUpgrade": "Actualizar a Pro",
+    "quotaExceededManualEntry": "Crear presupuesto manual"
   },
   "common": {
     "appName": "Quotio",
@@ -79,7 +83,7 @@
     "noQuotesYet": "Aún no hay presupuestos. ¡Graba el primero!",
     "processingFailed": "Error de procesamiento",
     "processingFailedMsg": "No se pudo procesar tu grabación. Inténtalo de nuevo.",
-    "newQuoteManual": "Nuevo presupuesto (sin grabación)"
+    "newQuoteManual": "Nuevo presupuesto"
   },
   "quotes": {
     "title": "Presupuestos",
@@ -110,6 +114,10 @@
     "deleteQuoteConfirm": "¿Estás seguro de que quieres eliminar este presupuesto? Esta acción no se puede deshacer.",
     "deleteQuoteFailed": "No se pudo eliminar el presupuesto.",
     "newQuote": "Nuevo presupuesto",
+    "newQuoteSubtitle": "Crear por voz o añadir detalles manualmente",
+    "newQuoteRecordHint": "Graba con el micrófono y lo convertiremos en presupuesto",
+    "newQuoteDeviceHint": "Elige un archivo de audio de tu dispositivo",
+    "newQuoteManualHint": "Empieza con un presupuesto en blanco y rellena los conceptos",
     "sortByDate": "Ordenar por fecha"
   },
   "quoteEditor": {

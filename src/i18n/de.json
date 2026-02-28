@@ -10,7 +10,11 @@
     "showingCachedData": "Cache-Daten werden angezeigt. Du bist offline.",
     "quoteNameTooLong": "Angebotsname darf maximal 255 Zeichen haben.",
     "itemNameTooLong": "Positionsname darf maximal 200 Zeichen haben.",
-    "createQuoteFailed": "Angebot konnte nicht erstellt werden. Bitte versuche es erneut."
+    "createQuoteFailed": "Angebot konnte nicht erstellt werden. Bitte versuche es erneut.",
+    "quotaExceededTitle": "Stimmangebots-Limit erreicht",
+    "quotaExceededMessage": "Du hast deine 5 Stimmangebote diesen Monat genutzt. Upgrade auf Pro für unbegrenzte Stimmangebote oder erstelle weiter Angebote mit manueller Eingabe?",
+    "quotaExceededUpgrade": "Auf Pro upgraden",
+    "quotaExceededManualEntry": "Angebot manuell erstellen"
   },
   "common": {
     "appName": "Quotio",
@@ -79,7 +83,7 @@
     "noQuotesYet": "Noch keine Angebote. Nimm dein erstes auf!",
     "processingFailed": "Verarbeitung fehlgeschlagen",
     "processingFailedMsg": "Aufnahme konnte nicht verarbeitet werden. Bitte versuche es erneut.",
-    "newQuoteManual": "Neues Angebot (ohne Aufnahme)"
+    "newQuoteManual": "Neues Angebot"
   },
   "quotes": {
     "title": "Angebote",
@@ -93,6 +97,10 @@
     "deleteQuoteConfirm": "Bist du sicher, dass du dieses Angebot löschen möchtest? Dies kann nicht rückgängig gemacht werden.",
     "deleteQuoteFailed": "Angebot konnte nicht gelöscht werden.",
     "newQuote": "Neues Angebot",
+    "newQuoteSubtitle": "Per Sprache erstellen oder Details manuell eingeben",
+    "newQuoteRecordHint": "Mit dem Mikro aufnehmen – wir machen ein Angebot daraus",
+    "newQuoteDeviceHint": "Audiodatei vom Gerät auswählen",
+    "newQuoteManualHint": "Leeres Angebot anlegen und Positionen selbst eintragen",
     "statusNeedsPricing": "Benötigt Preis",
     "filterAll": "Alle",
     "filterAllDesc": "Alle Angebote anzeigen",

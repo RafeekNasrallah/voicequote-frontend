@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ArrowDownUp, Check, FileText, Filter, Plus, Search } from "lucide-react-native";
+import { ArrowDownUp, Check, FileText, Filter, Mic, Plus, Search, Upload, PenLine } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -217,6 +217,7 @@ export default function AllQuotesScreen() {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const [recordingModalVisible, setRecordingModalVisible] = useState(false);
+  const [newQuoteModalVisible, setNewQuoteModalVisible] = useState(false);
   const { t, i18n } = useTranslation();
   const activeLocale = i18n.resolvedLanguage ?? i18n.language ?? undefined;
   const languageIsRTL = RTL_LANGUAGES.includes(
@@ -226,6 +227,8 @@ export default function AllQuotesScreen() {
   const rtlText = isRTL
     ? { textAlign: "right" as const, writingDirection: "rtl" as const }
     : undefined;
+  /** RTL: align text block content to the end (right); same as settings rows. */
+  const rtlAlignEnd = isRTL ? { alignItems: "flex-start" as const } : undefined;
   /** RTL: put section titles on the right (LTR row + flex-end so block stays right). */
   const rtlSectionTitleWrapStyle = isRTL
     ? { flexDirection: "row" as const, justifyContent: "flex-end" as const, width: "100%" as const, direction: "ltr" as const }
@@ -396,7 +399,21 @@ export default function AllQuotesScreen() {
             if (error?.response?.status === 403) {
               const code = error?.response?.data?.code;
               if (code === "QUOTA_EXCEEDED") {
-                router.push("/paywall" as any);
+                Alert.alert(
+                  t("errors.quotaExceededTitle"),
+                  t("errors.quotaExceededMessage"),
+                  [
+                    {
+                      text: t("errors.quotaExceededManualEntry"),
+                      onPress: () => createManualQuote.mutate(undefined),
+                    },
+                    {
+                      text: t("errors.quotaExceededUpgrade"),
+                      onPress: () => router.push("/paywall" as any),
+                    },
+                    { text: t("common.cancel"), style: "cancel" },
+                  ],
+                );
                 return;
               }
             }
@@ -417,18 +434,20 @@ export default function AllQuotesScreen() {
         },
       );
     },
-    [createQuote, queryClient, router, t],
+    [createQuote, createManualQuote, queryClient, router, t],
   );
 
   const handleCreateQuoteAction = useCallback(() => {
-    Alert.alert(t("quotes.newQuote"), "", [
-      {
-        text: t("recording.tapToRecord"),
-        onPress: () => setRecordingModalVisible(true),
-      },
-      {
-        text: t("recording.chooseFromDevice"),
-        onPress: async () => {
+    setNewQuoteModalVisible(true);
+  }, []);
+
+  const handleNewQuoteOption = useCallback(
+    (option: "record" | "device" | "manual") => {
+      setNewQuoteModalVisible(false);
+      if (option === "record") {
+        setRecordingModalVisible(true);
+      } else if (option === "device") {
+        (async () => {
           try {
             const selected = await pickAudioFromDevice();
             if (!selected) return;
@@ -437,15 +456,13 @@ export default function AllQuotesScreen() {
             console.error("Pick audio failed:", error);
             Alert.alert(t("common.error"), t("recording.failedToPick"));
           }
-        },
-      },
-      {
-        text: t("home.newQuoteManual"),
-        onPress: () => createManualQuote.mutate(undefined),
-      },
-      { text: t("common.cancel"), style: "cancel" },
-    ]);
-  }, [createManualQuote, handleRecordingComplete, t]);
+        })();
+      } else {
+        createManualQuote.mutate(undefined);
+      }
+    },
+    [createManualQuote, handleRecordingComplete, t],
+  );
 
   const renderQuote = useCallback(
     ({ item }: { item: Quote }) => (
@@ -485,7 +502,118 @@ export default function AllQuotesScreen() {
         onClose={() => setRecordingModalVisible(false)}
         onRecordingComplete={handleRecordingComplete}
       />
-      <ProcessingModal visible={createQuote.isPending} />
+      <ProcessingModal visible={createQuote.isPending || createManualQuote.isPending} />
+
+      {/* New quote options modal — custom bottom sheet instead of native Alert */}
+      <Modal
+        visible={newQuoteModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setNewQuoteModalVisible(false)}
+      >
+        <Pressable
+          className="flex-1 justify-end bg-black/50 px-6 pb-12"
+          onPress={() => setNewQuoteModalVisible(false)}
+        >
+          <Pressable
+            className="rounded-3xl bg-white overflow-hidden"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.15,
+              shadowRadius: 24,
+              elevation: 12,
+            }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View className="px-5 pt-5 pb-2" style={rtlSectionTitleWrapStyle}>
+              <View>
+                <Text className="text-lg font-semibold text-slate-900" style={rtlText}>
+                  {t("quotes.newQuote")}
+                </Text>
+                <Text className="mt-0.5 text-sm text-slate-500" style={rtlText}>
+                  {t("quotes.newQuoteSubtitle")}
+                </Text>
+              </View>
+            </View>
+            <View className="py-2">
+              <Pressable
+                onPress={() => handleNewQuoteOption("record")}
+                className="flex-row items-center px-5 py-3.5 active:bg-slate-50"
+                style={({ pressed }) => [
+                  isRTL ? { direction: "rtl" as const } : undefined,
+                  { backgroundColor: pressed ? "rgb(248 250 252)" : undefined },
+                ]}
+              >
+                <View className="h-10 w-10 items-center justify-center rounded-full bg-orange-100">
+                  <Mic size={20} color="#ea580c" />
+                </View>
+                <View className="ms-3 flex-1" style={rtlAlignEnd}>
+                  <Text className="text-base font-medium text-slate-900" style={rtlText}>
+                    {t("recording.tapToRecord")}
+                  </Text>
+                  <Text className="mt-0.5 text-xs text-slate-500" style={rtlText}>
+                    {t("quotes.newQuoteRecordHint")}
+                  </Text>
+                </View>
+              </Pressable>
+              <Pressable
+                onPress={() => handleNewQuoteOption("device")}
+                className="flex-row items-center px-5 py-3.5 active:bg-slate-50"
+                style={({ pressed }) => [
+                  isRTL ? { direction: "rtl" as const } : undefined,
+                  { backgroundColor: pressed ? "rgb(248 250 252)" : undefined },
+                ]}
+              >
+                <View className="h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+                  <Upload size={20} color="#475569" />
+                </View>
+                <View className="ms-3 flex-1" style={rtlAlignEnd}>
+                  <Text className="text-base font-medium text-slate-900" style={rtlText}>
+                    {t("recording.chooseFromDevice")}
+                  </Text>
+                  <Text className="mt-0.5 text-xs text-slate-500" style={rtlText}>
+                    {t("quotes.newQuoteDeviceHint")}
+                  </Text>
+                </View>
+              </Pressable>
+              <Pressable
+                onPress={() => handleNewQuoteOption("manual")}
+                className="flex-row items-center px-5 py-3.5 active:bg-slate-50"
+                style={({ pressed }) => [
+                  isRTL ? { direction: "rtl" as const } : undefined,
+                  { backgroundColor: pressed ? "rgb(248 250 252)" : undefined },
+                ]}
+              >
+                <View className="h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+                  <PenLine size={20} color="#475569" />
+                </View>
+                <View className="ms-3 flex-1" style={rtlAlignEnd}>
+                  <Text className="text-base font-medium text-slate-900" style={rtlText}>
+                    {t("home.newQuoteManual")}
+                  </Text>
+                  <Text className="mt-0.5 text-xs text-slate-500" style={rtlText}>
+                    {t("quotes.newQuoteManualHint")}
+                  </Text>
+                </View>
+              </Pressable>
+            </View>
+            <View className="border-t border-slate-100 px-5 py-3">
+              <Pressable
+                onPress={() => setNewQuoteModalVisible(false)}
+                className="py-2.5 items-center rounded-xl active:bg-slate-50"
+                style={({ pressed }) => ({
+                  backgroundColor: pressed ? "rgb(248 250 252)" : undefined,
+                })}
+              >
+                <Text className="text-base font-medium text-slate-600" style={rtlText}>
+                  {t("common.cancel")}
+                </Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Header — RTL: direction rtl so title on right, buttons on left; thin orange line under title */}
       <View

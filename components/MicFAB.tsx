@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import RecordingModal from "./RecordingModal";
 import ProcessingModal from "./ProcessingModal";
+import { useCreateManualQuote } from "@/src/hooks/useCreateManualQuote";
 import { useCreateQuote } from "@/src/hooks/useCreateQuote";
 import { type AudioInput } from "@/src/lib/audioInput";
 import { isNetworkError } from "@/src/lib/networkError";
@@ -21,6 +22,7 @@ export default function MicFAB({ style }: MicFABProps) {
   const router = useRouter();
   const { t } = useTranslation();
   const createQuote = useCreateQuote();
+  const createManualQuote = useCreateManualQuote();
 
   const handleRecordingComplete = useCallback(
     (audio: AudioInput) => {
@@ -44,7 +46,21 @@ export default function MicFAB({ style }: MicFABProps) {
             if (error?.response?.status === 403) {
               const code = error?.response?.data?.code;
               if (code === "QUOTA_EXCEEDED") {
-                router.push("/paywall" as any);
+                Alert.alert(
+                  t("errors.quotaExceededTitle"),
+                  t("errors.quotaExceededMessage"),
+                  [
+                    {
+                      text: t("errors.quotaExceededManualEntry"),
+                      onPress: () => createManualQuote.mutate(undefined),
+                    },
+                    {
+                      text: t("errors.quotaExceededUpgrade"),
+                      onPress: () => router.push("/paywall" as any),
+                    },
+                    { text: t("common.cancel"), style: "cancel" },
+                  ],
+                );
                 return;
               }
             }
@@ -65,7 +81,7 @@ export default function MicFAB({ style }: MicFABProps) {
         }
       );
     },
-    [createQuote, queryClient, router, t]
+    [createQuote, createManualQuote, queryClient, router, t]
   );
 
   return (
@@ -78,7 +94,7 @@ export default function MicFAB({ style }: MicFABProps) {
       />
 
       {/* Processing Modal */}
-      <ProcessingModal visible={createQuote.isPending} />
+      <ProcessingModal visible={createQuote.isPending || createManualQuote.isPending} />
 
       {/* FAB Button */}
       <Pressable

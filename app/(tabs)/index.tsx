@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/clerk-expo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { CheckCircle2, Clock, FileText } from "lucide-react-native";
+import { CheckCircle2, Clock, FileText, Plus } from "lucide-react-native";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -19,6 +19,7 @@ import NetworkErrorView from "@/components/NetworkErrorView";
 import ProcessingModal from "@/components/ProcessingModal";
 import RecordButton from "@/components/RecordButton";
 import { QuoteCardSkeleton, Skeleton } from "@/components/Skeleton";
+import { useCreateManualQuote } from "@/src/hooks/useCreateManualQuote";
 import { useCreateQuote } from "@/src/hooks/useCreateQuote";
 import { type AudioInput } from "@/src/lib/audioInput";
 import api from "@/src/lib/api";
@@ -285,6 +286,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const createQuote = useCreateQuote();
+  const createManualQuote = useCreateManualQuote();
   const { t, i18n } = useTranslation();
   const activeLocale = i18n.resolvedLanguage ?? i18n.language ?? undefined;
   const languageIsRTL = RTL_LANGUAGES.includes(
@@ -317,6 +319,7 @@ export default function HomeScreen() {
   const quoteCount = userProfile?.quoteCount ?? 0;
   const softLimitApproaching = isPro && quoteCount >= 180 && quoteCount < 200;
   const softLimitReached = isPro && quoteCount >= 200;
+  const freeVoiceLimitReached = !isPro && quoteCount >= 5;
 
   // Greeting based on time of day
   function getGreeting(): string {
@@ -410,7 +413,21 @@ export default function HomeScreen() {
             if (error?.response?.status === 403) {
               const code = error?.response?.data?.code;
               if (code === "QUOTA_EXCEEDED") {
-                router.push("/paywall" as any);
+                Alert.alert(
+                  t("errors.quotaExceededTitle"),
+                  t("errors.quotaExceededMessage"),
+                  [
+                    {
+                      text: t("errors.quotaExceededManualEntry"),
+                      onPress: () => createManualQuote.mutate(undefined),
+                    },
+                    {
+                      text: t("errors.quotaExceededUpgrade"),
+                      onPress: () => router.push("/paywall" as any),
+                    },
+                    { text: t("common.cancel"), style: "cancel" },
+                  ],
+                );
                 return;
               }
             }
@@ -431,13 +448,13 @@ export default function HomeScreen() {
         },
       );
     },
-    [createQuote, queryClient, router, t],
+    [createQuote, createManualQuote, router, t],
   );
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
       {/* Processing Modal */}
-      <ProcessingModal visible={createQuote.isPending} />
+      <ProcessingModal visible={createQuote.isPending || createManualQuote.isPending} />
 
       <ScrollView
         className="flex-1"
@@ -515,7 +532,7 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* ─── Record Button (Hero) ──────────────────── */}
+        {/* ─── Record Button (Hero) or + for manual when free at limit ──────────────────── */}
         <View className="mt-8 mb-6 items-center">
           {softLimitReached ? (
             <View className="items-center">
@@ -533,6 +550,31 @@ export default function HomeScreen() {
               </View>
               <Text className="mt-4 max-w-[280] text-center text-base font-semibold text-slate-600">
                 {t("errors.softLimitReached")}
+              </Text>
+            </View>
+          ) : freeVoiceLimitReached ? (
+            <View className="items-center">
+              <Pressable
+                onPress={() => createManualQuote.mutate(undefined)}
+                disabled={createManualQuote.isPending}
+                className="h-32 w-32 items-center justify-center rounded-full bg-orange-600"
+                style={({ pressed }) => [
+                  {
+                    opacity: pressed || createManualQuote.isPending ? 0.85 : 1,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 8,
+                    elevation: 8,
+                  },
+                ]}
+                accessibilityLabel={t("home.newQuoteManual")}
+                accessibilityRole="button"
+              >
+                <Plus size={48} color="#ffffff" />
+              </Pressable>
+              <Text className="mt-4 max-w-[280] text-center text-base font-semibold text-slate-700">
+                {t("home.newQuoteManual")}
               </Text>
             </View>
           ) : (

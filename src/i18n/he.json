@@ -10,7 +10,11 @@
     "showingCachedData": "מוצגים נתונים במטמון. אתה לא מחובר.",
     "quoteNameTooLong": "שם ההצעה חייב להיות 255 תווים או פחות.",
     "itemNameTooLong": "שם הפריט חייב להיות 200 תווים או פחות.",
-    "createQuoteFailed": "לא ניתן ליצור הצעה. נסה שוב."
+    "createQuoteFailed": "לא ניתן ליצור הצעה. נסה שוב.",
+    "quotaExceededTitle": "הגעת למגבלת הצעות קול",
+    "quotaExceededMessage": "השתמשת ב-5 הצעות הקול החודש. שדרג ל-Pro לצעות קול ללא הגבלה, או המשך ליצור הצעות בהזנה ידנית?",
+    "quotaExceededUpgrade": "שדרוג ל-Pro",
+    "quotaExceededManualEntry": "צור הצעה ידנית"
   },
   "common": {
     "appName": "Quotio",
@@ -79,7 +83,7 @@
     "noQuotesYet": "עדיין אין הצעות. הקלט את הראשונה!",
     "processingFailed": "העיבוד נכשל",
     "processingFailedMsg": "לא ניתן לעבד את ההקלטה. נסה שוב.",
-    "newQuoteManual": "הצעה חדשה (ללא הקלטה)"
+    "newQuoteManual": "הצעה חדשה"
   },
   "quotes": {
     "title": "הצעות מחיר",
@@ -93,6 +97,10 @@
     "deleteQuoteConfirm": "האם אתה בטוח שברצונך למחוק הצעה זו? לא ניתן לבטל פעולה זו.",
     "deleteQuoteFailed": "לא ניתן למחוק את ההצעה.",
     "newQuote": "הצעה חדשה",
+    "newQuoteSubtitle": "צור מקול או הזן פרטים ידנית",
+    "newQuoteRecordHint": "הקלט עם המיקרופון ונהפוך להצעה",
+    "newQuoteDeviceHint": "בחר קובץ אודיו מהמכשיר",
+    "newQuoteManualHint": "התחל עם הצעה ריקה ומלא פריטים בעצמך",
     "statusNeedsPricing": "דורש תמחור",
     "filterAll": "הכול",
     "filterAllDesc": "הצג את כל ההצעות",
