@@ -229,7 +229,7 @@ export default function ClientDetailScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom"]}>
       {/* Header: one order; RTL = trash left, right side = arrow then text */}
       <View
         className="flex-row items-center px-4 py-3 border-b border-slate-200"

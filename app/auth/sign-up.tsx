@@ -13,6 +13,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 export default function SignUpScreen() {
@@ -114,8 +115,9 @@ export default function SignUpScreen() {
   // ─── Verification Code Screen ─────────────────────────────
   if (pendingVerification) {
     return (
+      <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom"]}>
       <KeyboardAvoidingView
-        className="flex-1 bg-white"
+        className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
@@ -200,13 +202,15 @@ export default function SignUpScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      </SafeAreaView>
     );
   }
 
   // ─── Sign Up Form Screen ──────────────────────────────────
   return (
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom"]}>
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      className="flex-1"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -233,7 +237,7 @@ export default function SignUpScreen() {
                 <View className="flex-row items-center rounded-lg border border-slate-200 bg-white px-4 h-12">
                   <User size={18} color="#ea580c" />
                   <TextInput
-                    className="ml-3 flex-1 text-base text-slate-900"
+                    className="ml-3 flex-1 h-full text-base text-slate-900"
                     placeholder={t("auth.firstNamePlaceholder")}
                     placeholderTextColor="#94a3b8"
                     value={firstName}
@@ -251,7 +255,7 @@ export default function SignUpScreen() {
                 </Text>
                 <View className="flex-row items-center rounded-lg border border-slate-200 bg-white px-3 h-12">
                   <TextInput
-                    className="flex-1 text-base text-slate-900"
+                    className="flex-1 h-full text-base text-slate-900"
                     placeholder={t("auth.lastNamePlaceholder")}
                     placeholderTextColor="#94a3b8"
                     value={lastName}
@@ -271,7 +275,7 @@ export default function SignUpScreen() {
               <View className="flex-row items-center rounded-lg border border-slate-200 bg-white px-4 h-12">
                 <Mail size={18} color="#ea580c" />
                 <TextInput
-                  className="ml-3 flex-1 text-base text-slate-900"
+                  className="ml-3 flex-1 h-full text-base text-slate-900"
                   placeholder={t("auth.emailPlaceholder")}
                   placeholderTextColor="#94a3b8"
                   value={email}
@@ -292,7 +296,7 @@ export default function SignUpScreen() {
               <View className="flex-row items-center rounded-lg border border-slate-200 bg-white px-4 h-12">
                 <Lock size={18} color="#ea580c" />
                 <TextInput
-                  className="ml-3 flex-1 text-base text-slate-900"
+                  className="ml-3 flex-1 h-full text-base text-slate-900"
                   placeholder={t("auth.createPasswordPlaceholder")}
                   placeholderTextColor="#94a3b8"
                   value={password}
@@ -348,5 +352,6 @@ export default function SignUpScreen() {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

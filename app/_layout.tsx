@@ -21,7 +21,9 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 LogBox.ignoreLogs(["SafeAreaView has been deprecated"]);
 
 import OfflineBanner from "@/components/OfflineBanner";
-import { initI18n } from "@/src/i18n";
+import { changeLanguage, initI18n } from "@/src/i18n";
+import i18n from "@/src/i18n";
+import api from "@/src/lib/api";
 import { setGetToken, tokenCache } from "@/src/lib/auth";
 import { queryClient } from "@/src/lib/query";
 import { configureRevenueCat, initRevenueCat } from "@/src/lib/revenueCat";
@@ -98,7 +100,7 @@ export default function RootLayout() {
       <ClerkLoaded>
         <QueryClientProvider client={queryClient}>
           <SafeAreaProvider>
-            <StatusBar style="dark" />
+            <StatusBar style="dark" backgroundColor="transparent" translucent />
             <LayoutDirectionWrapper>
               <AuthGate />
             </LayoutDirectionWrapper>
@@ -131,6 +133,19 @@ function AuthGate() {
       setGetToken(() => getToken());
     }
   }, [isLoaded, isSignedIn, getToken]);
+
+  // Sync server preferredLanguage into local i18n on sign-in.
+  // Fixes fresh installs on a new device where AsyncStorage is empty but the server
+  // already has a language preference (e.g. user previously set Arabic on iOS, now on Android).
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    api.get<{ preferredLanguage?: string | null }>("/api/me").then(({ data }) => {
+      const serverLang = data?.preferredLanguage;
+      if (serverLang && serverLang !== i18n.language) {
+        changeLanguage(serverLang);
+      }
+    }).catch(() => {});
+  }, [isLoaded, isSignedIn]);
 
   // RevenueCat: identify user with Clerk ID so webhook updates correct backend user
   useEffect(() => {

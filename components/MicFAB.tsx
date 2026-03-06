@@ -94,7 +94,7 @@ export default function MicFAB({ style }: MicFABProps) {
       />
 
       {/* Processing Modal */}
-      <ProcessingModal visible={createQuote.isPending || createManualQuote.isPending} />
+      <ProcessingModal visible={createQuote.isPending} />
 
       {/* FAB Button */}
       <Pressable

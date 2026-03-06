@@ -513,7 +513,7 @@ export default function AllQuotesScreen() {
         onClose={() => setRecordingModalVisible(false)}
         onRecordingComplete={handleRecordingComplete}
       />
-      <ProcessingModal visible={createQuote.isPending || createManualQuote.isPending} />
+      <ProcessingModal visible={createQuote.isPending} />
 
       {/* New quote options modal — custom bottom sheet instead of native Alert */}
       <Modal

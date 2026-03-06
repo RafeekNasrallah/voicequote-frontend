@@ -30,11 +30,15 @@ export function useCreateManualQuote() {
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["quotes"] });
-      queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
-      queryClient.invalidateQueries({ queryKey: ["quoteStats"] });
-      queryClient.invalidateQueries({ queryKey: ["me"] });
-      router.push(`/quote/${data.quoteId}` as any);
+      // Manual quotes open immediately after creation, so navigate first and
+      // refresh list data in the background to avoid blocking the editor entry.
+      router.replace(`/quote/${data.quoteId}` as any);
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["quotes"] });
+        queryClient.invalidateQueries({ queryKey: ["recentQuotes"] });
+        queryClient.invalidateQueries({ queryKey: ["quoteStats"] });
+        queryClient.invalidateQueries({ queryKey: ["me"] });
+      }, 0);
     },
     onError: (error: any) => {
       const status = error?.response?.status;

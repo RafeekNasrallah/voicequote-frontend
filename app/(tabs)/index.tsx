@@ -454,7 +454,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
       {/* Processing Modal */}
-      <ProcessingModal visible={createQuote.isPending || createManualQuote.isPending} />
+      <ProcessingModal visible={createQuote.isPending} />
 
       <ScrollView
         className="flex-1"

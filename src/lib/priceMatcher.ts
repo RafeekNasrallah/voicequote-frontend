@@ -146,32 +146,23 @@ export function getPriceMatchCandidates(
   priceList: PriceListItem[],
   options: MatchCandidateOptions = {},
 ): PriceMatchCandidate[] {
-  const { maxResults = 3, minScore = 0.5 } = options;
-  if (!name?.trim()) return [];
-  if (!Array.isArray(priceList) || priceList.length === 0) return [];
-
   const normalizedList = normalizePriceList(priceList);
-  if (normalizedList.length === 0) return [];
+  return getPriceMatchCandidatesFromEntries(name, unit, normalizedList, options);
+}
 
-  const query = normalizeText(name);
-  if (!query) return [];
-  const querySorted = sortTokens(query);
-  const queryUnit = normalizeUnit(unit);
+export function createPriceMatcher(priceList: PriceListItem[]) {
+  const entries = normalizePriceList(priceList);
 
-  const scored: PriceMatchCandidate[] = [];
-  for (const entry of normalizedList) {
-    const baseScore = scoreEntry(query, querySorted, entry.searchKeys);
-    if (baseScore <= 0) continue;
-
-    const score = clamp01(
-      baseScore + getUnitScoreDelta(queryUnit, entry.normalizedUnit),
-    );
-    if (score < minScore) continue;
-    scored.push({ item: entry, score });
-  }
-
-  scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, Math.max(1, maxResults));
+  return {
+    hasEntries: entries.length > 0,
+    getCandidates(
+      name: string,
+      unit: string | undefined,
+      options: MatchCandidateOptions = {},
+    ): PriceMatchCandidate[] {
+      return getPriceMatchCandidatesFromEntries(name, unit, entries, options);
+    },
+  };
 }
 
 function normalizePriceList(items: PriceListItem[]): NormalizedPriceListItem[] {
@@ -226,6 +217,37 @@ function findBestMatch(
 
   if (!best || best.score < MATCH_ACCEPT_SCORE) return null;
   return best;
+}
+
+function getPriceMatchCandidatesFromEntries(
+  name: string,
+  unit: string | undefined,
+  entries: NormalizedPriceListItem[],
+  options: MatchCandidateOptions = {},
+): PriceMatchCandidate[] {
+  const { maxResults = 3, minScore = 0.5 } = options;
+  if (!name?.trim()) return [];
+  if (entries.length === 0) return [];
+
+  const query = normalizeText(name);
+  if (!query) return [];
+  const querySorted = sortTokens(query);
+  const queryUnit = normalizeUnit(unit);
+
+  const scored: PriceMatchCandidate[] = [];
+  for (const entry of entries) {
+    const baseScore = scoreEntry(query, querySorted, entry.searchKeys);
+    if (baseScore <= 0) continue;
+
+    const score = clamp01(
+      baseScore + getUnitScoreDelta(queryUnit, entry.normalizedUnit),
+    );
+    if (score < minScore) continue;
+    scored.push({ item: entry, score });
+  }
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, Math.max(1, maxResults));
 }
 
 function scoreEntry(

@@ -19,6 +19,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 // Required for OAuth session completion on web
@@ -149,10 +150,11 @@ export default function SignInScreen() {
   ]);
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-white"
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom"]}>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
@@ -175,7 +177,7 @@ export default function SignInScreen() {
               <View className="flex-row items-center rounded-lg border border-slate-200 bg-white px-4 h-12">
                 <Mail size={18} color="#ea580c" />
                 <TextInput
-                  className="ml-3 flex-1 text-base text-slate-900"
+                  className="ml-3 flex-1 h-full text-base text-slate-900"
                   placeholder={t("auth.emailPlaceholder")}
                   placeholderTextColor="#94a3b8"
                   value={email}
@@ -196,7 +198,7 @@ export default function SignInScreen() {
               <View className="flex-row items-center rounded-lg border border-slate-200 bg-white px-4 h-12">
                 <Lock size={18} color="#ea580c" />
                 <TextInput
-                  className="ml-3 flex-1 text-base text-slate-900"
+                  className="ml-3 flex-1 h-full text-base text-slate-900"
                   placeholder={t("auth.passwordPlaceholder")}
                   placeholderTextColor="#94a3b8"
                   value={password}
@@ -302,6 +304,7 @@ export default function SignInScreen() {
           </View>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

@@ -1,8 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+    createAudioPlayer,
     setAudioModeAsync,
-    useAudioPlayer,
-    useAudioPlayerStatus,
 } from "expo-audio";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
@@ -15,7 +14,7 @@ import {
     Trash2,
     UserPlus,
 } from "lucide-react-native";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
@@ -38,7 +37,7 @@ import NetworkErrorView from "@/components/NetworkErrorView";
 import api from "@/src/lib/api";
 import { DEFAULT_CURRENCY, getCurrencySymbol } from "@/src/lib/currency";
 import {
-  getPriceMatchCandidates,
+  createPriceMatcher,
   type PriceMatchCandidate,
   type PriceListItem as SavedPriceItem,
 } from "@/src/lib/priceMatcher";
@@ -132,26 +131,7 @@ export default function QuoteScreen() {
   const deleteButtonSpacing = isRTL
     ? { marginRight: 8 as const }
     : { marginLeft: 8 as const };
-  const tableActionColumnWidth = 58;
   const tableDirection = { direction: "ltr" as const };
-  const tableItemCellSpacing = isRTL
-    ? { marginLeft: 4 as const }
-    : { marginRight: 4 as const };
-  const tableActionCellStyle = isRTL
-    ? {
-        width: tableActionColumnWidth,
-        paddingRight: 8 as const,
-        borderRightWidth: 1 as const,
-        borderColor: "#e2e8f0",
-        alignItems: "center" as const,
-      }
-    : {
-        width: tableActionColumnWidth,
-        paddingLeft: 8 as const,
-        borderLeftWidth: 1 as const,
-        borderColor: "#e2e8f0",
-        alignItems: "center" as const,
-      };
   /** RTL: put section titles on the right (LTR row + flex-end so block stays right). */
   const rtlSectionTitleWrapStyle = isRTL
     ? { flexDirection: "row" as const, justifyContent: "flex-end" as const, width: "100%" as const, direction: "ltr" as const }
@@ -169,6 +149,14 @@ export default function QuoteScreen() {
   const [isSharing, setIsSharing] = useState(false);
   const [localExtraTerms, setLocalExtraTerms] = useState<string[]>([]);
   const [matchPicker, setMatchPicker] = useState<MatchPickerState | null>(null);
+  const audioPlayerRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
+  const audioPlayerSourceRef = useRef<string | null>(null);
+  const audioStatusSubscriptionRef = useRef<{ remove: () => void } | null>(null);
+  const [audioPlayback, setAudioPlayback] = useState({
+    playing: false,
+    currentTime: 0,
+    duration: 0,
+  });
 
   // ─── Fetch Quote ────────────────────────────────────────
   const {
@@ -202,12 +190,6 @@ export default function QuoteScreen() {
     enabled: !!quote?.id,
     staleTime: 25 * 60 * 1000, // 25 min (URL TTL is 1h)
   });
-
-  const audioPlayer = useAudioPlayer(audioUrl ?? null, {
-    updateInterval: 500,
-    downloadFirst: true, // download remote URL before playback for reliable sound
-  });
-  const audioStatus = useAudioPlayerStatus(audioPlayer);
 
   // ─── Fetch User Profile (for default labor rate) ──────────────────
   const { data: userProfile } = useQuery({
@@ -579,6 +561,88 @@ export default function QuoteScreen() {
     }
   }, [pdfUrl, id, t, generatePdf, localName]);
 
+  const releaseAudioPlayer = useCallback(() => {
+    audioStatusSubscriptionRef.current?.remove();
+    audioStatusSubscriptionRef.current = null;
+    audioPlayerRef.current?.remove();
+    audioPlayerRef.current = null;
+    audioPlayerSourceRef.current = null;
+    setAudioPlayback({
+      playing: false,
+      currentTime: 0,
+      duration: 0,
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      releaseAudioPlayer();
+    };
+  }, [releaseAudioPlayer]);
+
+  useEffect(() => {
+    if (audioPlayerSourceRef.current && audioPlayerSourceRef.current !== audioUrl) {
+      releaseAudioPlayer();
+      return;
+    }
+    if (!audioUrl && audioPlayerRef.current) {
+      releaseAudioPlayer();
+    }
+  }, [audioUrl, releaseAudioPlayer]);
+
+  const handleAudioToggle = useCallback(async () => {
+    if (!audioUrl) return;
+
+    let player = audioPlayerRef.current;
+    if (!player || audioPlayerSourceRef.current !== audioUrl) {
+      releaseAudioPlayer();
+      player = createAudioPlayer(audioUrl, {
+        updateInterval: 500,
+        downloadFirst: true,
+      });
+      audioPlayerRef.current = player;
+      audioPlayerSourceRef.current = audioUrl;
+      setAudioPlayback({
+        playing: player.playing,
+        currentTime: player.currentTime ?? 0,
+        duration: player.duration ?? 0,
+      });
+      audioStatusSubscriptionRef.current = player.addListener(
+        "playbackStatusUpdate",
+        (status: {
+          playing?: boolean;
+          currentTime?: number;
+          duration?: number;
+        }) => {
+          setAudioPlayback({
+            playing: !!status.playing,
+            currentTime: status.currentTime ?? 0,
+            duration: status.duration ?? 0,
+          });
+        },
+      );
+    }
+
+    if (player.playing) {
+      player.pause();
+      setAudioPlayback((prev) => ({ ...prev, playing: false }));
+      return;
+    }
+
+    await setAudioModeAsync({
+      allowsRecording: false,
+      playsInSilentMode: true,
+    });
+
+    const duration = player.duration ?? audioPlayback.duration ?? 0;
+    const currentTime = player.currentTime ?? audioPlayback.currentTime ?? 0;
+    if (duration > 0 && currentTime >= duration - 0.5) {
+      await player.seekTo(0);
+    }
+    player.play();
+    setAudioPlayback((prev) => ({ ...prev, playing: true }));
+  }, [audioPlayback.currentTime, audioPlayback.duration, audioUrl, releaseAudioPlayer]);
+
   // ─── Item Editing Helpers ───────────────────────────────
 
   const recalcTotal = useCallback((items: QuoteItem[]) => {
@@ -589,24 +653,29 @@ export default function QuoteScreen() {
     setLocalTotal(total);
   }, []);
 
+  const priceListMatcher = useMemo(
+    () =>
+      createPriceMatcher(
+        Array.isArray(userProfile?.priceList) ? userProfile.priceList : [],
+      ),
+    [userProfile?.priceList],
+  );
+
   const itemMatchCandidates = useMemo(() => {
-    const priceList = Array.isArray(userProfile?.priceList)
-      ? userProfile.priceList
-      : [];
     return localItems.map((item) => {
       const hasValidPrice =
         typeof item.price === "number" &&
         Number.isFinite(item.price) &&
         item.price > 0;
-      if (hasValidPrice || !item.name?.trim() || priceList.length === 0) {
+      if (hasValidPrice || !item.name?.trim() || !priceListMatcher.hasEntries) {
         return [] as PriceMatchCandidate[];
       }
-      return getPriceMatchCandidates(item.name, item.unit, priceList, {
+      return priceListMatcher.getCandidates(item.name, item.unit, {
         maxResults: 3,
         minScore: 0.5,
       });
     });
-  }, [localItems, userProfile?.priceList]);
+  }, [localItems, priceListMatcher]);
 
   const updateItem = useCallback(
     (index: number, field: keyof QuoteItem, value: string) => {
@@ -740,7 +809,7 @@ export default function QuoteScreen() {
   // ─── Render ─────────────────────────────────────────────
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom"]}>
       {/* Client Select Modal */}
       <ClientSelectModal
         visible={clientModalVisible}
@@ -948,50 +1017,35 @@ export default function QuoteScreen() {
                   </Text>
                 </View>
                 <Pressable
-                  onPress={async () => {
-                    if (audioStatus.playing) {
-                      audioPlayer.pause();
-                    } else {
-                      // Ensure playback is audible (iOS: play even in silent mode)
-                      await setAudioModeAsync({
-                        allowsRecording: false,
-                        playsInSilentMode: true,
-                      });
-                      const dur = audioStatus.duration ?? 0;
-                      if (dur > 0 && audioStatus.currentTime >= dur - 0.5) {
-                        audioPlayer.seekTo(0);
-                      }
-                      audioPlayer.play();
-                    }
-                  }}
+                  onPress={handleAudioToggle}
                   className="flex-row items-center rounded-lg border border-slate-200 bg-slate-50 p-3"
                   style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
                   accessibilityLabel={
-                    audioStatus.playing
+                    audioPlayback.playing
                       ? t("quoteEditor.pauseRecording")
                       : t("quoteEditor.playRecording")
                   }
                   accessibilityRole="button"
                 >
-                  {audioStatus.playing ? (
+                  {audioPlayback.playing ? (
                     <Pause size={20} color="#0f172a" />
                   ) : (
                     <Play size={20} color="#0f172a" />
                   )}
                   <Text className="ml-2 text-sm font-medium text-slate-900">
-                    {audioStatus.playing
+                    {audioPlayback.playing
                       ? t("quoteEditor.pauseRecording")
                       : t("quoteEditor.playRecording")}
                   </Text>
-                  {audioStatus.playing && (audioStatus.duration ?? 0) > 0 && (
+                  {audioPlayback.playing && audioPlayback.duration > 0 && (
                     <Text className="ml-2 text-xs text-slate-500">
-                      {Math.floor(audioStatus.currentTime / 60)}:
+                      {Math.floor(audioPlayback.currentTime / 60)}:
                       {String(
-                        Math.floor(audioStatus.currentTime % 60),
+                        Math.floor(audioPlayback.currentTime % 60),
                       ).padStart(2, "0")}{" "}
-                      / {Math.floor((audioStatus.duration ?? 0) / 60)}:
+                      / {Math.floor(audioPlayback.duration / 60)}:
                       {String(
-                        Math.floor((audioStatus.duration ?? 0) % 60),
+                        Math.floor(audioPlayback.duration % 60),
                       ).padStart(2, "0")}
                     </Text>
                   )}
@@ -1001,207 +1055,132 @@ export default function QuoteScreen() {
 
             {/* ─── Line Items ──────────────────────── */}
             <View className="p-4">
-              {/* Table Header */}
-              <View className="mb-2 flex-row items-center" style={tableDirection}>
-                {isRTL ? (
-                  <>
-                    <View style={{ width: tableActionColumnWidth }} />
-                    <Text
-                      className="w-20 text-right text-xs font-semibold uppercase text-slate-500"
-                      style={rtlText}
-                    >
-                      {t("quoteEditor.price")}
-                    </Text>
-                    <Text
-                      className="w-14 text-center text-xs font-semibold uppercase text-slate-500"
-                      style={rtlText}
-                    >
-                      {t("quoteEditor.qty")}
-                    </Text>
-                    <Text
-                      className="w-16 text-center text-xs font-semibold uppercase text-slate-500"
-                      style={rtlText}
-                    >
-                      {t("quoteEditor.unit")}
-                    </Text>
-                    <Text
-                      className="flex-1 text-xs font-semibold uppercase text-slate-500"
-                      style={[rtlText, fullWidthText]}
-                    >
-                      {t("quoteEditor.item")}
-                    </Text>
-                  </>
-                ) : (
-                  <>
-                    <Text className="flex-1 text-xs font-semibold uppercase text-slate-500">
-                      {t("quoteEditor.item")}
-                    </Text>
-                    <Text className="w-16 text-center text-xs font-semibold uppercase text-slate-500">
-                      {t("quoteEditor.unit")}
-                    </Text>
-                    <Text className="w-14 text-center text-xs font-semibold uppercase text-slate-500">
-                      {t("quoteEditor.qty")}
-                    </Text>
-                    <Text className="w-20 text-right text-xs font-semibold uppercase text-slate-500">
-                      {t("quoteEditor.price")}
-                    </Text>
-                    <View style={{ width: tableActionColumnWidth }} />
-                  </>
-                )}
+              {/* Section title */}
+              <View className="mb-3" style={rtlSectionTitleWrapStyle}>
+                <Text className="text-xs font-semibold uppercase text-slate-500" style={rtlText}>
+                  {t("quoteEditor.item")}
+                </Text>
               </View>
 
-              {/* Rows */}
+              {/* Item Cards */}
               {localItems.map((item, index) => {
                 const candidates = itemMatchCandidates[index] ?? [];
                 const hasPossibleMatch = candidates.length > 0;
+                const lineTotal = (item.qty || 0) * (item.price || 0);
                 return (
                   <View
                     key={index}
-                    style={[{ minHeight: 56 }, tableDirection]}
-                    className={`flex-row items-start border-b py-4 ${
+                    className={`mb-2.5 rounded-xl border p-3 ${
                       hasPossibleMatch
-                        ? "border-amber-200 bg-amber-50/30"
-                        : "border-slate-100"
+                        ? "border-amber-200 bg-amber-50/50"
+                        : "border-slate-200 bg-slate-50"
                     }`}
                   >
-                    {isRTL ? (
-                      <>
-                        <View style={tableActionCellStyle}>
-                          <Pressable
-                            onPress={() => removeItem(index)}
-                            className="h-11 w-11 items-center justify-center rounded-full border border-red-100 bg-red-50"
-                            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-                            hitSlop={4}
-                            accessibilityLabel={t("common.delete") + " " + t("quoteEditor.item")}
-                            accessibilityRole="button"
-                          >
-                            <Trash2 size={16} color="#dc2626" />
-                          </Pressable>
-                        </View>
-                        <TextInput
-                          className="w-20 text-right text-sm text-slate-900 mt-1"
-                          style={rtlText}
-                          value={item.price?.toString() || ""}
-                          onChangeText={(v) => updateItem(index, "price", v)}
-                          onBlur={saveItems}
-                          keyboardType="decimal-pad"
-                          placeholder="0.00"
-                          placeholderTextColor="#cbd5e1"
-                        />
-                        <TextInput
-                          className="w-14 text-center text-sm text-slate-900 mt-1"
-                          value={item.qty?.toString() || ""}
-                          onChangeText={(v) => updateItem(index, "qty", v)}
-                          onBlur={saveItems}
-                          keyboardType="numeric"
-                          placeholder="0"
-                          placeholderTextColor="#cbd5e1"
-                        />
-                        <TextInput
-                          className="w-16 text-center text-sm text-slate-900 mt-1"
-                          value={item.unit || ""}
-                          onChangeText={(v) => updateItem(index, "unit", v)}
-                          onBlur={saveItems}
-                          placeholder={t("quoteEditor.unitPlaceholder")}
-                          placeholderTextColor="#cbd5e1"
-                        />
-                        {/* Name - more height so long names can wrap */}
-                        <View style={[{ flex: 1, maxWidth: 220 }, tableItemCellSpacing]}>
-                          <TextInput
-                            className="text-sm text-slate-900 flex-1 min-w-0"
-                            style={[{ minHeight: 44 }, rtlText]}
-                            value={item.name}
-                            onChangeText={(v) => updateItem(index, "name", v)}
-                            onBlur={saveItems}
-                            placeholder={t("quoteEditor.itemNamePlaceholder")}
-                            placeholderTextColor="#cbd5e1"
-                            maxLength={ITEM_NAME_MAX}
-                            multiline
-                          />
-                          {hasPossibleMatch && (
-                            <Pressable
-                              onPress={() => openMatchPickerForItem(index)}
-                              className="mt-1 self-end rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1"
-                              style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
-                              accessibilityRole="button"
-                              accessibilityLabel={t("quoteEditor.possibleMatch")}
-                            >
-                              <Text className="text-[11px] font-semibold text-amber-800">
-                                {t("quoteEditor.possibleMatch")}
-                              </Text>
-                            </Pressable>
-                          )}
-                        </View>
-                      </>
-                    ) : (
-                      <>
-                        {/* Name - more height so long names can wrap */}
-                        <View style={[{ flex: 1, maxWidth: 220 }, tableItemCellSpacing]}>
-                          <TextInput
-                            className="text-sm text-slate-900 flex-1 min-w-0"
-                            style={{ minHeight: 44 }}
-                            value={item.name}
-                            onChangeText={(v) => updateItem(index, "name", v)}
-                            onBlur={saveItems}
-                            placeholder={t("quoteEditor.itemNamePlaceholder")}
-                            placeholderTextColor="#cbd5e1"
-                            maxLength={ITEM_NAME_MAX}
-                            multiline
-                          />
-                          {hasPossibleMatch && (
-                            <Pressable
-                              onPress={() => openMatchPickerForItem(index)}
-                              className="mt-1 self-start rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1"
-                              style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
-                              accessibilityRole="button"
-                              accessibilityLabel={t("quoteEditor.possibleMatch")}
-                            >
-                              <Text className="text-[11px] font-semibold text-amber-800">
-                                {t("quoteEditor.possibleMatch")}
-                              </Text>
-                            </Pressable>
-                          )}
-                        </View>
-                        <TextInput
-                          className="w-16 text-center text-sm text-slate-900 mt-1"
-                          value={item.unit || ""}
-                          onChangeText={(v) => updateItem(index, "unit", v)}
-                          onBlur={saveItems}
-                          placeholder={t("quoteEditor.unitPlaceholder")}
-                          placeholderTextColor="#cbd5e1"
-                        />
-                        <TextInput
-                          className="w-14 text-center text-sm text-slate-900 mt-1"
-                          value={item.qty?.toString() || ""}
-                          onChangeText={(v) => updateItem(index, "qty", v)}
-                          onBlur={saveItems}
-                          keyboardType="numeric"
-                          placeholder="0"
-                          placeholderTextColor="#cbd5e1"
-                        />
-                        <TextInput
-                          className="w-20 text-right text-sm text-slate-900 mt-1"
-                          value={item.price?.toString() || ""}
-                          onChangeText={(v) => updateItem(index, "price", v)}
-                          onBlur={saveItems}
-                          keyboardType="decimal-pad"
-                          placeholder="0.00"
-                          placeholderTextColor="#cbd5e1"
-                        />
-                        <View style={tableActionCellStyle}>
-                          <Pressable
-                            onPress={() => removeItem(index)}
-                            className="h-11 w-11 items-center justify-center rounded-full border border-red-100 bg-red-50"
-                            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-                            hitSlop={4}
-                            accessibilityLabel={t("common.delete") + " " + t("quoteEditor.item")}
-                            accessibilityRole="button"
-                          >
-                            <Trash2 size={16} color="#dc2626" />
-                          </Pressable>
-                        </View>
-                      </>
+                    {/* Name row */}
+                    <View className="mb-2.5 flex-row items-start">
+                      <TextInput
+                        className="flex-1 text-sm font-medium text-slate-900"
+                        style={[{ minHeight: 22, lineHeight: 20 }, rtlText]}
+                        value={item.name}
+                        onChangeText={(v) => updateItem(index, "name", v)}
+                        onBlur={saveItems}
+                        placeholder={t("quoteEditor.itemNamePlaceholder")}
+                        placeholderTextColor="#94a3b8"
+                        maxLength={ITEM_NAME_MAX}
+                        multiline
+                      />
+                      <Pressable
+                        onPress={() => removeItem(index)}
+                        className="ml-2 h-7 w-7 items-center justify-center rounded-full"
+                        style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+                        hitSlop={6}
+                        accessibilityLabel={t("common.delete") + " " + t("quoteEditor.item")}
+                        accessibilityRole="button"
+                      >
+                        <Trash2 size={15} color="#94a3b8" />
+                      </Pressable>
+                    </View>
+
+                    {/* Match badge */}
+                    {hasPossibleMatch && (
+                      <Pressable
+                        onPress={() => openMatchPickerForItem(index)}
+                        className="mb-2.5 self-start rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1"
+                        style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("quoteEditor.possibleMatch")}
+                      >
+                        <Text className="text-[11px] font-semibold text-amber-800">
+                          {t("quoteEditor.possibleMatch")}
+                        </Text>
+                      </Pressable>
                     )}
+
+                    {/* Fields row: Qty | Unit | Price | = Total */}
+                    <View className="flex-row gap-2" style={tableDirection}>
+                      {/* Qty */}
+                      <View className="flex-1 items-center">
+                        <Text className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          {t("quoteEditor.qty")}
+                        </Text>
+                        <TextInput
+                          className="w-full rounded-lg border border-slate-200 bg-white py-2 text-center text-sm font-semibold text-slate-900"
+                          value={item.qty?.toString() || ""}
+                          onChangeText={(v) => updateItem(index, "qty", v)}
+                          onBlur={saveItems}
+                          keyboardType="numeric"
+                          placeholder="1"
+                          placeholderTextColor="#cbd5e1"
+                        />
+                      </View>
+
+                      {/* Unit */}
+                      <View className="flex-1 items-center">
+                        <Text className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          {t("quoteEditor.unit")}
+                        </Text>
+                        <TextInput
+                          className="w-full rounded-lg border border-slate-200 bg-white py-2 text-center text-sm text-slate-900"
+                          value={item.unit || ""}
+                          onChangeText={(v) => updateItem(index, "unit", v)}
+                          onBlur={saveItems}
+                          placeholder={t("quoteEditor.unitPlaceholder")}
+                          placeholderTextColor="#cbd5e1"
+                        />
+                      </View>
+
+                      {/* Price */}
+                      <View className="flex-1 items-center">
+                        <Text className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          {t("quoteEditor.price")}
+                        </Text>
+                        <View className="w-full flex-row items-center rounded-lg border border-slate-200 bg-white px-1.5 py-2">
+                          <Text className="text-[11px] text-slate-400">{currencySymbol}</Text>
+                          <TextInput
+                            className="flex-1 text-center text-sm font-semibold text-slate-900"
+                            style={{ paddingVertical: 0 }}
+                            value={item.price?.toString() || ""}
+                            onChangeText={(v) => updateItem(index, "price", v)}
+                            onBlur={saveItems}
+                            keyboardType="decimal-pad"
+                            placeholder="0.00"
+                            placeholderTextColor="#cbd5e1"
+                          />
+                        </View>
+                      </View>
+
+                      {/* Line Total */}
+                      <View className="flex-1 items-center">
+                        <Text className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                          = Total
+                        </Text>
+                        <View className="w-full items-center justify-center rounded-lg bg-slate-100 py-2">
+                          <Text className="text-sm font-bold text-slate-700" numberOfLines={1}>
+                            {currencySymbol}{lineTotal.toFixed(2)}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
                   </View>
                 );
               })}
@@ -1209,7 +1188,7 @@ export default function QuoteScreen() {
               {/* Add Item Button */}
               <Pressable
                 onPress={addItem}
-                className="mt-3 h-11 flex-row items-center justify-center rounded-lg border border-dashed border-slate-300"
+                className="mt-1 h-11 flex-row items-center justify-center rounded-xl border border-dashed border-slate-300"
                 style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
               >
                 <Plus size={16} color="#64748b" />

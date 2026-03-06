@@ -286,7 +286,7 @@ export default function PaywallScreen() {
   }, [router]);
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-slate-50" edges={["top", "bottom"]}>
       {/* Header — RTL: close on right, title centered (in wrapper) */}
       <View
         className="flex-row items-center justify-between bg-white px-4 py-3 border-b border-slate-100 shadow-sm"

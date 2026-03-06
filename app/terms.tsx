@@ -190,7 +190,7 @@ export default function TermsScreen() {
   // ─── Render ────────────────────────────────────────────────
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom"]}>
       {/* Header — RTL: title on right, back arrow mirrored, Save on left */}
       <View
         className="flex-row items-center px-4 py-3 border-b border-slate-200"

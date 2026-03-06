@@ -2,11 +2,13 @@ import { Tabs } from "expo-router";
 import { FileText, Home, Settings, Users } from "lucide-react-native";
 import { I18nManager } from "react-native";
 import { useTranslation } from "react-i18next";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const RTL_LANGUAGES = ["ar", "he"];
 
 export default function TabLayout() {
   const { t, i18n } = useTranslation();
+  const insets = useSafeAreaInsets();
   const languageIsRTL = RTL_LANGUAGES.includes(
     (i18n.language || "").split("-")[0]
   );
@@ -15,6 +17,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      safeAreaInsets={{ bottom: 0 }}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: "#c2410c", // orange-700, accessible on white
@@ -24,6 +27,8 @@ export default function TabLayout() {
           borderTopColor: "#e2e8f0",
           borderTopWidth: 1,
           paddingTop: 6,
+          paddingBottom: insets.bottom,
+          height: 56 + insets.bottom,
           direction: tabDirection,
         },
         tabBarItemStyle: {
